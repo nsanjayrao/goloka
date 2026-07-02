@@ -19,7 +19,7 @@ worker/sync.py  ──  fetch new videos → classify (rules → optional Groq L
 Supabase (Postgres, free tier)  ──  metadata only: titles, URLs, categories, tags
         │
         ▼
-Next.js on Vercel (free tier)  ──  responsive PWA, YouTube embeds   [Phase 1b — not built yet]
+Next.js on Vercel (free tier)  ──  responsive PWA, YouTube embeds   (web/ — live at goloka-three.vercel.app)
 ```
 
 ## Setup (one time)
@@ -48,7 +48,7 @@ Next.js on Vercel (free tier)  ──  responsive PWA, YouTube embeds   [Phase 1
 ## Roadmap
 
 - [x] Phase 1a — data pipeline: schema, sync worker, auto-classification, cron
-- [ ] Phase 1b — Next.js frontend: browse by category, search, YouTube embeds, PWA
+- [x] Phase 1b — Next.js frontend: browse by category, search, YouTube embeds, PWA
 - [ ] Phase 2 — speaker/artist pages, filters (language, duration), playlists
 - [ ] Phase 3 — books & products directory (link-outs), temple directory
 - [ ] Phase 4 — accounts: favourites, watch-later (Supabase auth)
