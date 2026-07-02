@@ -39,3 +39,20 @@ create policy "public read channels" on channels for select using (true);
 
 drop policy if exists "public read videos" on videos;
 create policy "public read videos" on videos for select using (true);
+
+-- The frontend needs the distinct list of categories (for /browse and the
+-- search page's suggestion chips) - PostgREST/supabase-js can't express
+-- `select distinct` directly, and pulling every row's `category` column
+-- client-side doesn't scale once the catalog grows past PostgREST's
+-- default 1000-row cap. This RPC does the DISTINCT in Postgres instead.
+-- `security invoker` (the default) means it runs as whichever role calls
+-- it, so the "public read videos" RLS policy above still applies.
+create or replace function distinct_categories()
+returns table (category text)
+language sql
+stable
+as $$
+  select distinct category from videos order by category;
+$$;
+
+grant execute on function distinct_categories() to anon, authenticated;

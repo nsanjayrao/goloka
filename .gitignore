@@ -4,3 +4,10 @@ __pycache__/
 node_modules/
 .next/
 .vercel/
+
+# web/ (Next.js frontend) - .env is already matched above, but .env.local
+# is a different filename Next.js also reads and it's not covered by the
+# generic ".env" entry, so it needs its own line.
+web/.env.local
+*.env.local
+*.tsbuildinfo

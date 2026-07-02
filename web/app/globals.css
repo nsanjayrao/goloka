@@ -1,0 +1,125 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/*
+ * Goloka design tokens (docs/DESIGN.md #2).
+ * `:root` holds dark values (dark is the default theme); `.light` overrides
+ * them. This is the opposite of the usual "light is default" convention,
+ * so it's called out here for anyone reading this file.
+ */
+:root {
+  --bg: #0b0e1a;
+  --surface: #141a2e;
+  --surface-2: #1c2440;
+  --border: #262f4d;
+  --text: #f4f1e8;
+  --text-muted: #98a2c3;
+  --accent: #f0a83c;
+  --accent-2: #34b8a5;
+  /* Text placed directly on a saffron fill (e.g. primary button label)
+     needs a dark ink, not white, to pass WCAG AA against #F0A83C. */
+  --accent-ink: #1b0f00;
+}
+
+.light {
+  --bg: #faf7f0;
+  --surface: #ffffff;
+  --surface-2: #f1ead9;
+  --border: #e7e1d2;
+  --text: #1b2138;
+  --text-muted: #5a6382;
+  --accent: #b97a16;
+  --accent-2: #1f8577;
+  --accent-ink: #fffaf1;
+}
+
+@theme inline {
+  /* Brand tokens, exposed as Tailwind utilities: bg-bg, bg-surface,
+     text-text-muted, border-border, text-accent, etc. */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-text-muted: var(--text-muted);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-ink: var(--accent-ink);
+
+  /* shadcn primitive tokens, wired to the brand tokens above so Button /
+     Sheet / Skeleton / Badge / Tabs pick up Goloka's palette automatically.
+     Note: shadcn's own "accent" token is intentionally left as a neutral
+     hover surface (not brand saffron) - see comment below - so it's not
+     redeclared here. */
+  --color-background: var(--bg);
+  --color-foreground: var(--text);
+  --color-card: var(--surface);
+  --color-card-foreground: var(--text);
+  --color-popover: var(--surface);
+  --color-popover-foreground: var(--text);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--surface-2);
+  --color-secondary-foreground: var(--text);
+  --color-muted: var(--surface-2);
+  --color-muted-foreground: var(--text-muted);
+  --color-border: var(--border);
+  --color-input: var(--border);
+  --color-ring: var(--accent);
+
+  /* Some shadcn component size variants (e.g. Button's "sm"/"xs") reference
+     --radius-md directly, so this scale needs to exist even though our own
+     components mostly rely on Tailwind's built-in rounded-* utilities. */
+  --radius: 0.625rem;
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-fraunces);
+}
+
+/*
+ * DESIGN.md: "saffron never used for body text; large fills of accent are
+ * forbidden". shadcn's generated Button/Badge/Tabs components never
+ * reference `--accent`/`--accent-foreground` (grep shows zero uses), so we
+ * deliberately do NOT define them here - it stays a neutral surface,
+ * keeping any future shadcn `accent` variant from becoming a big saffron
+ * fill. Our own components use `text-accent` / `border-accent` directly for
+ * the small, deliberate accent touches DESIGN.md calls for.
+ */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-bg text-text;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+@layer utilities {
+  /* Tailwind v4 ships line-clamp-* utilities built in (no plugin needed) -
+     used for the video card title (line-clamp-2) and video description
+     preview (line-clamp-3). Only the scroll-snap row needs a custom
+     utility, since Tailwind has no built-in for it. */
+
+  /* Horizontally scrollable, snap-scrolling category rows (DESIGN.md #4). */
+  .snap-row {
+    scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+  .snap-row::-webkit-scrollbar {
+    display: none;
+  }
+  .snap-item {
+    scroll-snap-align: start;
+  }
+}
