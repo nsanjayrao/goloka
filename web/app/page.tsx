@@ -5,6 +5,11 @@ import { FadeUp } from "@/components/fade-up";
 import { Hero } from "@/components/hero";
 import { getCategoriesByRecency, getLatestVideo, getVideosByCategory } from "@/lib/data";
 
+// Without this, Next.js bakes the page once at build time and it never
+// updates. `revalidate` = ISR: serve the cached page, rebuild it in the
+// background at most every 30 minutes, so the 6-hour sync's new videos appear.
+export const revalidate = 1800;
+
 // Home is a server component: `async function` here means "fetch on the
 // server, send finished HTML to the browser" - there's no client-side
 // loading state to write for this page.

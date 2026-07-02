@@ -7,6 +7,10 @@ import { getAllCategories, getVideoCount } from "@/lib/data";
 
 export const metadata: Metadata = { title: "Browse" };
 
+// Re-generate at most every 30 minutes so new categories/counts appear
+// without a redeploy (same reasoning as the home page).
+export const revalidate = 1800;
+
 // Category list is never hardcoded - it's `select distinct category from
 // videos` (via lib/data.ts), so a new category the worker invents shows up
 // here automatically.
