@@ -20,6 +20,13 @@ export function SearchClient({ categories }: { categories: string[] }) {
   // to /search?q=...).
   const initialQuery = useSearchParams().get("q") ?? "";
   const [query, setQuery] = useState(initialQuery);
+
+  // useState only reads initialQuery on first mount. If the top bar
+  // navigates to /search?q=... while this page is already open, the URL
+  // changes but not our state - without this sync, search looks dead.
+  useEffect(() => {
+    if (initialQuery) setQuery(initialQuery);
+  }, [initialQuery]);
   const [videos, setVideos] = useState<Video[]>([]);
   // The query string `videos` is actually the results for. While the user
   // is still typing (or the debounce is pending), this lags behind `query`
