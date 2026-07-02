@@ -1,0 +1,11 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept 4: Cintamani touchstone-gem facet (cintamani-dhama, the ground of
+       Goloka). A regular hexagon (the gem body, saffron) is divided into six
+       facets by lines from the center to each vertex; one facet catches the
+       rare teal accent as a highlight, and an ivory dot at the exact center is
+       the gem's point of light, standing in for the wordmark's period. -->
+  <path d="M32,10 L51,21 L51,43 L32,54 L13,43 L13,21 Z" fill="#F0A83C"/>
+  <path d="M32,32 L32,10 L51,21 Z" fill="#34B8A5"/>
+  <path d="M32,32 L32,10 M32,32 L51,21 M32,32 L51,43 M32,32 L32,54 M32,32 L13,43 M32,32 L13,21" stroke="#0B0E1A" stroke-width="1.5" stroke-linecap="round"/>
+  <circle cx="32" cy="32" r="3.5" fill="#F4F1E8"/>
+</svg>

@@ -18,15 +18,20 @@ const GRID_CLASSES =
 export function SearchClient({ categories }: { categories: string[] }) {
   // Supports arriving here from the top bar's search box (which navigates
   // to /search?q=...).
-  const initialQuery = useSearchParams().get("q") ?? "";
-  const [query, setQuery] = useState(initialQuery);
+  const urlQuery = useSearchParams().get("q") ?? "";
+  const [query, setQuery] = useState(urlQuery);
 
-  // useState only reads initialQuery on first mount. If the top bar
-  // navigates to /search?q=... while this page is already open, the URL
-  // changes but not our state - without this sync, search looks dead.
-  useEffect(() => {
-    if (initialQuery) setQuery(initialQuery);
-  }, [initialQuery]);
+  // useState only reads urlQuery on first mount. If the top bar navigates
+  // to /search?q=... while this page is already open, the URL changes but
+  // not our state - without this sync, search looks dead. This is React's
+  // "adjust state during render" pattern: we remember the last URL query we
+  // saw, and when it changes, adopt it as the input value mid-render
+  // (allowed and cheaper than doing the same from a useEffect).
+  const [lastUrlQuery, setLastUrlQuery] = useState(urlQuery);
+  if (urlQuery !== lastUrlQuery) {
+    setLastUrlQuery(urlQuery);
+    if (urlQuery) setQuery(urlQuery);
+  }
   const [videos, setVideos] = useState<Video[]>([]);
   // The query string `videos` is actually the results for. While the user
   // is still typing (or the debounce is pending), this lags behind `query`

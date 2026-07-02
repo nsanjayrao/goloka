@@ -1,5 +1,22 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <rect width="512" height="512" fill="#0B0E1A"/>
-  <text x="256" y="336" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-weight="600" font-size="220" fill="#F4F1E8">G</text>
-  <circle cx="352" cy="300" r="18" fill="#F0A83C"/>
+<svg width="512" height="512" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Goloka mark: thousand-petal lotus (concept 1), maskable PWA icon.
+       Full-bleed #0B0E1A background; petal geometry's max radius (~24) sits
+       inside the 80% maskable safe zone (radius 25.6 of a 64-unit tile), so
+       it needs no extra scaling down. Source of truth for icon-192.png /
+       icon-512.png - see scripts/generate-icons.mjs. -->
+  <rect width="64" height="64" fill="#0B0E1A"/>
+  <defs>
+    <path id="pwa-petal" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/>
+  </defs>
+  <g fill="#F4F1E8">
+    <use href="#pwa-petal"/>
+    <use href="#pwa-petal" transform="rotate(45 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(90 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(135 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(180 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(225 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(270 32 32)"/>
+    <use href="#pwa-petal" transform="rotate(315 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
 </svg>

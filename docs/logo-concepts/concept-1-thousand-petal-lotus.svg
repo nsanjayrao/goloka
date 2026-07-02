@@ -1,0 +1,19 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept 1: Thousand-petal lotus (Brahma-samhita 5.2, sahasra-patra-kamalam).
+       One base petal shape, rotated 8x around the center via transform="rotate()".
+       Petals converge on a single saffron center dot, echoing the wordmark's period. -->
+  <defs>
+    <path id="c1-petal" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/>
+  </defs>
+  <g fill="#F4F1E8">
+    <use href="#c1-petal"/>
+    <use href="#c1-petal" transform="rotate(45 32 32)"/>
+    <use href="#c1-petal" transform="rotate(90 32 32)"/>
+    <use href="#c1-petal" transform="rotate(135 32 32)"/>
+    <use href="#c1-petal" transform="rotate(180 32 32)"/>
+    <use href="#c1-petal" transform="rotate(225 32 32)"/>
+    <use href="#c1-petal" transform="rotate(270 32 32)"/>
+    <use href="#c1-petal" transform="rotate(315 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+</svg>

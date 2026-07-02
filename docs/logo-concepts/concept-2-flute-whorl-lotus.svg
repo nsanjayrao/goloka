@@ -1,0 +1,22 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept 2: Flute-whorl lotus. Same rotated-petal construction as concept 1,
+       but the center is cut away to a negative-space "hole" (the venu's bore) in
+       the background color, with a small off-center saffron dot standing in for
+       a flute finger-hole / point of light, an abstracted echo of the wordmark's
+       period, deliberately off-axis rather than dead-center. -->
+  <defs>
+    <path id="c2-petal" d="M32,32 Q27,21 32,10 Q37,21 32,32 Z"/>
+  </defs>
+  <g fill="#F4F1E8">
+    <use href="#c2-petal"/>
+    <use href="#c2-petal" transform="rotate(45 32 32)"/>
+    <use href="#c2-petal" transform="rotate(90 32 32)"/>
+    <use href="#c2-petal" transform="rotate(135 32 32)"/>
+    <use href="#c2-petal" transform="rotate(180 32 32)"/>
+    <use href="#c2-petal" transform="rotate(225 32 32)"/>
+    <use href="#c2-petal" transform="rotate(270 32 32)"/>
+    <use href="#c2-petal" transform="rotate(315 32 32)"/>
+  </g>
+  <circle cx="32" cy="32" r="11" fill="#0B0E1A"/>
+  <circle cx="35.5" cy="29" r="3" fill="#F0A83C"/>
+</svg>

@@ -1,0 +1,11 @@
+<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+  <!-- Concept 3: Peacock-eye drops (Krishna's crown feather), abstracted to the
+       "eye" motif only, no feather barbs, no literal plume. An almond (vesica)
+       outline built from two arcs contains concentric rings: teal (used once,
+       sparingly, as the brief requires), ivory, and a saffron center dot echoing
+       the wordmark's period. -->
+  <path d="M32,8 Q52,32 32,56 Q12,32 32,8 Z" fill="none" stroke="#F4F1E8" stroke-width="2.5" stroke-linejoin="round"/>
+  <circle cx="32" cy="32" r="12" fill="none" stroke="#34B8A5" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="6.5" fill="none" stroke="#F4F1E8" stroke-width="2.5"/>
+  <circle cx="32" cy="32" r="3.5" fill="#F0A83C"/>
+</svg>

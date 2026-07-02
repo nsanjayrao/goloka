@@ -51,9 +51,10 @@ contrast for every text/background pair.
 ## 4. Layout & pages (Phase 1b scope)
 
 **App shell**
-- Desktop: sticky translucent top bar (backdrop-blur) — wordmark "Goloka"
-  (Fraunces) left, search center (expandable), theme toggle right.
-- Mobile: top bar shrinks to wordmark + search icon; **bottom tab bar**
+- Desktop: sticky translucent top bar (backdrop-blur) — logo lockup (lotus
+  mark + "Goloka." wordmark, see §6) left, search center (expandable),
+  theme toggle right.
+- Mobile: top bar shrinks to the lockup + search icon; **bottom tab bar**
   (Home, Browse, Search) with safe-area padding — this is what makes the
   PWA feel native.
 - Max content width 1280px, horizontal padding 16/24/48px (sm/md/lg).
@@ -98,7 +99,9 @@ contrast for every text/background pair.
 
 ## 6. Devotional identity touches (subtle, not kitsch)
 
-- Wordmark: "Goloka" in Fraunces with the accent-colored period: `Goloka.`
+- Lockup: the thousand-petal lotus mark (`components/icons/logo-mark.tsx`)
+  beside the "Goloka" wordmark in Fraunces with the accent-colored period:
+  `Goloka.` The mark also stands alone as the favicon and PWA app icon.
 - A single-line lotus SVG divider used max once per page (footer).
 - Empty/error states use gentle devotional copy ("Nothing here yet —
   like Vrindavan before the festival.") — warm, never preachy.

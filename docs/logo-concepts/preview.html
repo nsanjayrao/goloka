@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Goloka — Logo Concepts Preview</title>
+<style>
+  /* Production wordmark uses Fraunces (variable, Google Fonts). This preview
+     uses a system serif fallback (Georgia) since Fraunces isn't available
+     locally / this file must open via file:// with no external requests. */
+  :root {
+    --bg: #0B0E1A;
+    --surface: #141A2E;
+    --border: #262F4D;
+    --ivory: #F4F1E8;
+    --muted: #98A2C3;
+    --saffron: #F0A83C;
+    --teal: #34B8A5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 40px 24px 80px;
+    background: var(--bg);
+    color: var(--ivory);
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  h1 {
+    font-size: 28px;
+    font-weight: 600;
+    margin: 0 0 4px;
+  }
+  p.sub {
+    color: var(--muted);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 14px;
+    margin: 0 0 40px;
+    max-width: 640px;
+    line-height: 1.5;
+  }
+  .concepts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 24px;
+    max-width: 1200px;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .card h2 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 0 0 2px;
+  }
+  .card .file {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin: 0 0 20px;
+  }
+  .sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 28px;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .size-block {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .size-block .icon-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .size-block label {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .lockup {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .lockup .icon-box {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .wordmark {
+    font-family: Georgia, 'Times New Roman', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--ivory);
+  }
+  .wordmark .dot {
+    color: var(--saffron);
+  }
+  .hero-wordmark {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 48px;
+  }
+  .hero-wordmark .wordmark {
+    font-size: 40px;
+  }
+  .hero-wordmark span.note {
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    color: var(--muted);
+  }
+</style>
+</head>
+<body>
+
+<h1>Goloka — Logo Concept Preview</h1>
+<p class="sub">
+  Four scripturally-grounded mark concepts, rendered at favicon (16px), nav-bar
+  (48px), and hero (128px) sizes on the dark background (#0B0E1A). All colors
+  restricted to ivory #F4F1E8, saffron #F0A83C, peacock teal #34B8A5, and the
+  dark background itself.
+</p>
+
+<div class="hero-wordmark">
+  <span class="wordmark">Goloka<span class="dot">.</span></span>
+  <span class="note">wordmark reference — Fraunces in production, Georgia fallback here</span>
+</div>
+
+<div class="concepts">
+
+  <!-- Concept 1 -->
+  <div class="card">
+    <h2>1. Thousand-Petal Lotus</h2>
+    <p class="file">concept-1-thousand-petal-lotus.svg</p>
+    <div class="sizes">
+      <div class="size-block">
+        <div class="icon-box" style="width:128px;height:128px;">
+          <svg width="128" height="128" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p1-128" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p1-128"/>
+              <use href="#p1-128" transform="rotate(45 32 32)"/>
+              <use href="#p1-128" transform="rotate(90 32 32)"/>
+              <use href="#p1-128" transform="rotate(135 32 32)"/>
+              <use href="#p1-128" transform="rotate(180 32 32)"/>
+              <use href="#p1-128" transform="rotate(225 32 32)"/>
+              <use href="#p1-128" transform="rotate(270 32 32)"/>
+              <use href="#p1-128" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>128px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:48px;height:48px;">
+          <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p1-48" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p1-48"/>
+              <use href="#p1-48" transform="rotate(45 32 32)"/>
+              <use href="#p1-48" transform="rotate(90 32 32)"/>
+              <use href="#p1-48" transform="rotate(135 32 32)"/>
+              <use href="#p1-48" transform="rotate(180 32 32)"/>
+              <use href="#p1-48" transform="rotate(225 32 32)"/>
+              <use href="#p1-48" transform="rotate(270 32 32)"/>
+              <use href="#p1-48" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>48px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:16px;height:16px;">
+          <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p1-16" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p1-16"/>
+              <use href="#p1-16" transform="rotate(45 32 32)"/>
+              <use href="#p1-16" transform="rotate(90 32 32)"/>
+              <use href="#p1-16" transform="rotate(135 32 32)"/>
+              <use href="#p1-16" transform="rotate(180 32 32)"/>
+              <use href="#p1-16" transform="rotate(225 32 32)"/>
+              <use href="#p1-16" transform="rotate(270 32 32)"/>
+              <use href="#p1-16" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>16px</label>
+      </div>
+    </div>
+    <div class="lockup">
+      <div class="icon-box">
+        <svg width="24" height="24" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs><path id="p1-lock" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/></defs>
+          <g fill="#F4F1E8">
+            <use href="#p1-lock"/>
+            <use href="#p1-lock" transform="rotate(45 32 32)"/>
+            <use href="#p1-lock" transform="rotate(90 32 32)"/>
+            <use href="#p1-lock" transform="rotate(135 32 32)"/>
+            <use href="#p1-lock" transform="rotate(180 32 32)"/>
+            <use href="#p1-lock" transform="rotate(225 32 32)"/>
+            <use href="#p1-lock" transform="rotate(270 32 32)"/>
+            <use href="#p1-lock" transform="rotate(315 32 32)"/>
+          </g>
+          <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+        </svg>
+      </div>
+      <span class="wordmark">Goloka<span class="dot">.</span></span>
+    </div>
+  </div>
+
+  <!-- Concept 2 -->
+  <div class="card">
+    <h2>2. Flute-Whorl Lotus</h2>
+    <p class="file">concept-2-flute-whorl-lotus.svg</p>
+    <div class="sizes">
+      <div class="size-block">
+        <div class="icon-box" style="width:128px;height:128px;">
+          <svg width="128" height="128" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p2-128" d="M32,32 Q27,21 32,10 Q37,21 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p2-128"/>
+              <use href="#p2-128" transform="rotate(45 32 32)"/>
+              <use href="#p2-128" transform="rotate(90 32 32)"/>
+              <use href="#p2-128" transform="rotate(135 32 32)"/>
+              <use href="#p2-128" transform="rotate(180 32 32)"/>
+              <use href="#p2-128" transform="rotate(225 32 32)"/>
+              <use href="#p2-128" transform="rotate(270 32 32)"/>
+              <use href="#p2-128" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="11" fill="#0B0E1A"/>
+            <circle cx="35.5" cy="29" r="3" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>128px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:48px;height:48px;">
+          <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p2-48" d="M32,32 Q27,21 32,10 Q37,21 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p2-48"/>
+              <use href="#p2-48" transform="rotate(45 32 32)"/>
+              <use href="#p2-48" transform="rotate(90 32 32)"/>
+              <use href="#p2-48" transform="rotate(135 32 32)"/>
+              <use href="#p2-48" transform="rotate(180 32 32)"/>
+              <use href="#p2-48" transform="rotate(225 32 32)"/>
+              <use href="#p2-48" transform="rotate(270 32 32)"/>
+              <use href="#p2-48" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="11" fill="#0B0E1A"/>
+            <circle cx="35.5" cy="29" r="3" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>48px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:16px;height:16px;">
+          <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <defs><path id="p2-16" d="M32,32 Q27,21 32,10 Q37,21 32,32 Z"/></defs>
+            <g fill="#F4F1E8">
+              <use href="#p2-16"/>
+              <use href="#p2-16" transform="rotate(45 32 32)"/>
+              <use href="#p2-16" transform="rotate(90 32 32)"/>
+              <use href="#p2-16" transform="rotate(135 32 32)"/>
+              <use href="#p2-16" transform="rotate(180 32 32)"/>
+              <use href="#p2-16" transform="rotate(225 32 32)"/>
+              <use href="#p2-16" transform="rotate(270 32 32)"/>
+              <use href="#p2-16" transform="rotate(315 32 32)"/>
+            </g>
+            <circle cx="32" cy="32" r="11" fill="#0B0E1A"/>
+            <circle cx="35.5" cy="29" r="3" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>16px</label>
+      </div>
+    </div>
+    <div class="lockup">
+      <div class="icon-box">
+        <svg width="24" height="24" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <defs><path id="p2-lock" d="M32,32 Q27,21 32,10 Q37,21 32,32 Z"/></defs>
+          <g fill="#F4F1E8">
+            <use href="#p2-lock"/>
+            <use href="#p2-lock" transform="rotate(45 32 32)"/>
+            <use href="#p2-lock" transform="rotate(90 32 32)"/>
+            <use href="#p2-lock" transform="rotate(135 32 32)"/>
+            <use href="#p2-lock" transform="rotate(180 32 32)"/>
+            <use href="#p2-lock" transform="rotate(225 32 32)"/>
+            <use href="#p2-lock" transform="rotate(270 32 32)"/>
+            <use href="#p2-lock" transform="rotate(315 32 32)"/>
+          </g>
+          <circle cx="32" cy="32" r="11" fill="#0B0E1A"/>
+          <circle cx="35.5" cy="29" r="3" fill="#F0A83C"/>
+        </svg>
+      </div>
+      <span class="wordmark">Goloka<span class="dot">.</span></span>
+    </div>
+  </div>
+
+  <!-- Concept 3 -->
+  <div class="card">
+    <h2>3. Peacock-Eye Drops</h2>
+    <p class="file">concept-3-peacock-eye-drops.svg</p>
+    <div class="sizes">
+      <div class="size-block">
+        <div class="icon-box" style="width:128px;height:128px;">
+          <svg width="128" height="128" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,8 Q52,32 32,56 Q12,32 32,8 Z" fill="none" stroke="#F4F1E8" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="32" cy="32" r="12" fill="none" stroke="#34B8A5" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="6.5" fill="none" stroke="#F4F1E8" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>128px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:48px;height:48px;">
+          <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,8 Q52,32 32,56 Q12,32 32,8 Z" fill="none" stroke="#F4F1E8" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="32" cy="32" r="12" fill="none" stroke="#34B8A5" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="6.5" fill="none" stroke="#F4F1E8" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>48px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:16px;height:16px;">
+          <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,8 Q52,32 32,56 Q12,32 32,8 Z" fill="none" stroke="#F4F1E8" stroke-width="2.5" stroke-linejoin="round"/>
+            <circle cx="32" cy="32" r="12" fill="none" stroke="#34B8A5" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="6.5" fill="none" stroke="#F4F1E8" stroke-width="2.5"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F0A83C"/>
+          </svg>
+        </div>
+        <label>16px</label>
+      </div>
+    </div>
+    <div class="lockup">
+      <div class="icon-box">
+        <svg width="24" height="24" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32,8 Q52,32 32,56 Q12,32 32,8 Z" fill="none" stroke="#F4F1E8" stroke-width="2.5" stroke-linejoin="round"/>
+          <circle cx="32" cy="32" r="12" fill="none" stroke="#34B8A5" stroke-width="2.5"/>
+          <circle cx="32" cy="32" r="6.5" fill="none" stroke="#F4F1E8" stroke-width="2.5"/>
+          <circle cx="32" cy="32" r="3.5" fill="#F0A83C"/>
+        </svg>
+      </div>
+      <span class="wordmark">Goloka<span class="dot">.</span></span>
+    </div>
+  </div>
+
+  <!-- Concept 4 -->
+  <div class="card">
+    <h2>4. Cintamani Facet</h2>
+    <p class="file">concept-4-cintamani-facet.svg</p>
+    <div class="sizes">
+      <div class="size-block">
+        <div class="icon-box" style="width:128px;height:128px;">
+          <svg width="128" height="128" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,10 L51,21 L51,43 L32,54 L13,43 L13,21 Z" fill="#F0A83C"/>
+            <path d="M32,32 L32,10 L51,21 Z" fill="#34B8A5"/>
+            <path d="M32,32 L32,10 M32,32 L51,21 M32,32 L51,43 M32,32 L32,54 M32,32 L13,43 M32,32 L13,21" stroke="#0B0E1A" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F4F1E8"/>
+          </svg>
+        </div>
+        <label>128px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:48px;height:48px;">
+          <svg width="48" height="48" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,10 L51,21 L51,43 L32,54 L13,43 L13,21 Z" fill="#F0A83C"/>
+            <path d="M32,32 L32,10 L51,21 Z" fill="#34B8A5"/>
+            <path d="M32,32 L32,10 M32,32 L51,21 M32,32 L51,43 M32,32 L32,54 M32,32 L13,43 M32,32 L13,21" stroke="#0B0E1A" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F4F1E8"/>
+          </svg>
+        </div>
+        <label>48px</label>
+      </div>
+      <div class="size-block">
+        <div class="icon-box" style="width:16px;height:16px;">
+          <svg width="16" height="16" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32,10 L51,21 L51,43 L32,54 L13,43 L13,21 Z" fill="#F0A83C"/>
+            <path d="M32,32 L32,10 L51,21 Z" fill="#34B8A5"/>
+            <path d="M32,32 L32,10 M32,32 L51,21 M32,32 L51,43 M32,32 L32,54 M32,32 L13,43 M32,32 L13,21" stroke="#0B0E1A" stroke-width="1.5" stroke-linecap="round"/>
+            <circle cx="32" cy="32" r="3.5" fill="#F4F1E8"/>
+          </svg>
+        </div>
+        <label>16px</label>
+      </div>
+    </div>
+    <div class="lockup">
+      <div class="icon-box">
+        <svg width="24" height="24" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+          <path d="M32,10 L51,21 L51,43 L32,54 L13,43 L13,21 Z" fill="#F0A83C"/>
+          <path d="M32,32 L32,10 L51,21 Z" fill="#34B8A5"/>
+          <path d="M32,32 L32,10 M32,32 L51,21 M32,32 L51,43 M32,32 L32,54 M32,32 L13,43 M32,32 L13,21" stroke="#0B0E1A" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="32" cy="32" r="3.5" fill="#F4F1E8"/>
+        </svg>
+      </div>
+      <span class="wordmark">Goloka<span class="dot">.</span></span>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>
