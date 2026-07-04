@@ -15,7 +15,13 @@ import type { Video } from "@/lib/types";
 const GRID_CLASSES =
   "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
-export function SearchClient({ categories }: { categories: string[] }) {
+export function SearchClient({
+  categories,
+  latestVideos,
+}: {
+  categories: string[];
+  latestVideos: Video[];
+}) {
   // Supports arriving here from the top bar's search box (which navigates
   // to /search?q=...).
   const urlQuery = useSearchParams().get("q") ?? "";
@@ -53,12 +59,27 @@ export function SearchClient({ categories }: { categories: string[] }) {
     return () => clearTimeout(timer);
   }, [trimmedQuery]);
 
-  let emptyMessage: string | null = null;
-  if (!trimmedQuery) {
-    emptyMessage = "Search for a lecture, kirtan, or festival by title.";
-  } else if (!isPending && videos.length === 0) {
-    emptyMessage = "Nothing here yet — like Vrindavan before the festival. Try another search.";
-  }
+  // Three mutually exclusive states below the input: the resting state
+  // (no query yet), the no-results state, and the results grid.
+  const resting = !trimmedQuery;
+  const noResults = !isPending && trimmedQuery !== "" && videos.length === 0;
+
+  // Category suggestion chips - shown both in the resting state and under
+  // the no-results message, so it's a shared element.
+  const categoryChips =
+    categories.length > 0 ? (
+      <div className="flex flex-wrap gap-2">
+        {categories.map((category) => (
+          <Link
+            key={category}
+            href={`/browse/${encodeURIComponent(category)}`}
+            className="rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] text-text-muted transition-colors hover:text-text"
+          >
+            {category}
+          </Link>
+        ))}
+      </div>
+    ) : null;
 
   return (
     <div>
@@ -73,6 +94,31 @@ export function SearchClient({ categories }: { categories: string[] }) {
       />
 
       <div className="mt-8">
+        {resting && (
+          <div className="space-y-10">
+            {categoryChips && (
+              <section>
+                <h2 className="mb-3 font-heading text-2xl font-medium tracking-tight text-text">
+                  Browse by category
+                </h2>
+                {categoryChips}
+              </section>
+            )}
+            {latestVideos.length > 0 && (
+              <section>
+                <h2 className="mb-4 font-heading text-2xl font-medium tracking-tight text-text">
+                  Newest additions
+                </h2>
+                <div className={GRID_CLASSES}>
+                  {latestVideos.map((video) => (
+                    <VideoCard key={video.id} video={video} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )}
+
         {isPending && (
           <div className={GRID_CLASSES}>
             {Array.from({ length: 10 }).map((_, index) => (
@@ -81,25 +127,13 @@ export function SearchClient({ categories }: { categories: string[] }) {
           </div>
         )}
 
-        {emptyMessage && (
-          <EmptyState message={emptyMessage}>
-            {categories.length > 0 && (
-              <div className="flex flex-wrap justify-center gap-2">
-                {categories.map((category) => (
-                  <Link
-                    key={category}
-                    href={`/browse/${encodeURIComponent(category)}`}
-                    className="rounded-full border border-border bg-surface px-3 py-1.5 text-[13px] text-text-muted transition-colors hover:text-text"
-                  >
-                    {category}
-                  </Link>
-                ))}
-              </div>
-            )}
+        {noResults && (
+          <EmptyState message="Nothing here yet — like Vrindavan before the festival. Try another search.">
+            {categoryChips && <div className="flex justify-center">{categoryChips}</div>}
           </EmptyState>
         )}
 
-        {!isPending && trimmedQuery && videos.length > 0 && (
+        {!isPending && trimmedQuery !== "" && videos.length > 0 && (
           <div className={GRID_CLASSES}>
             {videos.map((video) => (
               <VideoCard key={video.id} video={video} />

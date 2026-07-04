@@ -4,8 +4,8 @@
   "description": "A free, centralized index of ISKCON lectures, kirtans, and festivals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0B0E1A",
-  "theme_color": "#0B0E1A",
+  "background_color": "#FFFFFF",
+  "theme_color": "#FFFFFF",
   "icons": [
     {
       "src": "/icons/icon-192.png",

@@ -18,6 +18,47 @@ export function formatDuration(totalSeconds: number | null): string {
   return `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
+// Abbreviations that must survive the ALL-CAPS -> Title Case conversion
+// below: honorifics (His Grace / His Holiness), scripture names
+// (Srimad-Bhagavatam, Bhagavad-gita, Chaitanya-charitamrita), and the
+// organization itself. Compared case-insensitively, restored as written here.
+const KEEP_UPPERCASE = new Set(["HG", "HH", "SB", "BG", "CC", "ISKCON", "Q&A"]);
+
+/**
+ * Raw YouTube titles -> display titles (DESIGN.md "Video card": titles are
+ * cleaned, never raw). YouTube titles optimize for the YouTube algorithm -
+ * #hashtags, ALL CAPS, decorative separators - which reads as noise in an
+ * Apple-style UI. This cleans for DISPLAY only; the database keeps the
+ * original (search still matches the raw title).
+ */
+export function cleanTitle(rawTitle: string): string {
+  let title = rawTitle
+    .replace(/#[^\s#]+/g, " ") // drop #hashtags entirely
+    .replace(/\s+/g, " ") // collapse runs of whitespace
+    // Trim separator junk left dangling at either end after the removals
+    // above (a title like "Kirtan ॥ #shorts" ends as "Kirtan ॥").
+    .replace(/^[\s|·•—–\-॥]+|[\s|·•—–\-॥]+$/g, "");
+
+  // Only de-shout titles that are MOSTLY capitals. Counting letters (not
+  // characters) keeps digits/punctuation from skewing the ratio, and the
+  // >= 12 floor stops short titles like "BG 2.13" from tripping it.
+  const letters = title.replace(/[^a-zA-Z]/g, "");
+  const uppercase = letters.replace(/[^A-Z]/g, "");
+  if (letters.length >= 12 && uppercase.length / letters.length > 0.7) {
+    title = title
+      .toLowerCase()
+      .replace(/[a-z][a-z'&.]*/g, (word) => {
+        const kept = word.toUpperCase();
+        if (KEEP_UPPERCASE.has(kept)) return kept;
+        return word[0].toUpperCase() + word.slice(1);
+      });
+  }
+
+  // If cleaning nuked everything (a title that was ONLY hashtags), the raw
+  // title is still better than an empty string.
+  return title || rawTitle;
+}
+
 const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 60 * 60 * 24 * 365],
   ["month", 60 * 60 * 24 * 30],

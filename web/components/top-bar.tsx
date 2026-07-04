@@ -3,15 +3,33 @@ import Link from "next/link";
 
 import { Container } from "@/components/container";
 import { LogoMark } from "@/components/icons/logo-mark";
-import { ThemeToggle } from "@/components/theme-toggle";
 import { TopBarSearch } from "@/components/top-bar-search";
 
-// Sticky translucent top bar (DESIGN.md #4 "App shell"). Stays a server
-// component - only the search box and theme toggle need the browser, and
-// they're carved out into their own small client components.
+// Apple-TV black header (DESIGN.md #4, owner decision 2026-07-03): one
+// persistent near-black translucent bar with white text on every page and
+// at every scroll position - tv.apple.com's global nav. The old
+// transparent-over-hero-then-frosted switching is gone, which also let
+// this go back to being a plain server component (no pathname check, no
+// IntersectionObserver).
 export function TopBar() {
   return (
-    <header className="sticky top-0 z-40 border-b border-border bg-bg/80 backdrop-blur">
+    <header
+      className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur"
+      // The page's tokens are near-black-on-white, which would vanish on a
+      // black bar. Every child (logo, search pill, icons) styles itself
+      // with the tokens, so locally overriding the CSS variables here
+      // re-skins the whole bar to white tones in one place (DESIGN.md #2).
+      style={
+        {
+          "--bg": "#000000",
+          "--text": "#ffffff",
+          "--text-muted": "rgba(255,255,255,0.75)",
+          "--accent": "#f0a83c",
+          "--surface": "rgba(255,255,255,0.18)",
+          "--border": "rgba(255,255,255,0.35)",
+        } as React.CSSProperties
+      }
+    >
       <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
         <Link
           href="/"
@@ -33,7 +51,6 @@ export function TopBar() {
           >
             <Search className="size-5" />
           </Link>
-          <ThemeToggle />
         </div>
       </Container>
     </header>

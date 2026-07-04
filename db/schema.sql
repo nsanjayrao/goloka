@@ -26,9 +26,17 @@ create table if not exists videos (
   created_at timestamptz not null default now()
 );
 
+-- Hand-curated "Featured" flag (owner ticks this in the Supabase table
+-- editor). The sync worker never sends this column, so a re-sync leaves
+-- curation untouched. `add column if not exists` keeps this file safe to
+-- re-run. The partial index only stores the rare `true` rows, so the
+-- featured-shelf query stays cheap as the catalog grows.
+alter table videos add column if not exists featured boolean not null default false;
+
 create index if not exists videos_category_idx on videos (category);
 create index if not exists videos_published_idx on videos (published_at desc);
 create index if not exists videos_channel_idx on videos (channel_id);
+create index if not exists videos_featured_idx on videos (published_at desc) where featured;
 
 -- Anyone may read (the site is public); only the service key (sync worker) may write.
 alter table channels enable row level security;

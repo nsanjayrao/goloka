@@ -14,15 +14,23 @@ const TABS = [
 ] as const;
 
 // Mobile-only bottom tab bar (DESIGN.md #4: "this is what makes the PWA
-// feel native"). `env(safe-area-inset-bottom)` keeps it clear of the home
-// indicator on iOS.
+// feel native"). Black glass to match the top bar - dark chrome on both
+// edges of the phone, Apple-style - using the same CSS-variable re-skin
+// as top-bar.tsx. `env(safe-area-inset-bottom)` keeps it clear of the
+// home indicator on iOS.
 export function BottomTabBar() {
   const pathname = usePathname();
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-surface/95 backdrop-blur sm:hidden"
-      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+      className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-black/80 backdrop-blur sm:hidden"
+      style={{
+        paddingBottom: "env(safe-area-inset-bottom)",
+        ...({
+          "--accent": "#f0a83c",
+          "--text-muted": "rgba(255,255,255,0.6)",
+        } as React.CSSProperties),
+      }}
     >
       <div className="flex h-14 items-stretch justify-around">
         {TABS.map(({ href, label, icon: Icon }) => {

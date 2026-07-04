@@ -5,7 +5,7 @@
 // every page render its empty state instead of crashing - see CLAUDE.md's
 // "database may be empty or unreachable" requirement.
 import { supabase } from "@/lib/supabase";
-import type { DurationBucket, Video } from "@/lib/types";
+import type { Channel, DurationBucket, Video } from "@/lib/types";
 
 const VIDEO_COLUMNS = "*, channel:channels(title, handle, thumbnail_url)";
 
@@ -44,6 +44,89 @@ export async function getLatestVideo(): Promise<Video | null> {
     if (error) throw error;
     return data as unknown as Video | null;
   }, null);
+}
+
+/** The hand-curated "Featured" videos for the home shelf (DESIGN.md #4.2),
+ * newest first. If the `featured` column doesn't exist yet (owner hasn't
+ * run the schema change), the query errors and `safely` returns [] - so
+ * the Featured shelf simply doesn't render until the column is added and a
+ * video is flagged. */
+export async function getFeaturedVideos(limit: number): Promise<Video[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select(VIDEO_COLUMNS)
+      .eq("featured", true)
+      .order("published_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as unknown as Video[];
+  }, []);
+}
+
+/** Every channel handle that isn't null, for the sitemap's /channel/[handle]
+ * URLs. Bounded - the curated channel list is small. */
+export async function getChannelHandles(): Promise<string[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("channels")
+      .select("handle")
+      .not("handle", "is", null)
+      .limit(500);
+    if (error) throw error;
+    return (data ?? []).map((row: { handle: string }) => row.handle);
+  }, []);
+}
+
+/** The newest `limit` videos' IDs + dates, for the sitemap's /watch/[id]
+ * URLs. Deliberately NOT `getLatestVideos` (which excludes Shorts): Shorts
+ * still deserve to be indexed, they just never headline. Light column set. */
+export async function getSitemapVideos(
+  limit: number
+): Promise<{ youtube_video_id: string; published_at: string | null }[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select("youtube_video_id, published_at")
+      .order("published_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as { youtube_video_id: string; published_at: string | null }[];
+  }, []);
+}
+
+/** A channel by its handle (the `[handle]` in /channel/[handle]). */
+export async function getChannelByHandle(handle: string): Promise<Channel | null> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("channels")
+      .select("*")
+      .eq("handle", handle)
+      .maybeSingle();
+    if (error) throw error;
+    return data as unknown as Channel | null;
+  }, null);
+}
+
+/** The newest `limit` videos across every channel, for the home hero
+ * carousel and the "Top 10 New Arrivals" shelf (DESIGN.md #4). Videos
+ * under 2 minutes are excluded (the eligibility rule in DESIGN.md #4.1):
+ * a 78vh hero built from a vertical #short is a layout failure no styling
+ * can fix. Shorts still appear in category shelves and search - this
+ * filter only guards what gets FEATURED. Note `gte` also drops rows with
+ * a null duration, which is what we want: an unknown length doesn't earn
+ * the hero either. */
+export async function getLatestVideos(limit: number): Promise<Video[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select(VIDEO_COLUMNS)
+      .gte("duration_seconds", 120)
+      .order("published_at", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as unknown as Video[];
+  }, []);
 }
 
 /**
@@ -123,24 +206,27 @@ export async function getVideosByCategory(category: string, limit = 10): Promise
   }, []);
 }
 
+// Every field is optional so this one shape drives two grids: the category
+// page (category + optional channel/duration chips) and the channel page
+// (channelId only). `getVideosPage`/`getVideoCount` apply whichever
+// filters are present.
 export type VideoPageFilters = {
-  category: string;
+  category?: string;
   channelId?: number;
   duration?: DurationBucket;
 };
 
-/** One page of videos for /browse/[category], with optional filters. */
+/** One page of videos for the category/channel grids, with optional
+ * filters (see `VideoPageFilters`). */
 export async function getVideosPage(
   filters: VideoPageFilters,
   offset: number,
   limit: number
 ): Promise<Video[]> {
   return safely(async () => {
-    let query = supabase!
-      .from("videos")
-      .select(VIDEO_COLUMNS)
-      .eq("category", filters.category);
+    let query = supabase!.from("videos").select(VIDEO_COLUMNS);
 
+    if (filters.category) query = query.eq("category", filters.category);
     if (filters.channelId) query = query.eq("channel_id", filters.channelId);
     if (filters.duration) {
       const range = durationRange(filters.duration);

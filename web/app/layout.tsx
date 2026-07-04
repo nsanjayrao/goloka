@@ -4,8 +4,8 @@ import { Fraunces, Inter } from "next/font/google";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { Footer } from "@/components/footer";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
-import { ThemeProvider } from "@/components/theme-provider";
 import { TopBar } from "@/components/top-bar";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // next/font/google downloads and self-hosts the font at build time (no
@@ -24,6 +24,10 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
+  // Absolute base for every relative canonical / OG image URL below and in
+  // child routes (DESIGN.md #7). Without this, OG image paths stay relative
+  // and social crawlers can't resolve them.
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "Goloka.",
     template: "%s — Goloka.",
@@ -34,23 +38,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0B0E1A",
+  themeColor: "#FFFFFF",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    // suppressHydrationWarning: next-themes sets the `dark`/`light` class on
-    // <html> before React hydrates, which would otherwise cause a harmless
-    // but noisy hydration-mismatch warning.
-    <html lang="en" suppressHydrationWarning className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
       <body className="min-h-screen bg-bg text-text antialiased">
-        <ThemeProvider>
-          <TopBar />
-          <main className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</main>
-          <Footer />
-          <BottomTabBar />
-          <RegisterServiceWorker />
-        </ThemeProvider>
+        <TopBar />
+        <main className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</main>
+        <Footer />
+        <BottomTabBar />
+        <RegisterServiceWorker />
       </body>
     </html>
   );

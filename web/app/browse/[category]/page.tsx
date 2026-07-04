@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
+import { CategoryBanner } from "@/components/category-banner";
 import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
 import { FilterChips } from "@/components/filter-chips";
@@ -8,9 +10,11 @@ import {
   CATEGORY_PAGE_SIZE,
   getChannelsInCategory,
   getVideoCount,
+  getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
 import type { DurationBucket } from "@/lib/types";
+import { safeDecodeURIComponent } from "@/lib/utils";
 
 const DURATION_VALUES: DurationBucket[] = ["short", "medium", "long"];
 
@@ -24,12 +28,19 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { category } = await params;
-  return { title: decodeURIComponent(category) };
+  const decoded = safeDecodeURIComponent(category);
+  return {
+    title: decoded ?? "Browse",
+    // `category` is the already-encoded route segment, so it drops straight
+    // into the canonical path without re-encoding.
+    alternates: { canonical: `/browse/${category}` },
+  };
 }
 
 export default async function CategoryPage({ params, searchParams }: Props) {
   const { category: rawCategory } = await params;
-  const category = decodeURIComponent(rawCategory);
+  const category = safeDecodeURIComponent(rawCategory);
+  if (category === null) notFound(); // malformed percent-encoding -> 404, not 500
   const query = await searchParams;
 
   const channelId = query.channel ? Number(query.channel) : undefined;
@@ -41,14 +52,18 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const hasActiveFilters = channelId !== undefined || duration !== undefined;
 
   // `categoryCount` decides whether the category itself exists/has any
-  // content at all (the full-page empty state below). `filteredCount` is
-  // what the heading shows - it needs its own query when filters are
-  // active, otherwise the heading would claim e.g. "42 videos" while a
-  // channel+duration combo that matches zero videos shows an empty grid.
-  const [categoryCount, channels, videos] = await Promise.all([
+  // content at all (the full-page empty state below) and is the number the
+  // banner shows - the category's stable identity, unaffected by filters.
+  // `bannerVideo` is the newest video in the category (filter-independent),
+  // so the banner artwork matches the poster the user clicked to get here.
+  // `filteredCount` is shown near the grid ONLY when filters narrow the
+  // set, so the banner's count never lies but the filtered total is still
+  // visible.
+  const [categoryCount, channels, videos, bannerVideos] = await Promise.all([
     getVideoCount({ category }),
     getChannelsInCategory(category),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
+    getVideosByCategory(category, 1),
   ]);
   const filteredCount = hasActiveFilters ? await getVideoCount(filters) : categoryCount;
 
@@ -63,12 +78,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <Container className="py-10">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{category}</h1>
-        <span className="text-sm text-text-muted">
-          {filteredCount} video{filteredCount === 1 ? "" : "s"}
-        </span>
-      </div>
+      <CategoryBanner
+        category={category}
+        thumbnail={bannerVideos[0]?.thumbnail_url ?? null}
+        count={categoryCount}
+      />
 
       {channels.length > 0 && (
         <div className="mt-6">
@@ -79,6 +93,12 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             activeDuration={duration}
           />
         </div>
+      )}
+
+      {hasActiveFilters && (
+        <p className="mt-4 text-sm text-text-muted">
+          Showing {filteredCount} of {categoryCount} video{categoryCount === 1 ? "" : "s"}
+        </p>
       )}
 
       <div className="mt-8">

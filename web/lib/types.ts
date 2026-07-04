@@ -25,6 +25,7 @@ export type Video = {
   category: string;
   language: string | null;
   tags: string[];
+  featured: boolean;
   created_at: string;
   channel: {
     title: string;
