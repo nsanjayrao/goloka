@@ -93,5 +93,77 @@
     "handle": "@krishnas_cuisine",
     "_title": "Krishna's Cuisine - vegetarian/prasadam cooking (166K subs)",
     "default_category": "Prasadam & Cooking"
+  },
+  {
+    "youtube_channel_id": "UCnD3dRJRtzt5bbkIxE8LVVA",
+    "handle": "@chaitanyacharanofficial",
+    "_title": "Chaitanya Charan Official (36.9K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCVBohU3S3fKk-pagBqYsfaQ",
+    "handle": "@myashraya",
+    "_title": "My Ashraya - Amogh Lila Prabhu (2.14M subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCYSvmuqB8zax0hyPkzYd5aQ",
+    "handle": "@bhaktivikasaswami",
+    "_title": "Bhakti Vikasa Swami (401K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCRGW8eva97zB4318vBsLUnQ",
+    "handle": "@devamritaswamimedia",
+    "_title": "Devamrita Swami Media (2.2K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCSTz9B0VBboVjUxWTZEeOtg",
+    "handle": "@indradyumnaswamiofficial",
+    "_title": "Indradyumna Swami Official (165K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UC8M2t-ln7lq5Pvmkm0izPsg",
+    "handle": "@niranjanaswamiofficial",
+    "_title": "Niranjana Swami Official (47.6K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCPoc6jnExJN4in1lE0YhO8Q",
+    "handle": "@mediakadambakananaswami",
+    "_title": "Kadamba Kanana Swami (26.4K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCDeloGv5S_NHVizd-DbNyGw",
+    "handle": "@sutapadas1349",
+    "_title": "Sutapa Das (5.56K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UC_oMVRN61d42Q0JpAHEwSBw",
+    "handle": "@girirajswamiofficial",
+    "_title": "Giriraj Swami Official (3.52K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCcINSh7PGNE_7wEXKeLFOiw",
+    "handle": "@jayapatakaswamiofficial",
+    "_title": "Jayapataka Swami (76.2K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UC1fi12IBsyyqRc5kAF-iCHg",
+    "handle": "@romapadaswamichannel",
+    "_title": "HH Romapada Swami (5.08K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCOW-P7JnJzDEq23gGKyyorg",
+    "handle": "@hdgoswami",
+    "_title": "H.D. Goswami - Hridayananda Das Goswami (6.88K subs)",
+    "default_category": "Lectures"
   }
 ]

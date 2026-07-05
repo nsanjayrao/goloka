@@ -22,6 +22,14 @@ import requests
 from dotenv import load_dotenv
 from supabase import create_client
 
+# Channel/video titles routinely contain Devanagari, Bengali, Tamil, etc.
+# (this catalog is full of them). Windows' default console codec (cp1252)
+# can't encode that and crashes on a plain print() - reconfigure stdout to
+# UTF-8 so logging never depends on the terminal's locale. GitHub Actions'
+# Linux runner is already UTF-8, so this is a no-op there.
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(encoding="utf-8")
+
 load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 YOUTUBE_API_KEY = os.environ.get("YOUTUBE_API_KEY", "")
@@ -85,7 +93,22 @@ CATEGORY_RULES = [
 
 def yt_get(endpoint: str, **params) -> dict:
     params["key"] = YOUTUBE_API_KEY
-    resp = requests.get(f"{YT_API}/{endpoint}", params=params, timeout=30)
+    # A `--full` backfill makes hundreds of paginated calls; a single dropped
+    # connection (seen in practice: WinError 10054 mid-run) otherwise kills the
+    # whole sync. 3 attempts with a short linear backoff is enough for a
+    # transient network blip without masking a real, persistent failure.
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            resp = requests.get(f"{YT_API}/{endpoint}", params=params, timeout=30)
+            break
+        except requests.exceptions.RequestException as exc:
+            last_exc = exc
+            if attempt < 2:
+                print(f"    yt_get {endpoint} network error, retrying: {exc}")
+                time.sleep(2 * (attempt + 1))
+    else:
+        raise last_exc
     if resp.status_code != 200:
         raise RuntimeError(f"YouTube API {endpoint} failed ({resp.status_code}): {resp.text[:500]}")
     return resp.json()
