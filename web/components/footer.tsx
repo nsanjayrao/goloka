@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { Container } from "@/components/container";
 import { LogoMark } from "@/components/icons/logo-mark";
 import { Ornament } from "@/components/ornament";
@@ -22,6 +24,17 @@ export function Footer() {
           YouTube player and links back to its source channel. All content belongs
           to its creators.
         </p>
+        <div className="flex items-center gap-4 text-sm text-text-muted">
+          <Link href="/about" className="transition-colors hover:text-accent">
+            About
+          </Link>
+          <a
+            href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion"
+            className="transition-colors hover:text-accent"
+          >
+            Suggest a channel
+          </a>
+        </div>
       </Container>
     </footer>
   );
