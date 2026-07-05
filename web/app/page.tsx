@@ -16,7 +16,7 @@ import {
   getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
-import { TOPIC_LIST } from "@/lib/topics";
+import { getActiveFestivalTopic, TOPIC_LIST } from "@/lib/topics";
 
 // Without this, Next.js bakes the page once at build time and it never
 // updates. `revalidate` = ISR: serve the cached page, rebuild it in the
@@ -30,8 +30,13 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 // loading state to write for this page.
 export default async function HomePage() {
   const homeTopics = TOPIC_LIST.filter((topic) => topic.showOnHomepage);
+  // Festival-aware rotation (owner decision 2026-07-05): during a topic's
+  // festivalWindow (lib/topics.ts - a yearly-recurring approximation, since
+  // real Vedic festival dates are lunar), its newest videos get an EXTRA
+  // shelf alongside the hand-picked Featured set below, not replacing it.
+  const activeFestival = getActiveFestivalTopic();
 
-  const [featured, latest, categories, topicRows, popular] = await Promise.all([
+  const [featured, latest, categories, topicRows, popular, festivalVideos] = await Promise.all([
     getFeaturedVideos(10),
     getLatestVideos(10),
     getCategoriesByRecency(),
@@ -42,6 +47,7 @@ export default async function HomePage() {
       }))
     ),
     getPopularVideos(12),
+    activeFestival ? getVideosPage({ titleKeywords: activeFestival.keywords }, 0, 12) : Promise.resolve([]),
   ]);
 
   if (latest.length === 0 && categories.length === 0) {
@@ -89,6 +95,20 @@ export default async function HomePage() {
       ? [
           <FadeUp key="featured">
             <CategoryRow title="Featured" videos={featured} />
+          </FadeUp>,
+        ]
+      : []),
+    // Festival shelf: only rendered while activeFestival's window is open
+    // AND it actually has matching videos - otherwise silently absent, same
+    // as every other conditional shelf on this page.
+    ...(activeFestival && festivalVideos.length > 0
+      ? [
+          <FadeUp key="festival">
+            <CategoryRow
+              title={`🪔 ${activeFestival.title}`}
+              href={`/topic/${activeFestival.slug}`}
+              videos={festivalVideos}
+            />
           </FadeUp>,
         ]
       : []),
