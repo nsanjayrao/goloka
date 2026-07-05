@@ -333,18 +333,34 @@ export async function getMoreFromCategory(
   }, []);
 }
 
-/** Title search, used by the /search page. Safe to call from the browser. */
+// Turns free-typed input into a prefix tsquery ("krishna prasadam" ->
+// "krishna:* & prasadam:*"), so a debounced search-as-you-type box still
+// matches on partial words. Postgres tsquery syntax reserves & | ! ( ) : *,
+// so those are stripped out of each word first (a lone "&" etc. would
+// otherwise be a syntax error, not a literal search term).
+function toPrefixTsQuery(input: string): string {
+  return input
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.replace(/[&|!():*]/g, ""))
+    .filter(Boolean)
+    .map((word) => `${word}:*`)
+    .join(" & ");
+}
+
+/** Full-text search over title + description (the generated `search_tsv`
+ * column, db/schema.sql), used by the /search page. Safe to call from the
+ * browser. Matches whole word-prefixes rather than arbitrary substrings
+ * (standard search-box behavior) - ordered by recency like every other list
+ * in the app, not by text relevance. */
 export async function searchVideos(query: string, limit = 24): Promise<Video[]> {
-  const trimmed = query.trim();
-  if (!trimmed) return [];
+  const tsQuery = toPrefixTsQuery(query);
+  if (!tsQuery) return [];
   return safely(async () => {
-    // Escape ilike's own wildcard characters so a literal "%" or "_" in
-    // someone's search doesn't act as a pattern wildcard.
-    const escaped = trimmed.replace(/[%_]/g, (char) => `\\${char}`);
     const { data, error } = await supabase!
       .from("videos")
       .select(VIDEO_COLUMNS)
-      .ilike("title", `%${escaped}%`)
+      .textSearch("search_tsv", tsQuery, { config: "simple" })
       .order("published_at", { ascending: false })
       .limit(limit);
     if (error) throw error;

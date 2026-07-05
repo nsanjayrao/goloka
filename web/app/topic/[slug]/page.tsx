@@ -1,29 +1,45 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 
 import { CategoryBanner } from "@/components/category-banner";
 import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
 import { VideoGrid } from "@/components/video-grid";
 import { CATEGORY_PAGE_SIZE, getVideoCount, getVideosPage } from "@/lib/data";
-import { TOPICS } from "@/lib/topics";
+import { TOPIC_LIST, TOPICS } from "@/lib/topics";
 
-// Static + ISR like `/` and `/browse`: the collection is a fixed saved search
-// (no route params), so we serve it cached and rebuild at most every 30 min to
-// pick up newly synced Radha videos. "Load more" is still live (VideoGrid
-// fetches further pages client-side).
+// Static + ISR like `/` and `/browse`: each topic is a fixed saved search (no
+// per-request params beyond the slug), so it's served cached and rebuilt at
+// most every 30 min to pick up newly synced videos. "Load more" is still live
+// (VideoGrid fetches further pages client-side).
 export const revalidate = 1800;
 
-const topic = TOPICS.radharani;
+type Props = { params: Promise<{ slug: string }> };
 
-export const metadata: Metadata = {
-  title: topic.title,
-  description: topic.subtitle,
-  alternates: { canonical: `/topic/${topic.slug}` },
-};
+// Pre-renders one page per registry entry; any other slug 404s via notFound()
+// below rather than rendering an empty "topic" page for a typo'd URL.
+export function generateStaticParams() {
+  return TOPIC_LIST.map((topic) => ({ slug: topic.slug }));
+}
 
-export default async function RadharaniTopicPage() {
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const topic = TOPICS[slug];
+  if (!topic) return {};
+  return {
+    title: topic.title,
+    description: topic.subtitle,
+    alternates: { canonical: `/topic/${topic.slug}` },
+  };
+}
+
+export default async function TopicPage({ params }: Props) {
+  const { slug } = await params;
+  const topic = TOPICS[slug];
+  if (!topic) notFound();
+
   // Only the title keywords - no category/channel/duration - so this gathers
-  // every Radha-themed video across the whole catalog.
+  // every matching video across the whole catalog.
   const filters = { titleKeywords: topic.keywords };
 
   const [count, videos, bannerVideos] = await Promise.all([

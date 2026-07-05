@@ -16,7 +16,7 @@ import {
   getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
-import { TOPICS } from "@/lib/topics";
+import { TOPIC_LIST } from "@/lib/topics";
 
 // Without this, Next.js bakes the page once at build time and it never
 // updates. `revalidate` = ISR: serve the cached page, rebuild it in the
@@ -29,11 +29,18 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 // server, send finished HTML to the browser" - there's no client-side
 // loading state to write for this page.
 export default async function HomePage() {
-  const [featured, latest, categories, radharani, popular] = await Promise.all([
+  const homeTopics = TOPIC_LIST.filter((topic) => topic.showOnHomepage);
+
+  const [featured, latest, categories, topicRows, popular] = await Promise.all([
     getFeaturedVideos(10),
     getLatestVideos(10),
     getCategoriesByRecency(),
-    getVideosPage({ titleKeywords: TOPICS.radharani.keywords }, 0, 12),
+    Promise.all(
+      homeTopics.map(async (topic) => ({
+        topic,
+        videos: await getVideosPage({ titleKeywords: topic.keywords }, 0, 12),
+      }))
+    ),
     getPopularVideos(12),
   ]);
 
@@ -88,19 +95,16 @@ export default async function HomePage() {
     <FadeUp key="top-ten">
       <TopTenRow videos={latest.slice(0, 10)} />
     </FadeUp>,
-    // The Śrī Rādhārāṇī topic collection - shown high on the page, links to
-    // its full /topic/radharani grid. Spread in only when it has videos.
-    ...(radharani.length > 0
-      ? [
-          <FadeUp key="radharani">
-            <CategoryRow
-              title={TOPICS.radharani.title}
-              href={`/topic/${TOPICS.radharani.slug}`}
-              videos={radharani}
-            />
-          </FadeUp>,
-        ]
-      : []),
+    // Topic collections flagged `showOnHomepage` (lib/topics.ts) - shown high
+    // on the page, each linking to its full /topic/<slug> grid. A topic with
+    // no matching videos yet is simply skipped.
+    ...topicRows
+      .filter(({ videos }) => videos.length > 0)
+      .map(({ topic, videos }) => (
+        <FadeUp key={`topic-${topic.slug}`}>
+          <CategoryRow title={topic.title} href={`/topic/${topic.slug}`} videos={videos} />
+        </FadeUp>
+      )),
     // "Most Watched" (DESIGN.md discovery): the top videos by YouTube view
     // count, once the worker has enriched view_count. Spread in only when
     // populated so it's invisible on a fresh/empty DB.
