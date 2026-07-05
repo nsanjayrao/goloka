@@ -12,30 +12,37 @@ temple at dusk." Never generic-SaaS, never cluttered like YouTube.
    no boxes-inside-boxes.
 2. **Calm, not busy.** Generous whitespace, max 2 typefaces, one accent
    color used sparingly. If a screen feels "full", remove something.
-3. **Light, Apple-like canvas.** White background, near-black text; the
-   content (thumbnails, hero artwork, poster cards) carries all the color,
-   exactly like tv.apple.com. Owner decision 2026-07-03: dark mode is
-   REMOVED — the app is light-only, no theme toggle.
+3. **Light, warm, Apple-like canvas.** Warm-ivory background, white cards,
+   near-black text; the content (thumbnails, hero artwork, poster cards)
+   carries all the color. Owner decision 2026-07-03: dark mode is
+   REMOVED — the app is light-only, no theme toggle. 2026-07-05 premium
+   pass: the canvas warmed from pure white to ivory (#F8F6F2) with white
+   cards floating on it — Calm/Headspace warmth on an Apple structure.
 4. **Fast is a feature.** Skeletons over spinners, next/image everywhere,
    no layout shift, no heavy animation libraries beyond what's specified.
 5. **Mobile is the primary device.** Design at 390px first, enhance upward.
 
 ## 2. Color tokens (CSS variables via Tailwind)
 
-Single light palette (Apple-style; dark mode removed 2026-07-03):
-- `--bg`         #FFFFFF   pure white (page background, like tv.apple.com)
-- `--surface`    #F5F5F7   Apple gray — bands, nav, inputs
-- `--surface-2`  #E8E8ED   hover/elevated states, badges
-- `--border`     #D2D2D7   1px hairlines only
-- `--text`       #1D1D1F   near-black (primary text)
-- `--text-muted` #6E6E73   secondary text, metadata
-- `--accent`     #B97A16   deepened saffron (AA on white) — accent TEXT,
-                           borders, icons, active states, focus rings
-- `--accent-strong` #96620F darker saffron for SOLID button fills only —
-                           `--accent-ink` on plain `--accent` is 3.44:1
-                           (fails AA); on this it's ~5:1 (2026-07-04)
+Single light palette (dark mode removed 2026-07-03; warmed to the
+white-on-ivory "premium pass" palette 2026-07-05):
+- `--bg`         #F8F6F2   warm ivory — the page canvas
+- `--surface`    #FFFFFF   white — cards, bands, inputs float ON the ivory
+- `--surface-2`  #F0ECE2   warm sand — hover/elevated states, badges
+- `--border`     rgba(0,0,0,0.06)  hairlines only, never heavier
+- `--text`       #191919   near-black (primary text)
+- `--text-muted` #6B6B6B   secondary text, metadata
+- `--accent`     #B8892F   gold — icons, borders, chips, LARGE accent text
+                           only (≥24px, or ≥19px bold); small gold text on
+                           ivory/white fails AA — use `--accent-strong`
+- `--accent-hover` #D4AF37 brighter gold for hover/active states of gold
+                           ELEMENTS (icons, borders, indicators) — never
+                           for text on light backgrounds
+- `--accent-strong` #8A6420 deep gold for SMALL accent text and SOLID
+                           button fills (`--accent-ink` on it stays ~AA;
+                           same reasoning as the 2026-07-04 fix)
 - `--accent-2`   #1F8577   deep peacock teal — rare, small highlights only
-- `--accent-ink` #FFFAF1   text on saffron fills
+- `--accent-ink` #FFFAF1   text on gold fills
 
 The top bar is the ONE black element on the light page (see §4 App
 shell): its text/icons render white via a local CSS-var override on the
@@ -49,14 +56,39 @@ contrast for every text/background pair.
 
 ## 3. Typography
 
-- **Display**: Fraunces (variable, Google Fonts) — page titles, section
-  headings, the wordmark. Slightly tightened letter-spacing, weight 500–600.
-- **Body/UI**: Inter (variable) — everything else. Body 15–16px,
-  line-height 1.6; metadata 13px muted.
-- Section headings are the personality carriers: e.g. "Kirtans & Bhajans" in
-  Fraunces 28–32px. Never all-caps body text.
+- **Display**: Fraunces (variable, Google Fonts) — MAJOR titles only:
+  hero title, page titles, section headings, the wordmark. Slightly
+  tightened letter-spacing, weight 500–600. (2026-07-05: owner brief
+  suggested Playfair Display; Fraunces stays — it already fills that
+  editorial-serif role and is welded to the approved lotus lockup.
+  Swapping it would be a rebrand, which the same brief forbids.)
+- **Body/UI**: Inter (variable) — everything else, loaded via next/font.
+  Weights 400/500/600/700 only.
+- **Hierarchy** (2026-07-05 premium pass — desktop / mobile):
+  - Hero title: 64px / 40px, Fraunces, max 2 lines (clamped)
+  - Hero subtitle: 20px / 16px, Inter 400, muted-on-scrim
+  - Section title: 34px / 26px, Fraunces 500
+  - Card title: 16px Inter 500, one-line clamp
+  - Card metadata: 13px Inter 400 muted
+  - Buttons: 16px Inter 500
+- Section headings are the personality carriers. Never all-caps body text
+  (the letter-spaced eyebrow label is the one sanctioned exception).
 - Sanskrit/Bengali terms render in the same fonts (both cover Latin
   transliteration); do not add extra font files without need.
+
+## 3.5 Space, shape & elevation (2026-07-05)
+
+- **Spacing scale** — every margin/padding/gap comes off this scale, no
+  magic numbers: 4 / 8 / 12 / 16 / 24 / 32 / 40 / 48 / 64 / 80.
+  Home-page sections sit 64–80px apart on desktop, 48px on mobile —
+  whitespace is the luxury; if a screen feels full, remove something.
+- **Radius**: cards 18px; buttons/chips/pills fully rounded (9999);
+  hero and full-bleed media bands 24px; surface sections/banners 20px.
+- **Elevation** — soft, warm, never harsh. Two recipes only:
+  - resting card: `0 1px 2px rgba(25,25,25,.04), 0 8px 24px rgba(25,25,25,.06)`
+  - lifted (hover): `0 2px 4px rgba(25,25,25,.05), 0 16px 40px rgba(25,25,25,.10)`
+  Nothing darker; no colored shadows; no `shadow-2xl` outside the watch
+  page's player.
 
 ## 4. Layout & pages (Phase 1b scope)
 
@@ -71,9 +103,12 @@ contrast for every text/background pair.
   artwork still bleeds up underneath it and shows through the blur.
 - Mobile: top bar shrinks to the lockup + search icon; **bottom tab bar**
   (Home, Browse, Search) with safe-area padding — this is what makes the
-  PWA feel native. The tab bar matches the header's black glass
-  (black/80 + blur, white/60 inactive, bright saffron active) so the
-  phone's chrome is dark on both edges, Apple-style (2026-07-03).
+  PWA feel native. The tab bar keeps the header's black-glass identity
+  (owner decision 2026-07-03) with the 2026-07-05 premium pass: deeper
+  blur (~20px), rounded TOP corners (20px) so it reads as a floating
+  glass slab, gold active state with a small animated indicator that
+  springs between tabs, and a gentle icon scale on selection — all under
+  `prefers-reduced-motion` guards.
 - Max content width 1280px, horizontal padding 16/24/48px (sm/md/lg).
 
 **Home** (structure mirrors tv.apple.com's home — hero carousel, Top 10,
@@ -87,14 +122,24 @@ mixed shelf types, one promo band; owner-provided reference screenshot,
    they just never headline.
    Full-bleed thumbnail at the highest available resolution
    (`maxresdefault.jpg` 1280px, client-side fallback to `hqdefault.jpg` —
-   never render a 480px image full-bleed), height ~78vh desktop / ~55vh
-   mobile (min 360px), bleeding up underneath the transparent top bar.
-   Dual scrim as before (tall bottom bg-fade + subtle left wash). Slide
-   content bottom-LEFT: category chip, Fraunces title (~48px desktop),
-   "Watch now" button. Pagination dots bottom-center (real buttons,
-   accent = active, aria-labels); auto-advance every ~7s with a plain CSS
-   crossfade (opacity, ~500ms), paused while hovered or focus is inside,
-   and disabled under `prefers-reduced-motion`. No heavy carousel library.
+   never render a 480px image full-bleed), height ~78vh desktop / ~70vh
+   mobile (min 360px) — the hero owns the first mobile screen — bleeding
+   up underneath the translucent top bar. Dual scrim (tall bottom bg-fade
+   into the ivory page + subtle left wash + top fade under the bar).
+   Slide content bottom-LEFT, in order: the gold letter-spaced eyebrow
+   ("WELCOME TO GOLOKA"), Fraunces title 64px desktop / 40px mobile
+   clamped to MAX 2 lines, a one-line 20px subtitle (the category's
+   personality line from category-meta.ts, muted), then two CTAs — the
+   gold pill "Watch now" (primary) and a quiet "Browse" ghost pill
+   (secondary). Pagination dots bottom-center (real buttons, accent =
+   active, aria-labels).
+   **Motion** (2026-07-05): auto-advance every ~7s with a ~500ms
+   crossfade, plus a slow Ken Burns drift on the active slide's image —
+   scale 1.0 → ~1.06 over ~14s, scale ONLY (no pan), ease-linear. Paused
+   while hovered or focus is inside; BOTH the crossfade auto-advance and
+   Ken Burns are disabled under `prefers-reduced-motion`. No floating
+   particles, no parallax — stillness is the brand. No heavy carousel
+   library.
 2. **"Featured" shelf** (curated, optional — 2026-07-03) — a hand-picked
    row of videos flagged `featured` in the database, rendered FIRST, above
    Top 10: curation outranks recency, the Apple way. Renders nothing when
@@ -130,19 +175,34 @@ mixed shelf types, one promo band; owner-provided reference screenshot,
    band, lotus mark + one-line tagline ("Every lecture, kirtan and
    festival — in one place.") + "Browse everything →" button. Quiet, no
    imagery collage, no accent fill.
-7. **Row order**: Featured (if any) first, then Top 10, then category
-   shelves by recency, with the browse shelf slotted after the 2nd
-   category shelf and the promo band after the 3rd.
+7. **Row order**: Continue Watching (client-side, when history exists),
+   Featured (if any), festival shelf (when a window is open), then Top
+   10, topic shelves, Most Watched, then category shelves by recency,
+   with the browse shelf slotted after the 2nd category shelf and the
+   promo band after the 3rd.
+8. **Row variety** (2026-07-05 — rows must not all look identical):
+   the page mixes FOUR shelf shapes, each earned by its content, not
+   decoration: (a) the **editorial lead** — Featured's first card
+   renders large (~2x span) with title/meta overlaid on its artwork,
+   remaining featured cards standard beside/below it; (b) **standard
+   16:9 rows** — categories, topics, Most Watched; (c) the **poster
+   row** — the existing 2:3 duotone browse shelf; (d) the **Top 10
+   row** with rank badges. Section titles at 34px Fraunces with 64–80px
+   between sections (§3.5). No new shelf shape without a content reason.
 
 **Video card** (the most important component — build it once, perfect)
-- 16:9 thumbnail, rounded-xl, **borderless** (Apple TV: the artwork IS
-  the card — no hairline box around it); duration badge bottom-right
-  (surface-2 pill, 12px). Below: ONE-line clamped title (15px medium) +
-  one muted 13px meta line (channel · relative date).
-- Hover (desktop, Apple-TV lift): scale 1.03 + `shadow-lg` + thumbnail
-  brightness nudged up (~1.05) + a faint `ring-1 ring-text/20` so the
-  lifted card still reads on same-tone thumbnails, 200ms ease-out.
-  Nothing heavier than `shadow-lg`.
+- 16:9 thumbnail, **18px radius**, borderless artwork (Apple TV: the
+  artwork IS the card) sitting with the soft RESTING shadow from §3.5;
+  the image fades in on load (skeleton → 300ms opacity, zero layout
+  shift). Duration pill bottom-right (12px, surface pill); rank badge
+  top-left when in the Top 10 row. Below: ONE-line clamped title (16px
+  Inter 500) + one muted 13px meta line (channel · relative date ·
+  compact views), truncated to one line.
+- Hover (desktop): scale 1.03 + the LIFTED shadow from §3.5 + thumbnail
+  brightness ~1.05, on a soft spring (~250ms, slight settle) — an
+  Apple-TV lift with warmth, never a bounce. Tap on touch: scale 0.98
+  press-in. Both respect `prefers-reduced-motion` (fall back to a plain
+  opacity/shadow change).
 - **Display titles are cleaned, never raw** (`cleanTitle()` in
   `web/lib/format.ts`, 2026-07-03): hashtags stripped, whitespace
   collapsed, leading/trailing separator junk trimmed, ALL-CAPS titles
@@ -202,27 +262,50 @@ mixed shelf types, one promo band; owner-provided reference screenshot,
 
 **Search** (`/search`)
 - Instant results as you type (client query on Supabase, debounced 300ms),
-  same card grid.
-- **Resting state** (before any query, 2026-07-03 — the page is never a
-  lonely input box): the search input, then category suggestion chips,
-  then a **"Newest additions"** grid of the ~10 newest videos (reuses
-  `getLatestVideos`, server-fetched). This replaces the old bare
-  "search for a lecture…" empty state.
+  same card grid. Full-text, relevance-ranked (search_videos_ranked RPC).
+- **The bar** (2026-07-05): a floating glass input — 44px tall, fully
+  rounded, white/70 + backdrop-blur, hairline border, soft resting
+  shadow; the gold focus ring on focus. It is the page's one hero
+  element; everything else sits quietly below it.
+- **Resting state** (before any query — the page is never a lonely input
+  box): the bar, then **Recent searches** (localStorage, max 6, same
+  zero-backend pattern as Continue Watching; renders nothing until the
+  visitor has searched), then **Popular** chips seeded from the topic
+  registry + category names, then the "Newest additions" grid (~10
+  newest videos, server-fetched).
 - **No-results state**: the gentle lotus line-icon + devotional copy +
   the same suggestion chips.
 
 ## 5. Motion
 
-- Framer Motion allowed, sparingly: fade-up 12px on section entry
-  (once, 250ms), card hover as above, page transitions ≤200ms fade.
-- Skeleton shimmer for loading rows/grids (match card dimensions exactly —
-  zero layout shift). No parallax, no scroll-jacking, no kinetic text.
+The sanctioned set (2026-07-05 premium pass — grown from the original
+single fade-up, still deliberately small). One spring character
+everywhere: soft, slightly damped, ~250ms, never bouncy. EVERY item
+below degrades gracefully under `prefers-reduced-motion` (to opacity
+changes or nothing).
+
+- **Section entry**: fade-up 12px, once, 250ms (unchanged).
+- **Card hover/tap**: the §4 lift/press-in springs.
+- **Hero**: 7s crossfade + the slow Ken Burns scale drift (§4.1).
+- **Tab bar**: gold indicator springs between tabs; icon scale on select.
+- **Skeletons**: shimmer matching final dimensions exactly — zero layout
+  shift; images fade in 300ms when loaded.
+- **Page transitions**: ≤200ms fade.
+
+Explicitly FORBIDDEN (the "peaceful, not flashy" line): floating
+particles, button ripples, scroll parallax, scroll-jacking, kinetic
+text, anything that moves without the user having caused it (the hero
+rotation being the one exception). Stillness is the brand.
 
 ## 6. Devotional identity touches (subtle, not kitsch)
 
-- Lockup: the thousand-petal lotus mark (`components/icons/logo-mark.tsx`)
-  beside the "Goloka" wordmark in Fraunces with the accent-colored period:
-  `Goloka.` The mark also stands alone as the favicon and PWA app icon.
+- Lockup: the thousand-petal lotus mark, "Concept A — Thousand-Petal
+  Bloom" (2026-07-04; `components/icons/logo-mark.tsx`): two offset gold
+  petal rings around a hexagonal saffron pericarp, fixed gold-gradient
+  palette (NOT currentColor — it reads on both the black bar and the
+  ivory page), beside the "Goloka" wordmark in Fraunces with the
+  accent-colored period: `Goloka.` The mark also stands alone as the
+  favicon and PWA app icon (mirrored SVGs — see CLAUDE.md).
 - A single-line lotus SVG divider used max once per page (lives in empty
   states — owner decision; the footer instead carries the logo lockup +
   a one-line "index, not a host" attribution).
@@ -253,10 +336,11 @@ mixed shelf types, one promo band; owner-provided reference screenshot,
   accent), used at most twice per page — the promo band and the footer.
   Sparse is the point; this is the "not kitsch" line.
 - NO: om/deity imagery as UI decoration, gradients of orange everywhere,
-  devotional clip-art, autoplaying audio. (Amendment pending: owner has
-  chosen to replace the lotus mark with a Krishna-with-flute emblem —
-  Phase D Track 2, blocked on a clean asset; the no-deity-imagery rule
-  will be revised to record that decision when the emblem lands.)
+  devotional clip-art, autoplaying audio. (Historical note: a
+  Krishna-with-flute emblem was tried as the brand mark on 2026-07-04
+  and REJECTED by the owner after seeing it in place — the detailed
+  scene didn't read at small sizes. The lotus stays; the no-deity-
+  imagery rule stands.)
 
 ## 7. Tech constraints
 
