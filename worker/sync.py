@@ -135,6 +135,22 @@ def fetch_playlist_videos(playlist_id: str, max_pages: int) -> list[dict]:
     return videos
 
 
+# Owner decision 2026-07-05: Goloka indexes videos, not Shorts/reels. YouTube
+# Shorts don't carry an explicit flag from the videos.list API (only duration
+# and, often, a "#shorts" tag the creator adds), so this is a best-effort
+# detector, not a certainty - matches YouTube's own Shorts window (originally
+# 60s, expanded to 3 min in 2024). A rare non-Short video under 3 minutes
+# could still be caught by this; there's no way to fully rule that out with
+# the data the API exposes.
+SHORTS_MAX_SECONDS = 180
+
+
+def is_short(title: str, duration_seconds: int | None) -> bool:
+    if "#shorts" in title.lower():
+        return True
+    return duration_seconds is not None and duration_seconds < SHORTS_MAX_SECONDS
+
+
 def parse_iso_duration(iso: str) -> int | None:
     m = re.fullmatch(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?", iso or "")
     if not m:
@@ -355,12 +371,23 @@ def main() -> None:
             v for v in videos
             if v["youtube_video_id"] not in known_ids
             and v["youtube_video_id"] not in EXCLUDED_VIDEO_IDS
+            # Cheap pre-filter on the "#shorts" tag alone (duration isn't
+            # known yet - that's the second filter below, after fetching it).
+            and not is_short(v["title"], None)
         ]
         print(f"    fetched {len(videos)}, new {len(new_videos)}")
         if not new_videos:
             continue
 
         details = fetch_video_details([v["youtube_video_id"] for v in new_videos])
+        # Goloka indexes videos, not Shorts/reels (owner decision 2026-07-05) -
+        # duration is only known now, so this is where the real cutoff applies.
+        new_videos = [
+            v for v in new_videos
+            if not is_short(v["title"], details.get(v["youtube_video_id"], {}).get("duration"))
+        ]
+        if not new_videos:
+            continue
         tags = classify_videos(new_videos, [default_category] * len(new_videos))
         rows = []
         for v, tag in zip(new_videos, tags):
