@@ -206,6 +206,43 @@ def classify_with_rules(title: str, description: str) -> str | None:
     return None
 
 
+# Groq returns the spoken language as free text ("English", "en", "Hindi",
+# "hindi", "hi", even typos like "Bangali") - normalizing at write time is what
+# makes a language FILTER usable later; without this, "English" and "en" would
+# show up as two separate filter chips for the same language.
+LANGUAGE_ALIASES = {
+    "en": "English", "eng": "English", "english": "English",
+    "hi": "Hindi", "hin": "Hindi", "hindi": "Hindi",
+    "bn": "Bengali", "ben": "Bengali", "bengali": "Bengali", "bangali": "Bengali", "bangla": "Bengali",
+    "ta": "Tamil", "tam": "Tamil", "tamil": "Tamil",
+    "te": "Telugu", "tel": "Telugu", "telugu": "Telugu",
+    "gu": "Gujarati", "guj": "Gujarati", "gujarati": "Gujarati",
+    "mr": "Marathi", "mar": "Marathi", "marathi": "Marathi",
+    "kn": "Kannada", "kan": "Kannada", "kannada": "Kannada",
+    "ml": "Malayalam", "mal": "Malayalam", "malayalam": "Malayalam",
+    "pa": "Punjabi", "pan": "Punjabi", "punjabi": "Punjabi",
+    "or": "Odia", "ori": "Odia", "odia": "Odia", "oriya": "Odia",
+    "es": "Spanish", "spanish": "Spanish",
+    "pt": "Portuguese", "portuguese": "Portuguese",
+    "ru": "Russian", "russian": "Russian",
+    "fr": "French", "french": "French",
+    "de": "German", "german": "German",
+    "sa": "Sanskrit", "sanskrit": "Sanskrit",
+}
+
+
+def normalize_language(lang: str | None) -> str | None:
+    if not lang or not isinstance(lang, str):
+        return None
+    key = lang.strip().lower()
+    if key in ("null", "none", "n/a", "unknown", ""):
+        return None
+    # Fall back to title-casing whatever the model returned, so even a
+    # language missing from the alias table above still gets consistent
+    # casing instead of a raw, unpredictable string.
+    return LANGUAGE_ALIASES.get(key, lang.strip().title())
+
+
 def classify_batch_with_groq(items: list[dict]) -> list[dict | None]:
     """Classify a BATCH of videos in one Groq call, with exponential backoff on
     429. `items` = [{"title","description"}]. Returns a list aligned by index,
@@ -251,12 +288,7 @@ def classify_batch_with_groq(items: list[dict]) -> list[dict | None]:
             for row in data.get("results", []):
                 idx = row.get("i")
                 if isinstance(idx, int) and 0 <= idx < len(items) and row.get("category") in CATEGORIES:
-                    # The model often returns the literal string "null"/"none"
-                    # for unknown language - store a real None instead.
-                    lang = row.get("language")
-                    if isinstance(lang, str) and lang.strip().lower() in ("null", "none", "n/a", "unknown", ""):
-                        lang = None
-                    out[idx] = {"category": row["category"], "language": lang}
+                    out[idx] = {"category": row["category"], "language": normalize_language(row.get("language"))}
             return out
         except Exception as exc:  # never fail the sync over tagging
             print(f"    groq batch skipped: {exc}")
@@ -286,7 +318,12 @@ def classify_videos(videos: list[dict], fallbacks: list[str]) -> list[dict]:
                 target = llm_idx[start + j]
                 results[target]["category"] = tag["category"]
                 results[target]["language"] = tag["language"]
-        time.sleep(0.5)  # be gentle between batches
+        # Proactive pacing, on top of classify_batch_with_groq's reactive 429
+        # backoff: a sustained multi-thousand-video pass (e.g. --enrich over
+        # the whole catalog) hit the free tier's rate limit constantly at
+        # 0.5s between batches. 2s keeps well clear of it without making a
+        # long run agonizingly slow.
+        time.sleep(2.0)
 
     for i, r in enumerate(results):
         if not r["category"]:

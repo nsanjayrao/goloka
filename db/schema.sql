@@ -93,3 +93,53 @@ as $$
 $$;
 
 grant execute on function distinct_categories() to anon, authenticated;
+
+-- Relevance-ranked search (Tier 1 discovery upgrade). The plain
+-- `search_tsv @@ tsquery` match in web/lib/data.ts's searchVideos() orders by
+-- recency, not how well a video matches the query - PostgREST/supabase-js
+-- can't order by a computed ts_rank() expression on a table query (it isn't a
+-- real column and the query varies per search), so that needs an RPC.
+-- `search_query` must already be valid tsquery syntax (the frontend already
+-- builds one, e.g. "krishna:* & prasadam:*" - see toPrefixTsQuery in
+-- lib/data.ts). Returns the channel join as flat `channel_*` columns since a
+-- SQL function can't produce PostgREST's automatic embedded-relation shape;
+-- lib/data.ts's searchVideos() reassembles them into the nested `channel`
+-- object the rest of the app expects. `security invoker` (the default) keeps
+-- the "public read videos"/"public read channels" RLS policies in effect.
+create or replace function search_videos_ranked(search_query text, result_limit int default 24)
+returns table (
+  id bigint,
+  youtube_video_id text,
+  channel_id bigint,
+  title text,
+  description text,
+  published_at timestamptz,
+  duration_seconds integer,
+  view_count bigint,
+  thumbnail_url text,
+  category text,
+  language text,
+  tags jsonb,
+  featured boolean,
+  created_at timestamptz,
+  channel_title text,
+  channel_handle text,
+  channel_thumbnail_url text
+)
+language sql
+stable
+as $$
+  select
+    v.id, v.youtube_video_id, v.channel_id, v.title, v.description, v.published_at,
+    v.duration_seconds, v.view_count, v.thumbnail_url, v.category, v.language, v.tags,
+    v.featured, v.created_at,
+    c.title, c.handle, c.thumbnail_url
+  from videos v
+  left join channels c on c.id = v.channel_id
+  where v.search_tsv @@ to_tsquery('simple', search_query)
+  order by ts_rank(v.search_tsv, to_tsquery('simple', search_query)) desc,
+           v.published_at desc nulls last
+  limit result_limit;
+$$;
+
+grant execute on function search_videos_ranked(text, int) to anon, authenticated;

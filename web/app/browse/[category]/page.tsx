@@ -9,6 +9,7 @@ import { VideoGrid } from "@/components/video-grid";
 import {
   CATEGORY_PAGE_SIZE,
   getChannelsInCategory,
+  getLanguagesInCategory,
   getVideoCount,
   getVideosByCategory,
   getVideosPage,
@@ -24,7 +25,7 @@ const DURATION_VALUES: DurationBucket[] = ["short", "medium", "long"];
 // so both need `await`.
 type Props = {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ channel?: string; duration?: string; sort?: string }>;
+  searchParams: Promise<{ channel?: string; duration?: string; sort?: string; language?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -48,12 +49,13 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const duration = DURATION_VALUES.includes(query.duration as DurationBucket)
     ? (query.duration as DurationBucket)
     : undefined;
+  const language = query.language || undefined;
   // Sort only reorders the same set, so it's NOT counted as an "active filter"
   // for the "Showing X of Y" line below (that's about narrowing the set).
   const sort: "recent" | "popular" = query.sort === "popular" ? "popular" : "recent";
 
-  const filters = { category, channelId, duration, sort };
-  const hasActiveFilters = channelId !== undefined || duration !== undefined;
+  const filters = { category, channelId, duration, language, sort };
+  const hasActiveFilters = channelId !== undefined || duration !== undefined || language !== undefined;
 
   // `categoryCount` decides whether the category itself exists/has any
   // content at all (the full-page empty state below) and is the number the
@@ -63,9 +65,10 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   // `filteredCount` is shown near the grid ONLY when filters narrow the
   // set, so the banner's count never lies but the filtered total is still
   // visible.
-  const [categoryCount, channels, videos, bannerVideos] = await Promise.all([
+  const [categoryCount, channels, languages, videos, bannerVideos] = await Promise.all([
     getVideoCount({ category }),
     getChannelsInCategory(category),
+    getLanguagesInCategory(category),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
     getVideosByCategory(category, 1),
   ]);
@@ -89,13 +92,15 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         subtitle={categorySubtitle(category)}
       />
 
-      {channels.length > 0 && (
+      {(channels.length > 0 || languages.length > 0) && (
         <div className="mt-6">
           <FilterChips
             category={category}
             channels={channels}
+            languages={languages}
             activeChannelId={channelId}
             activeDuration={duration}
+            activeLanguage={language}
             activeSort={sort}
           />
         </div>
@@ -111,7 +116,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         {/* `key` forces a remount (and fresh state) whenever the filters
             change, since VideoGrid otherwise only reads `initialVideos` on
             first mount. */}
-        <VideoGrid key={`${channelId ?? "all"}-${duration ?? "all"}-${sort}`} initialVideos={videos} filters={filters} />
+        <VideoGrid
+          key={`${channelId ?? "all"}-${duration ?? "all"}-${language ?? "all"}-${sort}`}
+          initialVideos={videos}
+          filters={filters}
+        />
       </div>
     </Container>
   );

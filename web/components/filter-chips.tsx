@@ -23,14 +23,21 @@ const DURATION_OPTIONS: { value: DurationBucket; label: string }[] = [
 export function FilterChips({
   category,
   channels,
+  languages,
   activeChannelId,
   activeDuration,
+  activeLanguage,
   activeSort = "recent",
 }: {
   category: string;
   channels: { id: number; title: string }[];
+  /** Languages present in this category (lib/data.ts's getLanguagesInCategory) -
+   * omitted (empty array) until the worker's Groq classification has
+   * populated `language` for enough videos to be worth a filter row. */
+  languages: string[];
   activeChannelId?: number;
   activeDuration?: DurationBucket;
+  activeLanguage?: string;
   activeSort?: SortOption;
 }) {
   const basePath = `/browse/${encodeURIComponent(category)}`;
@@ -38,10 +45,16 @@ export function FilterChips({
   // Build a URL from the FULL next filter state, so changing one chip never
   // silently drops the others. "recent" is the default, so it's left out of
   // the query to keep the canonical URL clean.
-  function hrefFor(next: { channel?: number; duration?: DurationBucket; sort: SortOption }) {
+  function hrefFor(next: {
+    channel?: number;
+    duration?: DurationBucket;
+    language?: string;
+    sort: SortOption;
+  }) {
     const params = new URLSearchParams();
     if (next.channel) params.set("channel", String(next.channel));
     if (next.duration) params.set("duration", next.duration);
+    if (next.language) params.set("language", next.language);
     if (next.sort !== "recent") params.set("sort", next.sort);
     const query = params.toString();
     return query ? `${basePath}?${query}` : basePath;
@@ -52,7 +65,12 @@ export function FilterChips({
       {SORT_OPTIONS.map((option) => (
         <Link
           key={option.value}
-          href={hrefFor({ channel: activeChannelId, duration: activeDuration, sort: option.value })}
+          href={hrefFor({
+            channel: activeChannelId,
+            duration: activeDuration,
+            language: activeLanguage,
+            sort: option.value,
+          })}
           className={chipClass(activeSort === option.value)}
         >
           {option.label}
@@ -63,7 +81,12 @@ export function FilterChips({
         return (
           <Link
             key={channel.id}
-            href={hrefFor({ channel: active ? undefined : channel.id, duration: activeDuration, sort: activeSort })}
+            href={hrefFor({
+              channel: active ? undefined : channel.id,
+              duration: activeDuration,
+              language: activeLanguage,
+              sort: activeSort,
+            })}
             className={chipClass(active)}
           >
             {channel.title}
@@ -75,10 +98,32 @@ export function FilterChips({
         return (
           <Link
             key={option.value}
-            href={hrefFor({ channel: activeChannelId, duration: active ? undefined : option.value, sort: activeSort })}
+            href={hrefFor({
+              channel: activeChannelId,
+              duration: active ? undefined : option.value,
+              language: activeLanguage,
+              sort: activeSort,
+            })}
             className={chipClass(active)}
           >
             {option.label}
+          </Link>
+        );
+      })}
+      {languages.map((language) => {
+        const active = activeLanguage === language;
+        return (
+          <Link
+            key={language}
+            href={hrefFor({
+              channel: activeChannelId,
+              duration: activeDuration,
+              language: active ? undefined : language,
+              sort: activeSort,
+            })}
+            className={chipClass(active)}
+          >
+            {language}
           </Link>
         );
       })}

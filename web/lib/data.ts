@@ -206,6 +206,7 @@ export async function getVideoCount(filters: Partial<VideoPageFilters> = {}): Pr
     let query = supabase!.from("videos").select("*", { count: "exact", head: true });
     if (filters.category) query = query.eq("category", filters.category);
     if (filters.channelId) query = query.eq("channel_id", filters.channelId);
+    if (filters.language) query = query.eq("language", filters.language);
     if (filters.duration) {
       const range = durationRange(filters.duration);
       if (range.gte !== undefined) query = query.gte("duration_seconds", range.gte);
@@ -240,6 +241,8 @@ export type VideoPageFilters = {
   category?: string;
   channelId?: number;
   duration?: DurationBucket;
+  /** Exact match on the `language` column (see getLanguagesInCategory). */
+  language?: string;
   /** Match videos whose TITLE contains any of these keywords (OR of ILIKEs).
    * Drives topic collections like /topic/radharani. */
   titleKeywords?: string[];
@@ -259,6 +262,7 @@ export async function getVideosPage(
 
     if (filters.category) query = query.eq("category", filters.category);
     if (filters.channelId) query = query.eq("channel_id", filters.channelId);
+    if (filters.language) query = query.eq("language", filters.language);
     if (filters.duration) {
       const range = durationRange(filters.duration);
       if (range.gte !== undefined) query = query.gte("duration_seconds", range.gte);
@@ -274,6 +278,27 @@ export async function getVideosPage(
       .range(offset, offset + limit - 1);
     if (error) throw error;
     return (data ?? []) as unknown as Video[];
+  }, []);
+}
+
+/** Languages present in `category` (its videos' `language` column, populated
+ * by the worker's Groq classification - see worker/sync.py's
+ * normalize_language), for filter chips. Bounded client-side dedup rather
+ * than a Postgres RPC (same approach as getChannelsInCategory below) - the
+ * language set is small (a couple dozen real-world languages at most), so a
+ * few thousand rows comfortably covers it without a schema change. */
+export async function getLanguagesInCategory(category: string): Promise<string[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select("language")
+      .eq("category", category)
+      .not("language", "is", null)
+      .limit(3000);
+    if (error) throw error;
+    const seen = new Set<string>();
+    for (const row of data ?? []) seen.add(row.language as string);
+    return [...seen].sort();
   }, []);
 }
 
@@ -348,15 +373,51 @@ function toPrefixTsQuery(input: string): string {
     .join(" & ");
 }
 
+// The `search_videos_ranked` RPC (db/schema.sql) can't return PostgREST's
+// automatic embedded-relation shape, so it comes back with flat `channel_*`
+// columns instead of a nested `channel` object - this reassembles it into
+// the shape the rest of the app (VideoCard etc.) expects.
+type RankedSearchRow = Omit<Video, "channel"> & {
+  channel_title: string | null;
+  channel_handle: string | null;
+  channel_thumbnail_url: string | null;
+};
+
+function rankedRowToVideo(row: RankedSearchRow): Video {
+  const { channel_title, channel_handle, channel_thumbnail_url, ...rest } = row;
+  return {
+    ...rest,
+    channel: channel_title === null ? null : {
+      title: channel_title,
+      handle: channel_handle,
+      thumbnail_url: channel_thumbnail_url,
+    },
+  };
+}
+
 /** Full-text search over title + description (the generated `search_tsv`
  * column, db/schema.sql), used by the /search page. Safe to call from the
  * browser. Matches whole word-prefixes rather than arbitrary substrings
- * (standard search-box behavior) - ordered by recency like every other list
- * in the app, not by text relevance. */
+ * (standard search-box behavior).
+ *
+ * Tries the `search_videos_ranked` RPC first (relevance-ordered via
+ * ts_rank - see db/schema.sql); if that RPC hasn't been added to the
+ * database yet (the owner runs schema.sql manually - CLAUDE.md's "no
+ * migration tooling"), falls back to a plain recency-ordered search_tsv
+ * match, so search keeps working either way and silently upgrades to
+ * relevance ranking the moment the migration is applied. */
 export async function searchVideos(query: string, limit = 24): Promise<Video[]> {
   const tsQuery = toPrefixTsQuery(query);
   if (!tsQuery) return [];
   return safely(async () => {
+    const ranked = await supabase!.rpc("search_videos_ranked", {
+      search_query: tsQuery,
+      result_limit: limit,
+    });
+    if (!ranked.error && ranked.data) {
+      return (ranked.data as RankedSearchRow[]).map(rankedRowToVideo);
+    }
+
     const { data, error } = await supabase!
       .from("videos")
       .select(VIDEO_COLUMNS)
