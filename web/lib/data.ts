@@ -117,6 +117,29 @@ export async function getChannelByHandle(handle: string): Promise<Channel | null
   }, null);
 }
 
+/** The curated "Spiritual Leaders" (lib/speakers.ts) that actually exist in
+ * the channels table, each with its indexed video count, sorted by that
+ * count descending (the most prolific teacher's catalog leads). One query
+ * for all the channel rows, then one small COUNT per channel in parallel -
+ * bounded by SPEAKER_HANDLES' length (well under free-tier concern). */
+export async function getSpeakerChannels(
+  handles: string[]
+): Promise<{ channel: Channel; videoCount: number }[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!.from("channels").select("*").in("handle", handles);
+    if (error) throw error;
+    const channels = (data ?? []) as unknown as Channel[];
+
+    const withCounts = await Promise.all(
+      channels.map(async (channel) => ({
+        channel,
+        videoCount: await getVideoCount({ channelId: channel.id }),
+      }))
+    );
+    return withCounts.sort((a, b) => b.videoCount - a.videoCount);
+  }, []);
+}
+
 /** The newest `limit` videos across every channel, for the home hero
  * carousel and the "Top 10 New Arrivals" shelf (DESIGN.md #4). Videos
  * under 2 minutes are excluded (the eligibility rule in DESIGN.md #4.1):

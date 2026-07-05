@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { CategoryPoster } from "@/components/category-poster";
 import { Container } from "@/components/container";
@@ -48,7 +49,12 @@ export default async function BrowsePage() {
 
   return (
     <Container className="py-10">
-      <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">Browse</h1>
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
+        <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">Browse</h1>
+        <Link href="/leaders" className="text-sm text-text-muted transition-colors hover:text-accent">
+          Browse by Spiritual Leader →
+        </Link>
+      </div>
       <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
         {posters.map(({ category, count, thumbnail }) => (
           <CategoryPoster
