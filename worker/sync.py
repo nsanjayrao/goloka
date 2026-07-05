@@ -52,6 +52,24 @@ CATEGORIES = [
     "General",
 ]
 
+# Videos hand-reviewed as off-topic for a devotional content hub (pure
+# news/politics/clickbait, no devotional content) - removed once (2026-07-05)
+# and denylisted here so a re-sync doesn't re-add them from the channel's
+# still-current uploads. This is a precise, hand-reviewed list by ID rather
+# than a keyword filter on purpose: a channel like Hare Krsna TV also runs a
+# legitimate "spiritual commentary on current events" genre (e.g. "does this
+# war show Kali-yuga signs?") that the owner wants KEPT, and it shares the same
+# vocabulary (war, politics, named public figures) as the pure-news videos
+# that don't belong here - a keyword regex can't tell the two apart without
+# false-positiving on the genre we want to keep, so add future offenders here
+# by ID after a manual look, not by broadening a keyword list.
+EXCLUDED_VIDEO_IDS = {
+    "D4Vf7eYHhU8",  # "Epstein Files..." - news/conspiracy commentary, no devotional content
+    "T2XswsSguXU",  # "Trump ATTACKED at White House" - pure political news
+    "ufDog3yF8AM",  # "Viral..." 120 km/h clickbait, unrelated to the catalog
+    "UBivDgFk8iQ",  # "Will Donald Trump's name be immortal in history?" - political speculation
+}
+
 # Checked in order, first match wins - keep the most specific/leftmost intent
 # first. Deliberately avoids over-broad terms like a bare "krishna"/"hare
 # krishna" that appear in nearly every title.
@@ -333,7 +351,11 @@ def main() -> None:
         existing = (db.table("videos").select("youtube_video_id")
                     .eq("channel_id", channel_pk).execute())
         known_ids = {r["youtube_video_id"] for r in existing.data}
-        new_videos = [v for v in videos if v["youtube_video_id"] not in known_ids]
+        new_videos = [
+            v for v in videos
+            if v["youtube_video_id"] not in known_ids
+            and v["youtube_video_id"] not in EXCLUDED_VIDEO_IDS
+        ]
         print(f"    fetched {len(videos)}, new {len(new_videos)}")
         if not new_videos:
             continue
