@@ -1,5 +1,6 @@
 import { CategoryPoster } from "@/components/category-poster";
 import { Shelf } from "@/components/shelf";
+import { categorySubtitle } from "@/lib/category-meta";
 
 // Apple's vertical-poster "Browse by category" row on the home page
 // (DESIGN.md #4). The poster itself - duotone artwork, gradient, scrim -
@@ -27,6 +28,9 @@ export function BrowseShelf({
             key={category}
             category={category}
             thumbnail={thumbnails[category] ?? null}
+            // The home shelf shows the category's personality line; the
+            // /browse grid uses the same `meta` slot for the video count.
+            meta={categorySubtitle(category)}
             className="snap-item w-[150px] shrink-0 sm:w-[200px]"
             sizes="(min-width: 640px) 200px, 150px"
           />

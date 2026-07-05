@@ -5,14 +5,17 @@ classifies them (keyword rules first, optional Groq LLM fallback), and
 upserts channel + video metadata into Supabase. Idempotent: safe to re-run.
 
 Usage:
-    python sync.py           # incremental: newest ~100 videos per channel
-    python sync.py --full    # backfill: up to ~1000 videos per channel
+    python sync.py            # incremental: newest ~100 videos per channel
+    python sync.py --full     # backfill: up to ~1000 videos per channel
+    python sync.py --enrich   # re-process EXISTING rows: refresh view_count
+                              #   and re-run classification (no channel fetch)
 """
 
 import json
 import os
 import re
 import sys
+import time
 from pathlib import Path
 
 import requests
@@ -28,7 +31,16 @@ GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 YT_API = "https://www.googleapis.com/youtube/v3"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
-GROQ_MODEL = "llama-3.3-70b-versatile"
+GROQ_MODEL = "llama-3.1-8b-instant"
+# Videos classified per Groq call. Batching (vs one call per video) is what
+# keeps a big backfill under Groq's rate limit - one 429 wall last time was
+# caused by ~900 single-video calls per channel.
+GROQ_BATCH = 15
+# `--no-llm` skips the Groq classifier (regex + fallback only). Use it for a
+# fast enrich pass that fills view_count + regex categories without fighting
+# Groq's per-minute free-tier limit; run plain `--enrich` later for the LLM
+# pass once you can pace it.
+USE_LLM = "--no-llm" not in sys.argv
 
 CATEGORIES = [
     "Lectures",
@@ -40,13 +52,16 @@ CATEGORIES = [
     "General",
 ]
 
+# Checked in order, first match wins - keep the most specific/leftmost intent
+# first. Deliberately avoids over-broad terms like a bare "krishna"/"hare
+# krishna" that appear in nearly every title.
 CATEGORY_RULES = [
-    (re.compile(r"kirtan|bhajan|maha[- ]?mantra|chant", re.I), "Kirtans & Bhajans"),
-    (re.compile(r"lecture|class|bhagavatam|bhagavad[- ]?gita|katha|seminar|pravachan", re.I), "Lectures"),
-    (re.compile(r"ratha[- ]?yatra|janmashtami|gaura[- ]?purnima|radhashtami|ekadashi|festival|kartik|damodara", re.I), "Festivals"),
-    (re.compile(r"documentary|history of|the story of", re.I), "Documentaries"),
-    (re.compile(r"prasadam|recipe|cooking|kitchen", re.I), "Prasadam & Cooking"),
-    (re.compile(r"\bkids\b|children|cartoon|animated", re.I), "Kids"),
+    (re.compile(r"kirtan|bhajan|maha[- ]?mantra|\bchant|harinam|sankirtan|abhang|aarti|arati|\bdhun\b", re.I), "Kirtans & Bhajans"),
+    (re.compile(r"lecture|\bclass\b|bhagavatam|bhagavad[- ]?gita|\bgita\b|katha|seminar|pravachan|pravacana|discourse|srimad|teachings|philosophy|\bsb\s?\d|\bbg\s?\d", re.I), "Lectures"),
+    (re.compile(r"ratha?[- ]?yatra|janmashtami|janmastami|gaura[- ]?purnima|radha?[- ]?ashtami|radhastami|ekadashi|festival|\bkartik\b|damodara|govardhan|nrsimha|nrisimha|narasimha|jhulan|vyasa[- ]?puja|appearance day|disappearance day|tirobhava|\bholi\b|diwali|deepotsav|balaram[a]?[- ]?purnima|nityananda[- ]?trayodashi", re.I), "Festivals"),
+    (re.compile(r"documentary|biography|life story|history of|the story of", re.I), "Documentaries"),
+    (re.compile(r"prasadam|prasad\b|recipe|cooking|\bcook\b|kitchen|laddu|halava|halwa|khichdi|khichuri|sabji|subji|\bsweet\b|bhoga|naivedya", re.I), "Prasadam & Cooking"),
+    (re.compile(r"\bkids\b|children|cartoon|animat|little krishna|for kids|nursery", re.I), "Kids"),
 ]
 
 
@@ -110,14 +125,20 @@ def parse_iso_duration(iso: str) -> int | None:
     return h * 3600 + mi * 60 + s
 
 
-def fetch_durations(video_ids: list[str]) -> dict[str, int | None]:
-    durations = {}
+def fetch_video_details(video_ids: list[str]) -> dict[str, dict]:
+    """Duration + view count for each id, from the videos endpoint (one call
+    per 50 ids). Returns {id: {"duration": int|None, "view_count": int|None}}."""
+    details: dict[str, dict] = {}
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i + 50]
-        data = yt_get("videos", part="contentDetails", id=",".join(batch), maxResults=50)
+        data = yt_get("videos", part="contentDetails,statistics", id=",".join(batch), maxResults=50)
         for item in data.get("items", []):
-            durations[item["id"]] = parse_iso_duration(item["contentDetails"].get("duration", ""))
-    return durations
+            views = item.get("statistics", {}).get("viewCount")
+            details[item["id"]] = {
+                "duration": parse_iso_duration(item.get("contentDetails", {}).get("duration", "")),
+                "view_count": int(views) if views is not None and str(views).isdigit() else None,
+            }
+    return details
 
 
 def classify_with_rules(title: str, description: str) -> str | None:
@@ -128,34 +149,137 @@ def classify_with_rules(title: str, description: str) -> str | None:
     return None
 
 
-def classify_with_groq(title: str, description: str) -> dict | None:
-    """Optional LLM fallback. Returns {"category": ..., "language": ...} or None."""
-    if not GROQ_API_KEY:
-        return None
-    prompt = (
-        "Classify this ISKCON/Krishna-consciousness YouTube video.\n"
-        f'Title: {title}\nDescription: {description[:400]}\n\n'
-        f'Reply with JSON only: {{"category": <one of {CATEGORIES}>, "language": <main spoken language or null>}}'
+def classify_batch_with_groq(items: list[dict]) -> list[dict | None]:
+    """Classify a BATCH of videos in one Groq call, with exponential backoff on
+    429. `items` = [{"title","description"}]. Returns a list aligned by index,
+    each {"category","language"} or None. Tagging is best-effort - any failure
+    returns None for the whole batch and the caller falls back."""
+    if not GROQ_API_KEY or not USE_LLM or not items:
+        return [None] * len(items)
+
+    numbered = "\n".join(
+        f'{i}. {it["title"]} :: {(it.get("description") or "")[:160]}'
+        for i, it in enumerate(items)
     )
-    try:
-        resp = requests.post(
-            GROQ_URL,
-            headers={"Authorization": f"Bearer {GROQ_API_KEY}", "User-Agent": "Mozilla/5.0"},
-            json={
-                "model": GROQ_MODEL,
-                "messages": [{"role": "user", "content": prompt}],
-                "response_format": {"type": "json_object"},
-                "temperature": 0,
-            },
-            timeout=30,
-        )
-        resp.raise_for_status()
-        result = json.loads(resp.json()["choices"][0]["message"]["content"])
-        if result.get("category") in CATEGORIES:
-            return result
-    except Exception as exc:  # tagging is best-effort; never fail the sync over it
-        print(f"    groq tagging skipped: {exc}")
-    return None
+    prompt = (
+        "Classify each ISKCON/Krishna-consciousness YouTube video below. For "
+        f"each, pick one category from {CATEGORIES} and its main spoken language "
+        "(or null).\n\n"
+        f"{numbered}\n\n"
+        'Reply with JSON only: {"results": [{"i": <index>, "category": <category>, '
+        '"language": <language or null>}, ...]} covering every index.'
+    )
+
+    for attempt in range(5):
+        try:
+            resp = requests.post(
+                GROQ_URL,
+                headers={"Authorization": f"Bearer {GROQ_API_KEY}", "User-Agent": "Mozilla/5.0"},
+                json={
+                    "model": GROQ_MODEL,
+                    "messages": [{"role": "user", "content": prompt}],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0,
+                },
+                timeout=60,
+            )
+            if resp.status_code == 429:
+                wait = 2 ** attempt
+                print(f"    groq 429 - backing off {wait}s")
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            data = json.loads(resp.json()["choices"][0]["message"]["content"])
+            out: list[dict | None] = [None] * len(items)
+            for row in data.get("results", []):
+                idx = row.get("i")
+                if isinstance(idx, int) and 0 <= idx < len(items) and row.get("category") in CATEGORIES:
+                    # The model often returns the literal string "null"/"none"
+                    # for unknown language - store a real None instead.
+                    lang = row.get("language")
+                    if isinstance(lang, str) and lang.strip().lower() in ("null", "none", "n/a", "unknown", ""):
+                        lang = None
+                    out[idx] = {"category": row["category"], "language": lang}
+            return out
+        except Exception as exc:  # never fail the sync over tagging
+            print(f"    groq batch skipped: {exc}")
+            return [None] * len(items)
+    print("    groq batch gave up after retries")
+    return [None] * len(items)
+
+
+def classify_videos(videos: list[dict], fallbacks: list[str]) -> list[dict]:
+    """Per-video {"category","language"}: regex rules first, then batched Groq
+    for the misses, then `fallbacks[i]` for anything still unclassified."""
+    results = [{"category": None, "language": None} for _ in videos]
+    to_llm: list[dict] = []
+    llm_idx: list[int] = []
+    for i, v in enumerate(videos):
+        cat = classify_with_rules(v["title"], v.get("description") or "")
+        if cat:
+            results[i]["category"] = cat
+        else:
+            to_llm.append(v)
+            llm_idx.append(i)
+
+    for start in range(0, len(to_llm), GROQ_BATCH):
+        chunk = to_llm[start:start + GROQ_BATCH]
+        for j, tag in enumerate(classify_batch_with_groq(chunk)):
+            if tag:
+                target = llm_idx[start + j]
+                results[target]["category"] = tag["category"]
+                results[target]["language"] = tag["language"]
+        time.sleep(0.5)  # be gentle between batches
+
+    for i, r in enumerate(results):
+        if not r["category"]:
+            r["category"] = fallbacks[i]
+    return results
+
+
+def enrich(db) -> None:
+    """One-time (resumable) pass over EXISTING rows: refresh view_count and
+    re-run the improved classification. Never downgrades a category it can't
+    improve, and keeps an existing language if it can't produce a new one.
+    Idempotent - safe to re-run / resume if Groq's daily cap is hit."""
+    page_size = 500
+    offset, total = 0, 0
+    while True:
+        page = (db.table("videos")
+                .select("id, youtube_video_id, title, description, category, language")
+                .order("id")
+                .range(offset, offset + page_size - 1)
+                .execute())
+        rows = page.data or []
+        if not rows:
+            break
+        print(f"enrich: rows {offset}..{offset + len(rows) - 1}")
+
+        details = fetch_video_details([r["youtube_video_id"] for r in rows])
+        videos = [{"title": r["title"], "description": r.get("description") or ""} for r in rows]
+        # Fallback = the row's CURRENT category, so classification never downgrades.
+        tags = classify_videos(videos, [r["category"] for r in rows])
+
+        updates = []
+        for r, tag in zip(rows, tags):
+            d = details.get(r["youtube_video_id"], {})
+            updates.append({
+                # Upsert-on-conflict UPDATEs the existing row - but Postgres
+                # validates the would-be-INSERTed row's NOT NULLs before the
+                # conflict redirects to UPDATE, so `title` MUST be included or
+                # it fails on title's NOT NULL. (`id` is GENERATED ALWAYS and
+                # can't be sent.)
+                "title": r["title"],
+                "youtube_video_id": r["youtube_video_id"],
+                "category": tag["category"],
+                "language": tag["language"] or r.get("language"),
+                "view_count": d.get("view_count"),
+            })
+        db.table("videos").upsert(updates, on_conflict="youtube_video_id").execute()
+        total += len(updates)
+        offset += page_size
+
+    print(f"Enrich done. {total} row(s) refreshed.")
 
 
 def main() -> None:
@@ -167,6 +291,12 @@ def main() -> None:
     if missing:
         sys.exit(f"Missing environment variables: {', '.join(missing)} (see .env.example)")
 
+    db = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+    if "--enrich" in sys.argv:
+        enrich(db)
+        return
+
     full = "--full" in sys.argv
     max_pages = 20 if full else 2
 
@@ -176,11 +306,15 @@ def main() -> None:
     if not entries:
         sys.exit("channels.json has no real channels yet - add at least one @handle.")
 
-    db = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
     total_new = 0
 
     for entry in entries:
-        info = resolve_channel(entry)
+        # One unreachable/renamed channel shouldn't abort the whole run.
+        try:
+            info = resolve_channel(entry)
+        except Exception as exc:
+            print(f"Channel skipped ({entry.get('handle') or entry.get('youtube_channel_id')}): {exc}")
+            continue
         uploads = info.pop("uploads_playlist")
         default_category = info["default_category"]
         print(f"Channel: {info['title']} ({info['youtube_channel_id']})")
@@ -204,21 +338,18 @@ def main() -> None:
         if not new_videos:
             continue
 
-        durations = fetch_durations([v["youtube_video_id"] for v in new_videos])
+        details = fetch_video_details([v["youtube_video_id"] for v in new_videos])
+        tags = classify_videos(new_videos, [default_category] * len(new_videos))
         rows = []
-        for v in new_videos:
-            category = classify_with_rules(v["title"], v["description"])
-            language = None
-            if category is None:
-                llm = classify_with_groq(v["title"], v["description"])
-                if llm:
-                    category, language = llm["category"], llm.get("language")
+        for v, tag in zip(new_videos, tags):
+            d = details.get(v["youtube_video_id"], {})
             rows.append({
                 **v,
                 "channel_id": channel_pk,
-                "duration_seconds": durations.get(v["youtube_video_id"]),
-                "category": category or default_category,
-                "language": language,
+                "duration_seconds": d.get("duration"),
+                "view_count": d.get("view_count"),
+                "category": tag["category"],
+                "language": tag["language"],
             })
 
         db.table("videos").upsert(rows, on_conflict="youtube_video_id").execute()

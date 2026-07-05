@@ -32,6 +32,15 @@ function durationRange(bucket: DurationBucket): { gte?: number; lt?: number } {
   return { gte: 45 * 60 }; // "long"
 }
 
+// Builds a PostgREST OR filter matching videos whose TITLE contains any of
+// `keywords` (case-insensitive). Powers topic collections like
+// /topic/radharani - a "topic" is just a saved title search over the catalog,
+// so it needs no schema change and grows as new videos sync. Note PostgREST
+// uses `*` (not `%`) as the wildcard inside an or() filter string.
+function titleKeywordFilter(keywords: string[]): string {
+  return keywords.map((keyword) => `title.ilike.*${keyword}*`).join(",");
+}
+
 /** The single most recent video across all channels, for the home hero. */
 export async function getLatestVideo(): Promise<Video | null> {
   return safely(async () => {
@@ -129,6 +138,22 @@ export async function getLatestVideos(limit: number): Promise<Video[]> {
   }, []);
 }
 
+/** The most-viewed videos across the catalog, for the home "Most Watched"
+ * shelf. Excludes Shorts (<2 min), which otherwise dominate on raw view
+ * count; `view_count` is null for un-enriched rows, so nulls sort last. */
+export async function getPopularVideos(limit: number): Promise<Video[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select(VIDEO_COLUMNS)
+      .gte("duration_seconds", 120)
+      .order("view_count", { ascending: false, nullsFirst: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as unknown as Video[];
+  }, []);
+}
+
 /**
  * Categories that currently have at least one video, ordered by which has
  * the newest upload first (DESIGN.md #4: "Row order: whichever categories
@@ -186,6 +211,7 @@ export async function getVideoCount(filters: Partial<VideoPageFilters> = {}): Pr
       if (range.gte !== undefined) query = query.gte("duration_seconds", range.gte);
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
+    if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
     const { count, error } = await query;
     if (error) throw error;
     return count ?? 0;
@@ -214,6 +240,11 @@ export type VideoPageFilters = {
   category?: string;
   channelId?: number;
   duration?: DurationBucket;
+  /** Match videos whose TITLE contains any of these keywords (OR of ILIKEs).
+   * Drives topic collections like /topic/radharani. */
+  titleKeywords?: string[];
+  /** Order: "recent" (published_at, default) or "popular" (view_count). */
+  sort?: "recent" | "popular";
 };
 
 /** One page of videos for the category/channel grids, with optional
@@ -233,9 +264,13 @@ export async function getVideosPage(
       if (range.gte !== undefined) query = query.gte("duration_seconds", range.gte);
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
+    if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
 
     const { data, error } = await query
-      .order("published_at", { ascending: false })
+      .order(filters.sort === "popular" ? "view_count" : "published_at", {
+        ascending: false,
+        nullsFirst: false,
+      })
       .range(offset, offset + limit - 1);
     if (error) throw error;
     return (data ?? []) as unknown as Video[];

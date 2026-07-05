@@ -232,8 +232,31 @@ mixed shelf types, one promo band; owner-provided reference screenshot,
   and a single "Back to Home" pill so they're never a dead end
   (2026-07-03); the offline page stays fully static (no data fetch — it
   must render with no network).
+- **Brand tagline** "Eternal abode of divine love" (2026-07-04): under the
+  footer lockup and on the OG share card. Poetic, used sparingly — not a
+  page-header subtitle.
+- **Daily Inspiration** (2026-07-04): the promo band carries a Srila
+  Prabhupada quote chosen deterministically by day-of-year from a curated
+  list in `web/lib/quotes.ts` — rotates daily, never mid-day, no backend.
+  Fraunces italic + attribution. Owner curates the quote list (devotional
+  editorial).
+- **Category personality** (2026-07-04): a one-line subtitle per category
+  ("Kirtans & Bhajans — soulful melodies that uplift") from a name-keyed
+  map in `web/lib/category-meta.ts`, shown on the home browse posters and
+  the category-page banner. Categories stay DYNAMIC — an unknown category
+  simply gets no subtitle (map miss → nothing), so the never-hardcode-the-
+  list rule holds; the map only decorates names it recognizes.
+- **Hero eyebrow** (2026-07-04): a small gold letter-spaced "WELCOME TO
+  GOLOKA" above the hero title.
+- **Gold ornament divider** (`components/ornament.tsx`, 2026-07-04): one
+  thin flourish (hairline rule with a small centered lotus/diamond in
+  accent), used at most twice per page — the promo band and the footer.
+  Sparse is the point; this is the "not kitsch" line.
 - NO: om/deity imagery as UI decoration, gradients of orange everywhere,
-  devotional clip-art, autoplaying audio.
+  devotional clip-art, autoplaying audio. (Amendment pending: owner has
+  chosen to replace the lotus mark with a Krishna-with-flute emblem —
+  Phase D Track 2, blocked on a clean asset; the no-deity-imagery rule
+  will be revised to record that decision when the emblem lands.)
 
 ## 7. Tech constraints
 

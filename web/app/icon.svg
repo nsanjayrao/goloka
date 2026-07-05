@@ -1,20 +1,44 @@
 <svg width="512" height="512" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
-  <!-- Goloka mark: thousand-petal lotus (concept 1), full-bleed on the dark
-       app background. One petal path rotated 8x around a saffron center dot -
-       see docs/logo-concepts/concept-1-thousand-petal-lotus.svg. -->
+  <!-- Goloka mark: thousand-petal lotus, Concept A "Thousand-Petal Bloom"
+       (owner-approved 2026-07-04). Two offset rings of gold petals around a
+       six-sided saffron pericarp (the hexagonal seat, Brahma-samhita 5.2),
+       full-bleed on the dark app tile. Mirror of
+       web/components/icons/logo-mark.tsx and web/public/icons/icon.svg;
+       re-run scripts/generate-icons.mjs after changes. -->
   <rect width="64" height="64" fill="#0B0E1A"/>
   <defs>
-    <path id="favicon-petal" d="M32,32 Q26,20 32,8 Q38,20 32,32 Z"/>
+    <linearGradient id="gd" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f4cf78"/><stop offset="1" stop-color="#a86d1c"/>
+    </linearGradient>
+    <linearGradient id="gl" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fdeec4"/><stop offset="1" stop-color="#e0b055"/>
+    </linearGradient>
+    <radialGradient id="sf" cx="0.5" cy="0.42" r="0.62">
+      <stop offset="0" stop-color="#ffc25a"/><stop offset="1" stop-color="#e2761b"/>
+    </radialGradient>
+    <path id="po" d="M32 32 C 25 23, 25 12, 32 5 C 39 12, 39 23, 32 32 Z"/>
+    <path id="pi" d="M32 32 C 28.4 27, 28.4 19, 32 14 C 35.6 19, 35.6 27, 32 32 Z"/>
   </defs>
-  <g fill="#F4F1E8">
-    <use href="#favicon-petal"/>
-    <use href="#favicon-petal" transform="rotate(45 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(90 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(135 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(180 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(225 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(270 32 32)"/>
-    <use href="#favicon-petal" transform="rotate(315 32 32)"/>
+  <g fill="url(#gd)">
+    <use href="#po"/>
+    <use href="#po" transform="rotate(45 32 32)"/>
+    <use href="#po" transform="rotate(90 32 32)"/>
+    <use href="#po" transform="rotate(135 32 32)"/>
+    <use href="#po" transform="rotate(180 32 32)"/>
+    <use href="#po" transform="rotate(225 32 32)"/>
+    <use href="#po" transform="rotate(270 32 32)"/>
+    <use href="#po" transform="rotate(315 32 32)"/>
   </g>
-  <circle cx="32" cy="32" r="5" fill="#F0A83C"/>
+  <g fill="url(#gl)">
+    <use href="#pi" transform="rotate(22.5 32 32)"/>
+    <use href="#pi" transform="rotate(67.5 32 32)"/>
+    <use href="#pi" transform="rotate(112.5 32 32)"/>
+    <use href="#pi" transform="rotate(157.5 32 32)"/>
+    <use href="#pi" transform="rotate(202.5 32 32)"/>
+    <use href="#pi" transform="rotate(247.5 32 32)"/>
+    <use href="#pi" transform="rotate(292.5 32 32)"/>
+    <use href="#pi" transform="rotate(337.5 32 32)"/>
+  </g>
+  <polygon points="32,26.4 36.85,29.2 36.85,34.8 32,37.6 27.15,34.8 27.15,29.2" fill="url(#sf)"/>
+  <circle cx="32" cy="32" r="1.7" fill="#fff2d6"/>
 </svg>

@@ -63,7 +63,7 @@ export default async function OpengraphImage() {
           Goloka<span style={{ color: "#b97a16" }}>.</span>
         </div>
         <div style={{ marginTop: 4, fontSize: 30, color: "#6e6e73" }}>
-          Every lecture, kirtan and festival — in one place.
+          Eternal abode of divine love
         </div>
       </div>
     ),

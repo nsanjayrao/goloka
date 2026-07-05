@@ -90,6 +90,11 @@ export function HeroCarousel({ videos }: { videos: Video[] }) {
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-r from-bg/70 via-bg/10 to-transparent" />
 
           <div className="absolute inset-x-0 bottom-0 flex flex-col items-start gap-3 p-4 sm:p-12">
+            {/* Brand eyebrow (DESIGN.md #6). accent-strong (darker gold)
+                keeps AA contrast on the whitish lower scrim. */}
+            <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-accent-strong sm:text-[13px]">
+              Welcome to Goloka
+            </span>
             <span className="rounded-full border border-accent/60 bg-bg/40 px-3 py-1 text-[13px] text-accent">
               {video.category}
             </span>

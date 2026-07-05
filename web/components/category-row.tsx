@@ -13,6 +13,7 @@ export function CategoryRow({
   category,
   videos,
   title,
+  href,
 }: {
   /** The category this row links its "View all →" to. Omit it (e.g. the
       curated "Featured" shelf, which has no browse page) and the link is
@@ -23,8 +24,13 @@ export function CategoryRow({
       "More from Kirtans & Bhajans" row on a watch page still links to
       `/browse/Kirtans & Bhajans`). Defaults to `category`. */
   title?: string;
+  /** Overrides where "View all →" points - used by topic shelves
+      (e.g. /topic/radharani) that aren't a browse category. */
+  href?: string;
 }) {
   if (videos.length === 0) return null;
+
+  const viewAllHref = href ?? (category ? `/browse/${encodeURIComponent(category)}` : null);
 
   return (
     <section>
@@ -32,9 +38,9 @@ export function CategoryRow({
         <h2 className="font-heading text-[26px] font-medium tracking-tight text-text sm:text-[28px]">
           {title ?? category}
         </h2>
-        {category && (
+        {viewAllHref && (
           <Link
-            href={`/browse/${encodeURIComponent(category)}`}
+            href={viewAllHref}
             className="shrink-0 text-sm text-text-muted transition-colors hover:text-accent"
           >
             View all →

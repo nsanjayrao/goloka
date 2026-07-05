@@ -13,6 +13,7 @@ import {
   getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
+import { categorySubtitle } from "@/lib/category-meta";
 import type { DurationBucket } from "@/lib/types";
 import { safeDecodeURIComponent } from "@/lib/utils";
 
@@ -23,7 +24,7 @@ const DURATION_VALUES: DurationBucket[] = ["short", "medium", "long"];
 // so both need `await`.
 type Props = {
   params: Promise<{ category: string }>;
-  searchParams: Promise<{ channel?: string; duration?: string }>;
+  searchParams: Promise<{ channel?: string; duration?: string; sort?: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -47,8 +48,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const duration = DURATION_VALUES.includes(query.duration as DurationBucket)
     ? (query.duration as DurationBucket)
     : undefined;
+  // Sort only reorders the same set, so it's NOT counted as an "active filter"
+  // for the "Showing X of Y" line below (that's about narrowing the set).
+  const sort: "recent" | "popular" = query.sort === "popular" ? "popular" : "recent";
 
-  const filters = { category, channelId, duration };
+  const filters = { category, channelId, duration, sort };
   const hasActiveFilters = channelId !== undefined || duration !== undefined;
 
   // `categoryCount` decides whether the category itself exists/has any
@@ -82,6 +86,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         category={category}
         thumbnail={bannerVideos[0]?.thumbnail_url ?? null}
         count={categoryCount}
+        subtitle={categorySubtitle(category)}
       />
 
       {channels.length > 0 && (
@@ -91,6 +96,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
             channels={channels}
             activeChannelId={channelId}
             activeDuration={duration}
+            activeSort={sort}
           />
         </div>
       )}
@@ -105,7 +111,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
         {/* `key` forces a remount (and fresh state) whenever the filters
             change, since VideoGrid otherwise only reads `initialVideos` on
             first mount. */}
-        <VideoGrid key={`${channelId ?? "all"}-${duration ?? "all"}`} initialVideos={videos} filters={filters} />
+        <VideoGrid key={`${channelId ?? "all"}-${duration ?? "all"}-${sort}`} initialVideos={videos} filters={filters} />
       </div>
     </Container>
   );

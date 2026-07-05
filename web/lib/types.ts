@@ -21,6 +21,7 @@ export type Video = {
   description: string | null;
   published_at: string | null;
   duration_seconds: number | null;
+  view_count: number | null;
   thumbnail_url: string | null;
   category: string;
   language: string | null;

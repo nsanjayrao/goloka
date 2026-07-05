@@ -3,45 +3,67 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import type { DurationBucket } from "@/lib/types";
 
+type SortOption = "recent" | "popular";
+
+const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+  { value: "recent", label: "Newest" },
+  { value: "popular", label: "Most watched" },
+];
+
 const DURATION_OPTIONS: { value: DurationBucket; label: string }[] = [
   { value: "short", label: "<15m" },
   { value: "medium", label: "15–45m" },
   { value: "long", label: ">45m" },
 ];
 
-// Filter chips are plain links that set/clear URL search params - clicking
-// one navigates to a new URL and the server re-renders the filtered page.
-// No client-side state needed (DESIGN.md's "server components for initial
-// data, client components only where interactivity requires it").
+// Filter/sort chips are plain links that set/clear URL search params - clicking
+// one navigates to a new URL and the server re-renders the page in the new
+// order/filter. No client-side state needed (DESIGN.md's "server components for
+// initial data, client components only where interactivity requires it").
 export function FilterChips({
   category,
   channels,
   activeChannelId,
   activeDuration,
+  activeSort = "recent",
 }: {
   category: string;
   channels: { id: number; title: string }[];
   activeChannelId?: number;
   activeDuration?: DurationBucket;
+  activeSort?: SortOption;
 }) {
   const basePath = `/browse/${encodeURIComponent(category)}`;
 
-  function hrefFor(next: { channel?: number; duration?: DurationBucket }) {
+  // Build a URL from the FULL next filter state, so changing one chip never
+  // silently drops the others. "recent" is the default, so it's left out of
+  // the query to keep the canonical URL clean.
+  function hrefFor(next: { channel?: number; duration?: DurationBucket; sort: SortOption }) {
     const params = new URLSearchParams();
     if (next.channel) params.set("channel", String(next.channel));
     if (next.duration) params.set("duration", next.duration);
+    if (next.sort !== "recent") params.set("sort", next.sort);
     const query = params.toString();
     return query ? `${basePath}?${query}` : basePath;
   }
 
   return (
     <div className="flex flex-wrap gap-2">
+      {SORT_OPTIONS.map((option) => (
+        <Link
+          key={option.value}
+          href={hrefFor({ channel: activeChannelId, duration: activeDuration, sort: option.value })}
+          className={chipClass(activeSort === option.value)}
+        >
+          {option.label}
+        </Link>
+      ))}
       {channels.map((channel) => {
         const active = activeChannelId === channel.id;
         return (
           <Link
             key={channel.id}
-            href={hrefFor({ channel: active ? undefined : channel.id, duration: activeDuration })}
+            href={hrefFor({ channel: active ? undefined : channel.id, duration: activeDuration, sort: activeSort })}
             className={chipClass(active)}
           >
             {channel.title}
@@ -53,7 +75,7 @@ export function FilterChips({
         return (
           <Link
             key={option.value}
-            href={hrefFor({ channel: activeChannelId, duration: active ? undefined : option.value })}
+            href={hrefFor({ channel: activeChannelId, duration: active ? undefined : option.value, sort: activeSort })}
             className={chipClass(active)}
           >
             {option.label}

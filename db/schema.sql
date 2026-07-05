@@ -38,6 +38,35 @@ create index if not exists videos_published_idx on videos (published_at desc);
 create index if not exists videos_channel_idx on videos (channel_id);
 create index if not exists videos_featured_idx on videos (published_at desc) where featured;
 
+-- ---------------------------------------------------------------------------
+-- Discovery upgrade (Phase 0). Additive + idempotent, safe to re-run.
+-- ---------------------------------------------------------------------------
+
+-- Popularity signal: the video's YouTube view count. The sync worker fills
+-- this from the `statistics` part of the videos endpoint (Phase 1); existing
+-- rows stay null until the next enrich pass, so `nulls last` keeps unranked
+-- videos out of the way in "Most Watched" sorts.
+alter table videos add column if not exists view_count bigint;
+create index if not exists videos_view_count_idx on videos (view_count desc nulls last);
+
+-- Category pages list a single category newest-first; this composite serves
+-- that ordering directly (the standalone category/published indexes above
+-- can't be combined for it).
+create index if not exists videos_category_published_idx on videos (category, published_at desc);
+
+-- Full-text search vector over title + description, replacing the current
+-- `title ILIKE '%q%'` scan (Phase 3). The 'simple' config does NO stemming,
+-- which suits a catalog full of transliterated names (Radharani, Damodara,
+-- Vrindavan) where English stemming would only hurt. The two-argument
+-- `to_tsvector(regconfig, text)` form is IMMUTABLE (unlike the one-argument
+-- form, which depends on a session setting), so it is valid in a generated
+-- column. STORED means Postgres keeps it in sync on every insert/update.
+alter table videos add column if not exists search_tsv tsvector
+  generated always as (
+    to_tsvector('simple', coalesce(title, '') || ' ' || coalesce(description, ''))
+  ) stored;
+create index if not exists videos_search_tsv_idx on videos using gin (search_tsv);
+
 -- Anyone may read (the site is public); only the service key (sync worker) may write.
 alter table channels enable row level security;
 alter table videos enable row level security;

@@ -24,6 +24,7 @@ npm run lint       # eslint
 pip install -r worker/requirements.txt
 python worker/sync.py          # incremental sync (~100 newest per channel)
 python worker/sync.py --full   # deep backfill (~1000 per channel)
+python worker/sync.py --enrich # re-process EXISTING rows: refresh view_count + re-classify
 
 # Regenerate PWA icon PNGs after changing the logo mark (inside web/)
 node scripts/generate-icons.mjs
@@ -31,6 +32,10 @@ node scripts/generate-icons.mjs
 
 There is no test suite; verification = build + lint + smoke-testing the
 affected routes in the dev server.
+
+Groq's free tier rate-limits hard on big classification runs — `sync.py`
+batches (~15 videos/call) with 429 backoff, but a full backfill still needs
+a light model (`llama-3.1-8b-instant`) to avoid 429-walling.
 
 ## Architecture
 
@@ -62,14 +67,22 @@ Key frontend conventions (breaking these is what past reviews flagged):
   params are never reflected into markup.
 - Categories are dynamic: `distinct_categories()` Postgres RPC (in
   `db/schema.sql`). Never hardcode the category list in the frontend.
+- **Topic collections** (`/topic/<slug>`) are a saved TITLE search, not a
+  DB category: a keyword list in `web/lib/topics.ts` + the `titleKeywords`
+  filter in `data.ts`. No schema change; grows as videos sync.
+- `videos` has `view_count` (popularity) and a generated `search_tsv`
+  (full-text GIN index). New search should use FTS, not `title ILIKE`.
 - Queries must stay bounded (`limit`/`range`) — free-tier discipline.
-- **Brand mark**: the Thousand-Petal Lotus (owner-chosen; Brahma-samhita
-  5.2). One source of truth for geometry: the petal path in
-  `web/components/icons/logo-mark.tsx` (theme-aware: currentColor petals,
-  saffron center), mirrored with hardcoded colors in `web/app/icon.svg`
-  and `web/public/icons/icon.svg`. Rejected alternatives + rationale live
-  in `docs/logo-concepts/`. If the mark changes, update all three SVGs and
-  re-run the icon script.
+- **Brand mark**: the Thousand-Petal Lotus, "Concept A — Thousand-Petal
+  Bloom" (owner-chosen; Brahma-samhita 5.2). Two offset petal rings (8
+  outer + 8 inner at 22.5°) around a hexagonal saffron pericarp, in a
+  **fixed gold-gradient palette** (NOT currentColor) so it reads on both
+  the black top bar and white pages. One source of truth for geometry:
+  `web/components/icons/logo-mark.tsx`, mirrored with the same colors in
+  `web/app/icon.svg` and `web/public/icons/icon.svg` (the maskable icon
+  scales the lotus to 0.9 for the safe zone). If the mark changes, update
+  all three SVGs and re-run the icon script. (A Krishna-flute photo emblem
+  was tried and rejected; alternatives + rationale in `docs/logo-concepts/`.)
 
 Schema changes: edit `db/schema.sql` (kept idempotent) and the owner must
 re-run it in the Supabase SQL Editor — there is no migration tooling.
@@ -97,8 +110,9 @@ general-purpose agent, the developer agent, or any other subagent for
 routine work — planning AND coding both happen directly in the main
 session. Sequence for any non-trivial task:
 
-1. **Plan first, always, before touching code**: goal, exact
-   components/files, constraints, how success is verified. Update
+1. **Plan first, then WAIT for the owner's explicit "implement"** before
+   writing or running any code — a hard rule he enforces. The plan: goal,
+   exact components/files, constraints, how success is verified. Update
    docs/DESIGN.md first if the design changes. Ask the owner only about
    genuine product decisions.
 2. **Build in the main session**, reading only the files needed.
@@ -107,9 +121,9 @@ session. Sequence for any non-trivial task:
    iterate on his feedback.
 4. **Report** in plain language, teaching as you go (see Owner context).
 
-The `code-reviewer` agent is the one exception — it may still be used for
-genuinely large or risky work (schema changes, key handling, sweeping
-refactors), with the owner's go-ahead. Commit only when the owner asks.
+Do NOT spawn subagents — even the `code-reviewer` — unless a task
+genuinely requires it or the owner asks; default to doing everything
+inline in the main session. Commit only when the owner asks.
 
 ## Owner context
 

@@ -12,8 +12,11 @@ import {
   getCategoriesByRecency,
   getFeaturedVideos,
   getLatestVideos,
+  getPopularVideos,
   getVideosByCategory,
+  getVideosPage,
 } from "@/lib/data";
+import { TOPICS } from "@/lib/topics";
 
 // Without this, Next.js bakes the page once at build time and it never
 // updates. `revalidate` = ISR: serve the cached page, rebuild it in the
@@ -26,10 +29,12 @@ export const metadata: Metadata = { alternates: { canonical: "/" } };
 // server, send finished HTML to the browser" - there's no client-side
 // loading state to write for this page.
 export default async function HomePage() {
-  const [featured, latest, categories] = await Promise.all([
+  const [featured, latest, categories, radharani, popular] = await Promise.all([
     getFeaturedVideos(10),
     getLatestVideos(10),
     getCategoriesByRecency(),
+    getVideosPage({ titleKeywords: TOPICS.radharani.keywords }, 0, 12),
+    getPopularVideos(12),
   ]);
 
   if (latest.length === 0 && categories.length === 0) {
@@ -83,6 +88,29 @@ export default async function HomePage() {
     <FadeUp key="top-ten">
       <TopTenRow videos={latest.slice(0, 10)} />
     </FadeUp>,
+    // The Śrī Rādhārāṇī topic collection - shown high on the page, links to
+    // its full /topic/radharani grid. Spread in only when it has videos.
+    ...(radharani.length > 0
+      ? [
+          <FadeUp key="radharani">
+            <CategoryRow
+              title={TOPICS.radharani.title}
+              href={`/topic/${TOPICS.radharani.slug}`}
+              videos={radharani}
+            />
+          </FadeUp>,
+        ]
+      : []),
+    // "Most Watched" (DESIGN.md discovery): the top videos by YouTube view
+    // count, once the worker has enriched view_count. Spread in only when
+    // populated so it's invisible on a fresh/empty DB.
+    ...(popular.length > 0
+      ? [
+          <FadeUp key="most-watched">
+            <CategoryRow title="Most Watched" videos={popular} />
+          </FadeUp>,
+        ]
+      : []),
     ...rows.slice(0, 2).map(categoryRow),
     <FadeUp key="browse-shelf">
       <BrowseShelf categories={categories} thumbnails={posterThumbnails} />

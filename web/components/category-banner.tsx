@@ -11,10 +11,14 @@ export function CategoryBanner({
   category,
   thumbnail,
   count,
+  subtitle,
 }: {
   category: string;
   thumbnail: string | null;
   count: number;
+  /** Optional personality line (category-meta.ts); omitted for unknown
+   * categories. */
+  subtitle?: string;
 }) {
   return (
     <div className="relative h-40 w-full overflow-hidden rounded-xl sm:h-44">
@@ -37,13 +41,16 @@ export function CategoryBanner({
       />
       {/* Bottom scrim keeps the white heading legible over any artwork. */}
       <div className="absolute inset-x-0 bottom-0 h-2/3 bg-gradient-to-t from-black/70 to-transparent" />
-      <div className="absolute inset-x-0 bottom-0 flex flex-wrap items-baseline gap-x-3 gap-y-1 p-4 sm:p-6">
+      <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
         {/* Explicit white, not text-text: the banner is always dark
             regardless of the page's light palette. */}
-        <h1 className="font-heading text-3xl font-medium text-white sm:text-4xl">{category}</h1>
-        <span className="text-sm text-white/70">
-          {count} video{count === 1 ? "" : "s"}
-        </span>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+          <h1 className="font-heading text-3xl font-medium text-white sm:text-4xl">{category}</h1>
+          <span className="text-sm text-white/70">
+            {count} video{count === 1 ? "" : "s"}
+          </span>
+        </div>
+        {subtitle && <p className="mt-1 text-sm text-white/70">{subtitle}</p>}
       </div>
     </div>
   );
