@@ -36,8 +36,11 @@ export function cleanTitle(rawTitle: string): string {
     .replace(/#[^\s#]+/g, " ") // drop #hashtags entirely
     .replace(/\s+/g, " ") // collapse runs of whitespace
     // Trim separator junk left dangling at either end after the removals
-    // above (a title like "Kirtan ॥ #shorts" ends as "Kirtan ॥").
-    .replace(/^[\s|·•—–\-॥]+|[\s|·•—–\-॥]+$/g, "");
+    // above (a title like "Kirtan ॥ #shorts" ends as "Kirtan ॥"). ॥ (the
+    // Sanskrit/Hindi double danda marking a verse/mantra's end) is
+    // deliberately NOT in this class - it's meaningful devotional
+    // punctuation throughout this catalog's titles, not decorative junk.
+    .replace(/^[\s|·•—–-]+|[\s|·•—–-]+$/g, "");
 
   // Only de-shout titles that are MOSTLY capitals. Counting letters (not
   // characters) keeps digits/punctuation from skewing the ratio, and the

@@ -19,6 +19,7 @@ code-reviewer treats deviations from it as findings.
 npm run dev        # dev server at localhost:3000
 npm run build      # production build — must pass before any handoff
 npm run lint       # eslint
+npm run test       # vitest — pure-logic unit tests (web/lib/*.test.ts)
 
 # Worker (run from repo root)
 pip install -r worker/requirements.txt
@@ -30,8 +31,11 @@ python worker/sync.py --enrich # re-process EXISTING rows: refresh view_count + 
 node scripts/generate-icons.mjs
 ```
 
-There is no test suite; verification = build + lint + smoke-testing the
-affected routes in the dev server.
+Vitest covers the pure-logic layer only (`web/lib/*.test.ts`: formatters,
+`safeDecodeURIComponent`, festival-window date math, the Continue Watching
+localStorage logic) — no React component or page tests. Verification is
+still build + lint + `test` + smoke-testing the affected routes in the dev
+server; there's no CI step running any of this yet (all manual).
 
 Groq's free tier rate-limits hard on big classification runs — `sync.py`
 batches (~15 videos/call) with 429 backoff, but a full backfill still needs
