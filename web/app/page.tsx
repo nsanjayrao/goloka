@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { BrowseShelf } from "@/components/browse-shelf";
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
+import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
 import { EmptyState } from "@/components/empty-state";
 import { FadeUp } from "@/components/fade-up";
 import { HeroCarousel } from "@/components/hero-carousel";
@@ -91,6 +92,15 @@ export default async function HomePage() {
   // reads fine even with 0-3 categories. The Featured shelf is spread in
   // only when videos are flagged, so it's invisible until the owner curates.
   const sections = [
+    // Continue Watching (Tier 3): purely client-side (localStorage, see
+    // lib/recently-watched.ts), so it renders null on the server and for
+    // first-time visitors, then appears after mount for a returning one. NOT
+    // wrapped in <FadeUp> here - it applies its own internally only when it
+    // has data, so an empty one contributes nothing to the flex layout
+    // (see continue-watching-shelf.tsx). Leads the page (industry
+    // convention for a personalized row) without touching the owner's
+    // Featured curation below it.
+    <ContinueWatchingShelf key="continue-watching" />,
     ...(featured.length > 0
       ? [
           <FadeUp key="featured">

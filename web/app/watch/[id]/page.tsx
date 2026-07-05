@@ -5,6 +5,7 @@ import { cache } from "react";
 
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
+import { RecordWatch } from "@/components/record-watch";
 import { ShareButton } from "@/components/share-button";
 import { VideoDescription } from "@/components/video-description";
 import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
@@ -85,6 +86,14 @@ export default async function WatchPage({ params }: Props) {
 
   return (
     <>
+      <RecordWatch
+        youtubeVideoId={video.youtube_video_id}
+        title={title}
+        thumbnailUrl={video.thumbnail_url}
+        channelTitle={video.channel?.title ?? null}
+        durationSeconds={video.duration_seconds}
+      />
+
       {/* The cinematic stage (DESIGN.md "Video page"): a full-width
           near-black band the player sits on, flowing seamlessly down from
           the black header. Same CSS-variable re-skin trick as the top bar -
