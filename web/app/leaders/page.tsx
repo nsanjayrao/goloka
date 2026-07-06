@@ -60,7 +60,7 @@ export default async function LeadersPage() {
                 {channel.title.charAt(0)}
               </div>
             )}
-            <span className="line-clamp-2 text-[15px] font-medium leading-snug text-text group-hover:text-accent">
+            <span className="line-clamp-2 text-[15px] font-medium leading-snug text-text group-hover:text-accent-strong">
               {channel.title}
             </span>
             <span className="text-[13px] text-text-muted">

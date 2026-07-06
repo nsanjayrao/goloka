@@ -13,7 +13,7 @@ export function VideoDescription({ description }: { description: string }) {
       <button
         type="button"
         onClick={() => setExpanded((prev) => !prev)}
-        className="mt-2 text-sm font-medium text-accent hover:underline"
+        className="mt-2 text-sm font-medium text-accent-strong hover:underline"
       >
         {expanded ? "Less" : "More"}
       </button>

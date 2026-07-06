@@ -51,7 +51,7 @@ export default async function BrowsePage() {
     <Container className="py-10">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">Browse</h1>
-        <Link href="/leaders" className="text-sm text-text-muted transition-colors hover:text-accent">
+        <Link href="/leaders" className="text-sm text-text-muted transition-colors hover:text-accent-strong">
           Browse by Spiritual Leader →
         </Link>
       </div>

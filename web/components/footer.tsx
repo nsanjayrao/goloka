@@ -25,12 +25,12 @@ export function Footer() {
           to its creators.
         </p>
         <div className="flex items-center gap-4 text-sm text-text-muted">
-          <Link href="/about" className="transition-colors hover:text-accent">
+          <Link href="/about" className="transition-colors hover:text-accent-strong">
             About
           </Link>
           <a
             href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion"
-            className="transition-colors hover:text-accent"
+            className="transition-colors hover:text-accent-strong"
           >
             Suggest a channel
           </a>

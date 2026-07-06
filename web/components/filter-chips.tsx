@@ -135,7 +135,7 @@ function chipClass(active: boolean) {
   return cn(
     "rounded-full border px-3 py-1.5 text-[13px] transition-colors duration-200 ease-out",
     active
-      ? "border-accent bg-surface-2 text-accent"
+      ? "border-accent bg-surface-2 text-accent-strong"
       : "border-border bg-surface text-text-muted hover:text-text"
   );
 }

@@ -70,7 +70,7 @@ export default function AboutPage() {
             Know a channel that belongs here, or spot something miscategorized?{" "}
             <a
               href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion"
-              className="text-accent underline-offset-4 hover:underline"
+              className="text-accent-strong underline-offset-4 hover:underline"
             >
               Send a note
             </a>{" "}
