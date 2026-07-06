@@ -1,5 +1,4 @@
-import Link from "next/link";
-
+import { SectionHeader } from "@/components/section-header";
 import { Shelf } from "@/components/shelf";
 import { VideoCard } from "@/components/video-card";
 import type { Video } from "@/lib/types";
@@ -30,23 +29,11 @@ export function CategoryRow({
 }) {
   if (videos.length === 0) return null;
 
-  const viewAllHref = href ?? (category ? `/browse/${encodeURIComponent(category)}` : null);
+  const viewAllHref = href ?? (category ? `/browse/${encodeURIComponent(category)}` : undefined);
 
   return (
     <section>
-      <div className="mb-3 flex items-baseline justify-between">
-        <h2 className="font-heading text-[26px] font-medium tracking-tight text-text sm:text-[28px]">
-          {title ?? category}
-        </h2>
-        {viewAllHref && (
-          <Link
-            href={viewAllHref}
-            className="shrink-0 text-sm text-text-muted transition-colors hover:text-accent"
-          >
-            View all →
-          </Link>
-        )}
-      </div>
+      <SectionHeader title={title ?? category ?? ""} href={viewAllHref} />
       <Shelf>
         {/* No `priority` here: these rows are below the fold (the Hero
             above already claims priority loading for the one LCP-critical

@@ -4,6 +4,7 @@ import { BrowseShelf } from "@/components/browse-shelf";
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
 import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
+import { FeaturedShelf } from "@/components/featured-shelf";
 import { EmptyState } from "@/components/empty-state";
 import { FadeUp } from "@/components/fade-up";
 import { HeroCarousel } from "@/components/hero-carousel";
@@ -104,7 +105,7 @@ export default async function HomePage() {
     ...(featured.length > 0
       ? [
           <FadeUp key="featured">
-            <CategoryRow title="Featured" videos={featured} />
+            <FeaturedShelf videos={featured} />
           </FadeUp>,
         ]
       : []),

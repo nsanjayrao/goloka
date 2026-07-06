@@ -1,3 +1,4 @@
+import { SectionHeader } from "@/components/section-header";
 import { Shelf } from "@/components/shelf";
 import { VideoCard } from "@/components/video-card";
 import type { Video } from "@/lib/types";
@@ -12,11 +13,7 @@ export function TopTenRow({ videos }: { videos: Video[] }) {
 
   return (
     <section>
-      <div className="mb-3">
-        <h2 className="font-heading text-[26px] font-medium tracking-tight text-text sm:text-[28px]">
-          Top 10 New Arrivals
-        </h2>
-      </div>
+      <SectionHeader title="Top 10 New Arrivals" />
       <Shelf>
         {videos.map((video, index) => (
           <div key={video.id} className="snap-item w-[260px] shrink-0 sm:w-[320px]">
