@@ -56,6 +56,11 @@
   --shadow-card: 0 1px 2px rgba(25, 25, 25, 0.04), 0 8px 24px rgba(25, 25, 25, 0.06);
   --shadow-lift: 0 2px 4px rgba(25, 25, 25, 0.05), 0 16px 40px rgba(25, 25, 25, 0.1);
 
+  /* The ONE motion character (DESIGN.md #5): a soft, slightly-damped spring -
+     a gentle overshoot that settles, never a bounce. `ease-spring` on hover
+     lifts / indicator moves. */
+  --ease-spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+
   /* shadcn primitive tokens, wired to the brand tokens above so Button /
      Sheet / Skeleton / Badge / Tabs pick up Goloka's palette automatically.
      Note: shadcn's own "accent" token is intentionally left as a neutral

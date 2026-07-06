@@ -163,7 +163,9 @@ export default async function HomePage() {
     // whole page - only the hero itself moves up, under the top bar.
     <div className="flow-root">
       {latest.length > 0 && <HeroCarousel videos={latest.slice(0, 5)} />}
-      <Container className="flex flex-col gap-10 py-10">{sections}</Container>
+      {/* Generous section rhythm (DESIGN.md #3.5): 48px between shelves on
+          mobile, 80px on desktop - whitespace is the luxury. */}
+      <Container className="flex flex-col gap-12 py-12 sm:gap-20 sm:py-16">{sections}</Container>
     </div>
   );
 }
