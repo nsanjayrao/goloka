@@ -4,27 +4,29 @@
 
 /*
  * Goloka design tokens (docs/DESIGN.md #2).
- * Single light palette, Apple-style (owner decision 2026-07-03: dark mode
- * removed). White canvas, near-black text - the content imagery carries
- * the color, like tv.apple.com.
+ * Warm-ivory light palette (2026-07-05 premium pass): white cards float on
+ * an ivory canvas, near-black text - the content imagery carries the color.
+ * Calm/Headspace warmth on an Apple structure. Dark mode removed 2026-07-03.
  */
 :root {
-  --bg: #ffffff;
-  --surface: #f5f5f7;
-  --surface-2: #e8e8ed;
-  --border: #d2d2d7;
-  --text: #1d1d1f;
-  --text-muted: #6e6e73;
-  /* Deepened saffron: the bright #F0A83C brand tone fails WCAG AA as text
-     on white, so the UI uses this darker cut of it everywhere. */
-  --accent: #b97a16;
-  /* Fill-only saffron for solid buttons: --accent-ink (near-white) on
-     --accent is only 3.44:1 (fails AA), so filled CTAs use this darker cut
-     (~5:1 with --accent-ink). --accent itself stays for text/borders/icons,
-     where it reads on the white page as the owner intended. */
-  --accent-strong: #96620f;
-  --accent-2: #1f8577;
-  --accent-ink: #fffaf1;
+  --bg: #f8f6f2; /* warm ivory - the page canvas */
+  --surface: #ffffff; /* white - cards / bands / inputs float ON the ivory */
+  --surface-2: #f0ece2; /* warm sand - hover/elevated states, skeletons, badges */
+  --border: rgba(0, 0, 0, 0.06); /* hairlines only, never heavier */
+  --text: #191919;
+  --text-muted: #6b6b6b;
+  /* Gold. #B8892F is ~3:1 on white/ivory: good for icons, borders,
+     indicators, and LARGE text, but it fails AA for small text - small gold
+     text must use --accent-strong. */
+  --accent: #b8892f;
+  /* Brighter gold for HOVER/ACTIVE of gold *elements* (icons, borders,
+     indicators). Never for text on a light background (it's ~2.4:1). */
+  --accent-hover: #d4af37;
+  /* Deep gold for SMALL accent text and SOLID button fills - ~4.8:1 on
+     white, so it clears AA and --accent-ink stays legible on a fill. */
+  --accent-strong: #8a6420;
+  --accent-2: #1f8577; /* deep peacock teal - rare, small highlights only */
+  --accent-ink: #fffaf1; /* text on gold fills */
 }
 
 @theme inline {
@@ -37,9 +39,22 @@
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-accent-strong: var(--accent-strong);
   --color-accent-2: var(--accent-2);
   --color-accent-ink: var(--accent-ink);
+
+  /* Radii (DESIGN.md #3.5): cards 18px, surface sections/banners 20px, hero
+     & full-bleed media bands 24px (= built-in rounded-3xl). Exposed as
+     rounded-card / rounded-section. Buttons/chips use rounded-full. */
+  --radius-card: 18px;
+  --radius-section: 20px;
+
+  /* Soft, warm elevation - the ONLY two shadow recipes on the light page
+     (DESIGN.md #3.5). shadow-card resting, shadow-lift on hover. Nothing
+     darker; no colored shadows. */
+  --shadow-card: 0 1px 2px rgba(25, 25, 25, 0.04), 0 8px 24px rgba(25, 25, 25, 0.06);
+  --shadow-lift: 0 2px 4px rgba(25, 25, 25, 0.05), 0 16px 40px rgba(25, 25, 25, 0.1);
 
   /* shadcn primitive tokens, wired to the brand tokens above so Button /
      Sheet / Skeleton / Badge / Tabs pick up Goloka's palette automatically.
@@ -52,7 +67,10 @@
   --color-card-foreground: var(--text);
   --color-popover: var(--surface);
   --color-popover-foreground: var(--text);
-  --color-primary: var(--accent);
+  /* Solid fills use the DEEP gold (--accent-strong), not --accent: cream ink
+     on --accent is ~3.4:1 (fails AA), on --accent-strong it clears it.
+     DESIGN.md #2. */
+  --color-primary: var(--accent-strong);
   --color-primary-foreground: var(--accent-ink);
   --color-secondary: var(--surface-2);
   --color-secondary-foreground: var(--text);
