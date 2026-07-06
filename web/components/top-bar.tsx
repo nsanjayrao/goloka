@@ -14,7 +14,7 @@ import { TopBarSearch } from "@/components/top-bar-search";
 export function TopBar() {
   return (
     <header
-      className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur"
+      className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-lg"
       // The page's tokens are near-black-on-white, which would vanish on a
       // black bar. Every child (logo, search pill, icons) styles itself
       // with the tokens, so locally overriding the CSS variables here
