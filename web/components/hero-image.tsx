@@ -5,6 +5,8 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 // Full-bleed hero art (DESIGN.md #4: "highest available resolution
 // maxresdefault.jpg... with client-side fallback to hqdefault.jpg - never
 // render a 480px image full-bleed"). `maxresdefault` (1280px) doesn't exist
@@ -19,12 +21,16 @@ export function HeroImage({
   videoId,
   alt,
   priority = false,
+  className,
 }: {
   videoId: string;
   alt: string;
   /** Only the active/first carousel slide should be priority (the LCP
    * image); the rest lazy-load so they don't compete for bandwidth. */
   priority?: boolean;
+  /** Extra classes on the image itself - the carousel passes the Ken Burns
+   * animation class here for the active slide. */
+  className?: string;
 }) {
   const [fellBack, setFellBack] = useState(false);
 
@@ -39,7 +45,9 @@ export function HeroImage({
       fill
       priority={priority}
       sizes="100vw"
-      className="object-cover transition-transform duration-200 ease-out group-hover:scale-[1.02]"
+      // Ambient motion is the carousel's slow Ken Burns (passed via
+      // `className` on the active slide), so no hover scale here.
+      className={cn("object-cover", className)}
       onError={() => setFellBack(true)}
       onLoad={(event) => {
         if (event.currentTarget.naturalWidth <= 120) setFellBack(true);

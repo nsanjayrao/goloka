@@ -137,4 +137,27 @@
   .snap-item {
     scroll-snap-align: start;
   }
+
+  /* Hero Ken Burns (DESIGN.md #4.1 / #5): a slow scale-only drift on the
+     active slide - scale, never pan, so no directional bias. Applied only to
+     the active slide by the carousel; disabled entirely for reduced motion. */
+  .animate-ken-burns {
+    animation: ken-burns 14s linear forwards;
+    transform-origin: center;
+    will-change: transform;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .animate-ken-burns {
+      animation: none;
+    }
+  }
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(1.001);
+  }
+  to {
+    transform: scale(1.06);
+  }
 }
