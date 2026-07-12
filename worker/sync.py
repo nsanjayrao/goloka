@@ -236,9 +236,12 @@ TOPIC_DEFS = {
 # High-precision word patterns per topic - the floor the LLM builds on (its
 # judgments are unioned with these). Deliberately narrow: "radharani" needs
 # the full name / Radhastami / Barsana, never a bare "radha" substring
-# (which used to false-positive on "aradhana").
+# (which used to false-positive on "aradhana"). "radhika"/"राधिका" is NOT
+# here on purpose: it appears constantly in SPEAKER names ("Radhika Vallabh
+# Prabhu", "Radhika Devi Dasi") - name-vs-subject is exactly the judgment
+# call that belongs to the LLM, not a regex.
 TOPIC_RULES = {
-    "radharani": re.compile(r"radharani|radhika|radh[ae][\s-]*a?shtami|radhastami|\bkishori\b|\bbarsana\b|राधारानी|राधाष्टमी|राधिका", re.I),
+    "radharani": re.compile(r"radharani|radh[ae][\s-]*a?shtami|radhastami|\bkishori\b|\bbarsana\b|राधारानी|राधाष्टमी", re.I),
     "vrindavan": re.compile(r"vrindavan|vrndavan|brindavan|वृन्दावन|वृंदावन", re.I),
     "gita": re.compile(r"bhagavad[\s-]*gita|bhagavadgita|\bgita\b|भगवद्[\s-]*गीता", re.I),
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
@@ -321,6 +324,18 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start:end + 1])
 
 
+def _echo_matches(echo: str, title: str) -> bool:
+    """True when the LLM's echoed title-start really is this video's title.
+    Batch models occasionally shift results one index over - seen in
+    practice tagging 'Neurological Disorders: An Ayurvedic Perspective' as
+    Radharani content - so every row must prove it's talking about ITS
+    video. Comparison ignores case/whitespace/punctuation (the echo often
+    normalizes quotes or drops a pipe)."""
+    e = re.sub(r"\W+", "", echo or "").lower()
+    t = re.sub(r"\W+", "", title or "").lower()
+    return bool(e) and t.startswith(e[:16])
+
+
 def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
     """Classify a BATCH of videos in one LLM call, failing over between
     providers (Groq -> NVIDIA) on 429s/errors. `items` = [{"title",
@@ -338,13 +353,16 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
     topic_lines = "\n".join(f'- "{slug}": {desc}' for slug, desc in TOPIC_DEFS.items())
     prompt = (
         "Classify each ISKCON/Krishna-consciousness YouTube video below. For each, give:\n"
+        '- "t": the first few words of that video\'s title, copied verbatim\n'
         f'- "category": one of {CATEGORIES}\n'
         '- "language": its main spoken language, or null\n'
         '- "topics": which of these the video is PRIMARILY about - 0 to 3 of:\n'
-        f"{topic_lines}\n\n"
+        f"{topic_lines}\n"
+        "A person's NAME containing Radha/Radhika/Vrindavan does not make the video about that topic.\n\n"
         f"{numbered}\n\n"
-        'Reply with JSON only: {"results": [{"i": <index>, "category": <category>, '
-        '"language": <language or null>, "topics": [<slugs>]}, ...]} covering every index.'
+        'Reply with JSON only: {"results": [{"i": <index>, "t": <title start>, '
+        '"category": <category>, "language": <language or null>, "topics": [<slugs>]}, ...]} '
+        "covering every index."
     )
 
     for offset in range(len(PROVIDERS)):
@@ -373,9 +391,17 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
                 resp.raise_for_status()
                 data = _extract_json(resp.json()["choices"][0]["message"]["content"])
                 out: list[dict | None] = [None] * len(items)
+                mismatches = 0
                 for row in data.get("results", []):
                     idx = row.get("i")
                     if not (isinstance(idx, int) and 0 <= idx < len(items)):
+                        continue
+                    # Echo check: the row must prove it's about ITS video.
+                    # A row with a wrong/missing echo is discarded (that video
+                    # just gets no LLM verdict) rather than trusted - a
+                    # misaligned verdict is worse than none.
+                    if not _echo_matches(row.get("t") or "", items[idx]["title"]):
+                        mismatches += 1
                         continue
                     raw_topics = row.get("topics") or []
                     out[idx] = {
@@ -383,6 +409,8 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
                         "language": normalize_language(row.get("language")),
                         "topics": [t for t in raw_topics if t in TOPIC_DEFS],
                     }
+                if mismatches:
+                    print(f"    {p['name']}: dropped {mismatches}/{len(items)} rows on echo mismatch")
                 return out
             except Exception as exc:  # this provider is unhealthy - try the next
                 print(f"    {p['name']} batch failed: {exc}")
