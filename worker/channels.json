@@ -137,12 +137,6 @@
     "default_category": "Lectures"
   },
   {
-    "youtube_channel_id": "UCDeloGv5S_NHVizd-DbNyGw",
-    "handle": "@sutapadas1349",
-    "_title": "Sutapa Das (5.56K subs)",
-    "default_category": "Lectures"
-  },
-  {
     "youtube_channel_id": "UC_oMVRN61d42Q0JpAHEwSBw",
     "handle": "@girirajswamiofficial",
     "_title": "Giriraj Swami Official (3.52K subs)",
@@ -164,6 +158,18 @@
     "youtube_channel_id": "UCOW-P7JnJzDEq23gGKyyorg",
     "handle": "@hdgoswami",
     "_title": "H.D. Goswami - Hridayananda Das Goswami (6.88K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UCZSyJyxtMG3Qbjh7ZZY39tg",
+    "handle": "@nitaisevinimatajiofficial",
+    "_title": "Nitaisevini Mataji (258K subs)",
+    "default_category": "Lectures"
+  },
+  {
+    "youtube_channel_id": "UChkQ7Q6cEBQenwKugPjOVjA",
+    "handle": "@punyamkrsnakathamritam",
+    "_title": "Amarendra Dasa Official (266K subs)",
     "default_category": "Lectures"
   }
 ]

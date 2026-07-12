@@ -25,9 +25,10 @@ export const SPEAKER_HANDLES = [
   "@indradyumnaswamiofficial",
   "@niranjanaswamiofficial",
   "@mediakadambakananaswami",
-  "@sutapadas1349",
   "@girirajswamiofficial",
   "@jayapatakaswamiofficial",
   "@romapadaswamichannel",
   "@hdgoswami",
+  "@nitaisevinimatajiofficial",
+  "@punyamkrsnakathamritam",
 ];
