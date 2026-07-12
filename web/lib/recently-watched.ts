@@ -1,7 +1,7 @@
 // "Continue Watching" (Tier 3): a personalized homepage row with zero
 // backend and zero accounts - watch history lives ONLY in the visitor's own
 // browser (localStorage), never sent to or read by the server. This is what
-// keeps it consistent with the site's no-user-data stance (CLAUDE.md) while
+// keeps it consistent with the site's no-user-data stance (see About) while
 // still giving a real returning-visitor convenience.
 const STORAGE_KEY = "goloka:recently-watched";
 const MAX_ENTRIES = 12;

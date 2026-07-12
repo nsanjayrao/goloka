@@ -58,12 +58,12 @@ export default async function HomePage() {
       Promise.all(
         homeTopics.map(async (topic) => ({
           topic,
-          videos: await getVideosPage({ titleKeywords: topic.keywords }, 0, 8),
+          videos: await getVideosPage({ topicSlug: topic.slug }, 0, 8),
         }))
       ),
       getPopularVideos(8),
       activeFestival
-        ? getVideosPage({ titleKeywords: activeFestival.keywords }, 0, 8)
+        ? getVideosPage({ topicSlug: activeFestival.slug }, 0, 8)
         : Promise.resolve([]),
     ]);
 

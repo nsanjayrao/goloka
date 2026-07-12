@@ -38,9 +38,11 @@ export default async function TopicPage({ params }: Props) {
   const topic = TOPICS[slug];
   if (!topic) notFound();
 
-  // Only the title keywords - no category/channel/duration - so this gathers
-  // every matching video across the whole catalog.
-  const filters = { titleKeywords: topic.keywords };
+  // Tag-driven (2026-07-13): the sync worker LLM-judges what each video is
+  // PRIMARILY about and writes topic slugs into `tags` - so this page shows
+  // videos about the topic, not videos whose title happens to contain a
+  // substring ("aradhana" is not Radharani content).
+  const filters = { topicSlug: topic.slug };
 
   const [count, videos, bannerVideos] = await Promise.all([
     getVideoCount(filters),

@@ -2,7 +2,7 @@
 // to `supabase` directly. Every function is defensive: if Supabase isn't
 // configured (no env vars) or a query fails (network blip, empty database),
 // it returns an empty/neutral value instead of throwing. That's what lets
-// every page render its empty state instead of crashing - see CLAUDE.md's
+// every page render its empty state instead of crashing - the app-wide
 // "database may be empty or unreachable" requirement.
 import { supabase } from "@/lib/supabase";
 import type { Channel, DurationBucket, Video } from "@/lib/types";
@@ -259,6 +259,7 @@ export async function getVideoCount(filters: Partial<VideoPageFilters> = {}): Pr
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
     if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
+    if (filters.topicSlug) query = query.contains("tags", [filters.topicSlug]);
     const { count, error } = await query;
     if (error) throw error;
     return count ?? 0;
@@ -290,8 +291,14 @@ export type VideoPageFilters = {
   /** Exact match on the `language` column (see getLanguagesInCategory). */
   language?: string;
   /** Match videos whose TITLE contains any of these keywords (OR of ILIKEs).
-   * Drives topic collections like /topic/radharani. */
+   * Legacy topic mechanism - substring matching false-positives (e.g.
+   * "radha" inside "aradhana"), so topic collections now use `topicSlug`;
+   * this stays for any ad-hoc keyword shelf. */
   titleKeywords?: string[];
+  /** Match videos the sync worker tagged with this topic slug (the `tags`
+   * jsonb column - see worker/sync.py TOPIC_DEFS). LLM-judged "aboutness",
+   * not substring luck: drives /topic/* and the home topic shelves. */
+  topicSlug?: string;
   /** Order: "recent" (published_at, default) or "popular" (view_count). */
   sort?: "recent" | "popular";
 };
@@ -315,6 +322,7 @@ export async function getVideosPage(
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
     if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
+    if (filters.topicSlug) query = query.contains("tags", [filters.topicSlug]);
 
     const { data, error } = await query
       .order(filters.sort === "popular" ? "view_count" : "published_at", {
@@ -448,8 +456,8 @@ function rankedRowToVideo(row: RankedSearchRow): Video {
  *
  * Tries the `search_videos_ranked` RPC first (relevance-ordered via
  * ts_rank - see db/schema.sql); if that RPC hasn't been added to the
- * database yet (the owner runs schema.sql manually - CLAUDE.md's "no
- * migration tooling"), falls back to a plain recency-ordered search_tsv
+ * database yet (schema.sql is run manually - there is no migration
+ * tooling), falls back to a plain recency-ordered search_tsv
  * match, so search keeps working either way and silently upgrades to
  * relevance ranking the moment the migration is applied. */
 export async function searchVideos(query: string, limit = 24): Promise<Video[]> {

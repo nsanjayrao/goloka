@@ -67,6 +67,13 @@ alter table videos add column if not exists search_tsv tsvector
   ) stored;
 create index if not exists videos_search_tsv_idx on videos using gin (search_tsv);
 
+-- Topic collections (2026-07-13): the sync worker writes LLM-judged topic
+-- slugs (worker/sync.py TOPIC_DEFS, mirroring web/lib/topics.ts) into the
+-- `tags` jsonb array, and /topic/* queries it with the jsonb containment
+-- operator (tags @> '["radharani"]'). jsonb_path_ops GIN is the smaller,
+-- faster index variant that serves exactly that operator.
+create index if not exists videos_tags_idx on videos using gin (tags jsonb_path_ops);
+
 -- Live darshans (Midnight redesign, 2026-07-12): powers the home page's
 -- "Live from the dhāma" strip. Defaults mean "not live", so the strip simply
 -- doesn't render until the sync worker starts marking live streams (worker

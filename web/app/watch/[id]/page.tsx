@@ -103,7 +103,7 @@ export default async function WatchPage({ params }: Props) {
         <Container className="page-top pb-8 sm:pb-10">
           <div className="mx-auto max-w-4xl">
             {/* Standard, unmodified YouTube embed via youtube-nocookie.com -
-                Goloka is an index, never a host (CLAUDE.md). No custom
+                Goloka is an index, never a host (see README). No custom
                 controls, no download/proxy of the video itself. */}
             <div className="relative aspect-video overflow-hidden rounded-xl shadow-2xl">
               <iframe

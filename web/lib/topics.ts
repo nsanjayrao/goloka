@@ -1,10 +1,13 @@
 // Topic collections: cross-category themes (e.g. everything about Śrī
 // Rādhārāṇī) surfaced as their own page (/topic/<slug>) plus, optionally, a
-// homepage shelf. A topic is just a saved TITLE search over the catalog - see
-// `titleKeywords` in lib/data.ts - so it needs no schema change and grows
-// automatically as new videos sync. Add a topic by adding an entry here; the
-// page (app/topic/[slug]/page.tsx) and the home page both read this registry,
-// so nothing else needs editing.
+// homepage shelf. Since 2026-07-13 a topic is TAG-driven: the sync worker
+// LLM-judges what each video is primarily about and writes these slugs into
+// the `tags` column (worker/sync.py TOPIC_DEFS - keep the two registries in
+// sync), and pages query `topicSlug` in lib/data.ts. The `keywords` field
+// below is the legacy title-substring mechanism, kept for reference and for
+// any ad-hoc keyword shelf - it is no longer what topic pages match on.
+// Adding a topic = add an entry here AND its TOPIC_DEFS/TOPIC_RULES entry in
+// worker/sync.py, then run `python worker/sync.py --enrich` to backfill.
 /** A fixed Gregorian month/day window (inclusive) approximating a festival's
  * date - real Vedic festival dates (Janmashtami, Nrsimha Chaturdashi, ...)
  * follow the lunar calendar and shift every year, so this is a deliberate
