@@ -11,7 +11,7 @@ official sources. We store metadata only — no media files, ever.
 
 ```
 YouTube channels (curated list)
-        │  every 6 hours (GitHub Actions cron)
+        │  every 12 hours (GitHub Actions cron)
         ▼
 worker/sync.py  ──  fetch new videos → classify (rules → optional Groq LLM) → upsert
         │
@@ -43,7 +43,7 @@ Next.js on Vercel (free tier)  ──  responsive PWA, YouTube embeds   (web/ �
 6. **Automate**: push to GitHub → repo Settings → Secrets and variables →
    Actions → add `YOUTUBE_API_KEY`, `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`
    (and optionally `GROQ_API_KEY`). The workflow in
-   `.github/workflows/sync.yml` then syncs every 6 hours automatically.
+   `.github/workflows/sync.yml` then syncs every 12 hours automatically.
 
 ## Roadmap
 

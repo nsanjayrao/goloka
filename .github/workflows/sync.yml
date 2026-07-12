@@ -2,7 +2,7 @@ name: Sync videos
 
 on:
   schedule:
-    - cron: "0 */6 * * *"   # every 6 hours
+    - cron: "0 */12 * * *"  # every 12 hours (owner decision 2026-07-13: halves API/LLM usage; new uploads land within half a day)
   workflow_dispatch: {}      # allow manual runs from the Actions tab
 
 jobs:
@@ -26,7 +26,7 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
 
-      # This runs unattended every 6h with no other observer, so a silent
+      # This runs unattended every 12h with no other observer, so a silent
       # failure can go unnoticed for days. Rather than add a new external
       # service (Slack/Discord webhook), this stays inside GitHub's own free
       # tooling: file an issue on failure, and auto-close it once a later run
