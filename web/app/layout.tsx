@@ -1,26 +1,35 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Figtree, Marcellus, Tiro_Devanagari_Hindi } from "next/font/google";
 
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { Footer } from "@/components/footer";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
 import { TopBar } from "@/components/top-bar";
+import { Veil } from "@/components/veil";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-// next/font/google downloads and self-hosts the font at build time (no
-// runtime request to Google, no layout shift from a late-loading webfont).
-// The `variable` option exposes it as a CSS custom property that
-// globals.css's `--font-heading` / `--font-sans` point at.
-const fraunces = Fraunces({
+// next/font/google downloads and self-hosts each font at build time (no
+// runtime request to Google, no layout shift). The `variable` options expose
+// them as CSS custom properties that globals.css's --display/--body stacks
+// point at. Tiro Devanagari Hindi is the fallback in BOTH stacks so Hindi
+// titles render as elegant serif, never system fallback (DESIGN.md #3).
+const marcellus = Marcellus({
   subsets: ["latin"],
-  variable: "--font-fraunces",
-  weight: ["500", "600"],
+  weight: "400", // Marcellus ships a single weight
+  variable: "--font-marcellus",
 });
 
-const inter = Inter({
+const figtree = Figtree({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600"],
+  variable: "--font-figtree",
+});
+
+const tiro = Tiro_Devanagari_Hindi({
+  subsets: ["latin", "devanagari"],
+  weight: "400",
+  variable: "--font-tiro",
 });
 
 export const metadata: Metadata = {
@@ -38,13 +47,18 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FFFFFF",
+  themeColor: "#0A0F26", // --midnight (DESIGN.md #2)
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${fraunces.variable} ${inter.variable}`}>
+    <html lang="en" className={`${marcellus.variable} ${figtree.variable} ${tiro.variable}`}>
       <body className="min-h-screen bg-bg text-text antialiased">
+        {/* Darshan curtain (first visit per session) + film grain overlay
+            (DESIGN.md #5.1 / #5.11) sit above everything and never catch
+            pointer events. */}
+        <Veil />
+        <div className="grain" aria-hidden="true" />
         <TopBar />
         <main className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</main>
         <Footer />

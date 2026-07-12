@@ -23,7 +23,7 @@ export default async function BrowsePage() {
 
   if (categories.length === 0) {
     return (
-      <Container className="py-10">
+      <Container className="page-top pb-10">
         <h1 className="font-heading text-3xl font-medium text-text">Browse</h1>
         <EmptyState message="Nothing here yet — like Vrindavan before the festival. Check back soon." />
       </Container>
@@ -48,7 +48,7 @@ export default async function BrowsePage() {
   );
 
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-2">
         <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">Browse</h1>
         <Link href="/leaders" className="text-sm text-text-muted transition-colors hover:text-accent-strong">

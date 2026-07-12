@@ -27,6 +27,11 @@ export type Video = {
   language: string | null;
   tags: string[];
   featured: boolean;
+  /** Optional: these two exist only once the owner re-runs db/schema.sql
+   * (the 2026-07-12 live-darshan columns) - older databases return rows
+   * without them, so treat `undefined` as "not live". */
+  is_live?: boolean;
+  live_viewer_count?: number | null;
   created_at: string;
   channel: {
     title: string;

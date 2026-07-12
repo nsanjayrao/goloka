@@ -25,9 +25,15 @@
 const OUTER_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 const INNER_ANGLES = [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5];
 
-export function LogoMark({ className }: { className?: string }) {
+export function LogoMark({
+  className,
+  style,
+}: {
+  className?: string;
+  style?: React.CSSProperties;
+}) {
   return (
-    <svg viewBox="0 0 64 64" className={className} aria-hidden="true">
+    <svg viewBox="0 0 64 64" className={className} style={style} aria-hidden="true">
       <defs>
         <linearGradient id="lotus-gold-deep" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#f4cf78" />

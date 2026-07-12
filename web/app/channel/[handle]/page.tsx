@@ -43,7 +43,7 @@ export default async function ChannelPage({ params }: Props) {
   ]);
 
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <div className="flex items-center gap-4">
         {channel.thumbnail_url ? (
           <Image

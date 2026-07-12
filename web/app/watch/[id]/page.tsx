@@ -94,25 +94,13 @@ export default async function WatchPage({ params }: Props) {
         durationSeconds={video.duration_seconds}
       />
 
-      {/* The cinematic stage (DESIGN.md "Video page"): a full-width
-          near-black band the player sits on, flowing seamlessly down from
-          the black header. Same CSS-variable re-skin trick as the top bar -
-          every child styles itself with the tokens, so one override turns
-          the whole band's text white. */}
-      <div
-        className="bg-[#141416]"
-        style={
-          {
-            "--bg": "#141416",
-            "--text": "#ffffff",
-            "--text-muted": "rgba(255,255,255,0.7)",
-            "--accent": "#f0a83c",
-            "--surface": "rgba(255,255,255,0.1)",
-            "--border": "rgba(255,255,255,0.15)",
-          } as React.CSSProperties
-        }
-      >
-        <Container className="py-8 sm:py-10">
+      {/* The cinematic stage (DESIGN.md #6 "Watch page"): the player sits
+          directly on the midnight canvas with the āratī lamp glowing behind
+          it at low intensity. The old light-theme CSS-var override band is
+          gone - the page IS dark now. */}
+      <div className="relative overflow-hidden">
+        <div className="lamp dim" aria-hidden="true" />
+        <Container className="page-top pb-8 sm:pb-10">
           <div className="mx-auto max-w-4xl">
             {/* Standard, unmodified YouTube embed via youtube-nocookie.com -
                 Goloka is an index, never a host (CLAUDE.md). No custom
@@ -155,19 +143,24 @@ export default async function WatchPage({ params }: Props) {
         </Container>
       </div>
 
-      <Container className="py-8">
-        {video.description && (
+      {video.description && (
+        <Container className="py-8">
           <div className="mx-auto max-w-4xl">
             <VideoDescription description={video.description} />
           </div>
-        )}
+        </Container>
+      )}
 
-        {moreVideos.length > 0 && (
-          <div className="mx-auto mt-12 max-w-6xl">
-            <CategoryRow category={video.category} title={`More from ${video.category}`} videos={moreVideos} />
-          </div>
-        )}
-      </Container>
+      {/* Related videos as one full-bleed row (DESIGN.md #6) - CategoryRow
+          carries its own --pad gutters now, so it sits outside Container. */}
+      {moreVideos.length > 0 && (
+        <CategoryRow
+          category={video.category}
+          kicker="Keep watching"
+          title={`More from ${video.category}`}
+          videos={moreVideos}
+        />
+      )}
 
       <script
         type="application/ld+json"

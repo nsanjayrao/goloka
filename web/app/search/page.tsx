@@ -19,7 +19,7 @@ export default async function SearchPage() {
   ]);
 
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">Search</h1>
       <div className="mt-6">
         {/* SearchClient reads the ?q= param via useSearchParams, which

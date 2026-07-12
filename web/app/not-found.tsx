@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state";
 
 export default function NotFound() {
   return (
-    <Container className="py-20">
+    <Container className="page-top pb-20">
       <EmptyState title="Page not found" message="This page wandered off the path — nothing to see here.">
         <Link
           href="/"

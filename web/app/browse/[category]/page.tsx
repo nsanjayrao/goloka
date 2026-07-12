@@ -76,7 +76,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   if (categoryCount === 0) {
     return (
-      <Container className="py-10">
+      <Container className="page-top pb-10">
         <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{category}</h1>
         <EmptyState message="Nothing here yet — like Vrindavan before the festival. Check back soon." />
       </Container>
@@ -84,7 +84,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   }
 
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <CategoryBanner
         category={category}
         thumbnail={bannerVideos[0]?.thumbnail_url ?? null}

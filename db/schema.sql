@@ -67,6 +67,15 @@ alter table videos add column if not exists search_tsv tsvector
   ) stored;
 create index if not exists videos_search_tsv_idx on videos using gin (search_tsv);
 
+-- Live darshans (Midnight redesign, 2026-07-12): powers the home page's
+-- "Live from the dhāma" strip. Defaults mean "not live", so the strip simply
+-- doesn't render until the sync worker starts marking live streams (worker
+-- support is a follow-up - see docs/DESIGN.md #5.6). The partial index only
+-- stores the rare live rows, so the strip's query stays near-free.
+alter table videos add column if not exists is_live boolean not null default false;
+alter table videos add column if not exists live_viewer_count integer;
+create index if not exists videos_is_live_idx on videos (published_at desc) where is_live;
+
 -- Anyone may read (the site is public); only the service key (sync worker) may write.
 alter table channels enable row level security;
 alter table videos enable row level security;

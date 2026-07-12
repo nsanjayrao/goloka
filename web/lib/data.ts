@@ -73,6 +73,29 @@ export async function getFeaturedVideos(limit: number): Promise<Video[]> {
   }, []);
 }
 
+/** Currently-live streams for the home "Live from the dhāma" strip
+ * (DESIGN.md #5.6), newest first. Until the owner re-runs db/schema.sql,
+ * the `is_live` column doesn't exist - Postgres reports that as error
+ * 42703 (undefined_column), which is an EXPECTED state here, not a
+ * failure: return [] quietly (no console.error spamming the dev overlay)
+ * and the strip simply doesn't render. Any other error still goes through
+ * `safely`'s normal log-and-fallback path. */
+export async function getLiveVideos(limit = 6): Promise<Video[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("videos")
+      .select(VIDEO_COLUMNS)
+      .eq("is_live", true)
+      .order("published_at", { ascending: false })
+      .limit(limit);
+    if (error) {
+      if (error.code === "42703") return [];
+      throw error;
+    }
+    return (data ?? []) as unknown as Video[];
+  }, []);
+}
+
 /** Every channel handle that isn't null, for the sitemap's /channel/[handle]
  * URLs. Bounded - the curated channel list is small. */
 export async function getChannelHandles(): Promise<string[]> {

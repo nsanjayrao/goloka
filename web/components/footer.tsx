@@ -1,41 +1,47 @@
 import Link from "next/link";
 
-import { Container } from "@/components/container";
 import { LogoMark } from "@/components/icons/logo-mark";
-import { Ornament } from "@/components/ornament";
 
-// The footer's own `border-t` is its divider. DESIGN.md #6's lotus SVG
-// divider is reserved for empty states (EmptyState renders it) - putting
-// one here too would put two lotuses on any empty-state page, breaking the
-// "max once per page" rule. The logo lockup is a different element and
-// gives the page a signed-off ending (DESIGN.md #6).
+// The prototype footer (DESIGN.md #5.10): mahā-mantra inscription in
+// letter-spaced gold Marcellus, a faint lamp glow rising from behind the
+// gold hairline, brand + links, and the existing "index, not a host"
+// disclaimer preserved verbatim.
 export function Footer() {
   return (
-    <footer className="mt-16 border-t border-border pb-20 pt-10 sm:pb-10">
-      <Container className="flex flex-col items-center gap-3 text-center">
-        <span className="flex items-center gap-1.5 font-heading text-lg font-medium tracking-tight text-text">
-          <LogoMark className="size-5" />
-          Goloka<span className="text-accent">.</span>
-        </span>
-        <p className="font-heading text-sm italic text-text-muted">Eternal abode of divine love</p>
-        <Ornament className="my-1" />
-        <p className="max-w-md text-sm text-text-muted">
-          Goloka is an index, not a host — every video plays through the official
-          YouTube player and links back to its source channel. All content belongs
-          to its creators.
-        </p>
-        <div className="flex items-center gap-4 text-sm text-text-muted">
-          <Link href="/about" className="transition-colors hover:text-accent-strong">
-            About
-          </Link>
-          <a
-            href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion"
-            className="transition-colors hover:text-accent-strong"
-          >
+    <footer className="site-footer">
+      <div className="lamp-foot" aria-hidden="true" />
+      <p className="mantra">
+        Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare
+        <br />
+        Hare Rāma Hare Rāma Rāma Rāma Hare Hare
+      </p>
+      <div className="foot-grid">
+        <div className="foot-brand">
+          <span className="wordmark">
+            <LogoMark className="size-8" />
+            Goloka
+          </span>
+          <p>
+            Eternal abode of divine love. A free, centralized index of ISKCON
+            lectures, kirtans and festivals from official channels.
+          </p>
+        </div>
+        <nav className="foot-links" aria-label="Footer">
+          <Link href="/">Home</Link>
+          <Link href="/browse">Browse</Link>
+          <Link href="/search">Search</Link>
+          <Link href="/leaders">Leaders</Link>
+          <Link href="/about">About</Link>
+          <a href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion">
             Suggest a channel
           </a>
-        </div>
-      </Container>
+        </nav>
+      </div>
+      <p className="disclaimer">
+        Goloka is an index, not a host — every video plays through the official
+        YouTube player and links back to its source channel. All content belongs
+        to its creators.
+      </p>
     </footer>
   );
 }

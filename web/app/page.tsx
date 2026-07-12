@@ -1,24 +1,26 @@
 import type { Metadata } from "next";
 
-import { BrowseShelf } from "@/components/browse-shelf";
+import { CategoryCards } from "@/components/category-cards";
 import { CategoryRow } from "@/components/category-row";
-import { Container } from "@/components/container";
 import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
-import { FeaturedShelf } from "@/components/featured-shelf";
 import { EmptyState } from "@/components/empty-state";
 import { FadeUp } from "@/components/fade-up";
-import { HeroCarousel } from "@/components/hero-carousel";
-import { PromoBand } from "@/components/promo-band";
-import { TopTenRow } from "@/components/top-ten-row";
+import { Hero, type HeroFeature } from "@/components/hero";
+import { LiveStrip } from "@/components/live-strip";
+import { QuoteBlock } from "@/components/quote-block";
+import { SplitFeature } from "@/components/split-feature";
+import { categorySubtitle } from "@/lib/category-meta";
 import {
-  getCategoriesByRecency,
+  getAllCategories,
   getFeaturedVideos,
   getLatestVideos,
+  getLiveVideos,
   getPopularVideos,
-  getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
+import { cleanTitle } from "@/lib/format";
 import { getActiveFestivalTopic, TOPIC_LIST } from "@/lib/topics";
+import type { Video } from "@/lib/types";
 
 // Without this, Next.js bakes the page once at build time and it never
 // updates. `revalidate` = ISR: serve the cached page, rebuild it in the
@@ -27,146 +29,125 @@ export const revalidate = 1800;
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 
-// Home is a server component: `async function` here means "fetch on the
-// server, send finished HTML to the browser" - there's no client-side
-// loading state to write for this page.
+// The rotating hero wants a light, serializable shape, not a whole Video row.
+function toHeroFeature(video: Video): HeroFeature {
+  return {
+    videoId: video.youtube_video_id,
+    title: cleanTitle(video.title),
+    channel: video.channel?.title ?? null,
+    subtitle: categorySubtitle(video.category) ?? null,
+  };
+}
+
+// Home is a server component: fetch on the server, send finished HTML.
+// Section order follows the prototype (goloka-final.html): hero → live
+// strip → new arrivals row → topic split → quote → topic rows → category
+// cards → most watched. Continue Watching (browser-only personalization)
+// and the festival shelf (owner decision 2026-07-05) are kept from the
+// previous design and slotted where they don't break the rhythm.
 export default async function HomePage() {
   const homeTopics = TOPIC_LIST.filter((topic) => topic.showOnHomepage);
-  // Festival-aware rotation (owner decision 2026-07-05): during a topic's
-  // festivalWindow (lib/topics.ts - a yearly-recurring approximation, since
-  // real Vedic festival dates are lunar), its newest videos get an EXTRA
-  // shelf alongside the hand-picked Featured set below, not replacing it.
   const activeFestival = getActiveFestivalTopic();
 
-  const [featured, latest, categories, topicRows, popular, festivalVideos] = await Promise.all([
-    getFeaturedVideos(10),
-    getLatestVideos(10),
-    getCategoriesByRecency(),
-    Promise.all(
-      homeTopics.map(async (topic) => ({
-        topic,
-        videos: await getVideosPage({ titleKeywords: topic.keywords }, 0, 12),
-      }))
-    ),
-    getPopularVideos(12),
-    activeFestival ? getVideosPage({ titleKeywords: activeFestival.keywords }, 0, 12) : Promise.resolve([]),
-  ]);
+  const [featured, latest, live, categories, topicRows, popular, festivalVideos] =
+    await Promise.all([
+      getFeaturedVideos(3),
+      getLatestVideos(12),
+      getLiveVideos(3),
+      getAllCategories(),
+      Promise.all(
+        homeTopics.map(async (topic) => ({
+          topic,
+          videos: await getVideosPage({ titleKeywords: topic.keywords }, 0, 8),
+        }))
+      ),
+      getPopularVideos(8),
+      activeFestival
+        ? getVideosPage({ titleKeywords: activeFestival.keywords }, 0, 8)
+        : Promise.resolve([]),
+    ]);
 
   if (latest.length === 0 && categories.length === 0) {
     return (
-      <Container>
+      <div className="page-top gutter">
         <EmptyState message="Nothing here yet — like Vrindavan before the festival. Check back soon." />
-      </Container>
+      </div>
     );
   }
 
-  // Fetch each row's videos in parallel rather than one category at a time.
-  const rows = await Promise.all(
-    categories.map(async (category) => ({
-      category,
-      videos: await getVideosByCategory(category, 10),
-    }))
+  // The hero rotates the owner's hand-curated Featured videos; before any
+  // are flagged it falls back to the newest uploads, so it never sits empty.
+  const heroFeatures = (featured.length > 0 ? featured : latest).slice(0, 3).map(toHeroFeature);
+
+  // The first home topic with enough videos becomes the feature-split
+  // layout; the remaining topics render as ordinary rows.
+  const splitIndex = topicRows.findIndex(({ videos }) => videos.length >= 4);
+  const splitTopic = splitIndex >= 0 ? topicRows[splitIndex] : null;
+  const rowTopics = topicRows.filter(
+    (entry, index) => index !== splitIndex && entry.videos.length > 0
   );
-
-  // Each browse poster shows its category's newest thumbnail (DESIGN.md
-  // #4.4). The rows above are already sorted newest-first, so the first
-  // video with artwork is the poster - no extra query needed.
-  const posterThumbnails = Object.fromEntries(
-    rows.map(({ category, videos }) => [
-      category,
-      videos.find((video) => video.thumbnail_url)?.thumbnail_url ?? null,
-    ])
-  );
-
-  function categoryRow({ category, videos }: { category: string; videos: typeof rows[number]["videos"] }) {
-    return (
-      <FadeUp key={category}>
-        <CategoryRow category={category} videos={videos} />
-      </FadeUp>
-    );
-  }
-
-  // Row order per DESIGN.md #4.7: Featured (if any) first, then Top 10
-  // right after the hero, then category shelves by recency, with the browse
-  // shelf slotted after the 2nd category shelf and the promo band after the
-  // 3rd. `rows.slice` on a short array just returns fewer/no items, so this
-  // reads fine even with 0-3 categories. The Featured shelf is spread in
-  // only when videos are flagged, so it's invisible until the owner curates.
-  const sections = [
-    // Continue Watching (Tier 3): purely client-side (localStorage, see
-    // lib/recently-watched.ts), so it renders null on the server and for
-    // first-time visitors, then appears after mount for a returning one. NOT
-    // wrapped in <FadeUp> here - it applies its own internally only when it
-    // has data, so an empty one contributes nothing to the flex layout
-    // (see continue-watching-shelf.tsx). Leads the page (industry
-    // convention for a personalized row) without touching the owner's
-    // Featured curation below it.
-    <ContinueWatchingShelf key="continue-watching" />,
-    ...(featured.length > 0
-      ? [
-          <FadeUp key="featured">
-            <FeaturedShelf videos={featured} />
-          </FadeUp>,
-        ]
-      : []),
-    // Festival shelf: only rendered while activeFestival's window is open
-    // AND it actually has matching videos - otherwise silently absent, same
-    // as every other conditional shelf on this page.
-    ...(activeFestival && festivalVideos.length > 0
-      ? [
-          <FadeUp key="festival">
-            <CategoryRow
-              title={`🪔 ${activeFestival.title}`}
-              href={`/topic/${activeFestival.slug}`}
-              videos={festivalVideos}
-            />
-          </FadeUp>,
-        ]
-      : []),
-    <FadeUp key="top-ten">
-      <TopTenRow videos={latest.slice(0, 10)} />
-    </FadeUp>,
-    // Topic collections flagged `showOnHomepage` (lib/topics.ts) - shown high
-    // on the page, each linking to its full /topic/<slug> grid. A topic with
-    // no matching videos yet is simply skipped.
-    ...topicRows
-      .filter(({ videos }) => videos.length > 0)
-      .map(({ topic, videos }) => (
-        <FadeUp key={`topic-${topic.slug}`}>
-          <CategoryRow title={topic.title} href={`/topic/${topic.slug}`} videos={videos} />
-        </FadeUp>
-      )),
-    // "Most Watched" (DESIGN.md discovery): the top videos by YouTube view
-    // count, once the worker has enriched view_count. Spread in only when
-    // populated so it's invisible on a fresh/empty DB.
-    ...(popular.length > 0
-      ? [
-          <FadeUp key="most-watched">
-            <CategoryRow title="Most Watched" videos={popular} />
-          </FadeUp>,
-        ]
-      : []),
-    ...rows.slice(0, 2).map(categoryRow),
-    <FadeUp key="browse-shelf">
-      <BrowseShelf categories={categories} thumbnails={posterThumbnails} />
-    </FadeUp>,
-    ...rows.slice(2, 3).map(categoryRow),
-    <FadeUp key="promo-band">
-      <PromoBand />
-    </FadeUp>,
-    ...rows.slice(3).map(categoryRow),
-  ];
 
   return (
-    // `flow-root` gives this wrapper its own block-formatting context, so
-    // the Hero's negative top margin (see components/hero-carousel.tsx)
-    // doesn't collapse through this div into `<main>`/`<body>` and shift the
-    // whole page - only the hero itself moves up, under the top bar.
-    <div className="flow-root">
-      {latest.length > 0 && <HeroCarousel videos={latest.slice(0, 5)} />}
-      {/* Generous section rhythm (DESIGN.md #3.5): 48px between shelves on
-          mobile, 80px on desktop - whitespace is the luxury. */}
-      <Container className="flex flex-col gap-12 py-12 sm:gap-20 sm:py-16">{sections}</Container>
+    <div>
+      {heroFeatures.length > 0 && <Hero features={heroFeatures} />}
+
+      <FadeUp>
+        <LiveStrip videos={live} />
+      </FadeUp>
+
+      {/* Client-side personalization: renders null for first-time visitors. */}
+      <ContinueWatchingShelf />
+
+      <FadeUp>
+        <CategoryRow
+          kicker="Fresh from the temples"
+          title="Arrived today"
+          href="/browse"
+          videos={latest.slice(0, 8)}
+        />
+      </FadeUp>
+
+      {activeFestival && festivalVideos.length > 0 && (
+        <FadeUp>
+          <CategoryRow
+            kicker="Festival days"
+            title={activeFestival.title}
+            href={`/topic/${activeFestival.slug}`}
+            videos={festivalVideos}
+          />
+        </FadeUp>
+      )}
+
+      {splitTopic && (
+        <FadeUp>
+          <SplitFeature
+            kicker="Topic"
+            title={splitTopic.topic.title}
+            href={`/topic/${splitTopic.topic.slug}`}
+            videos={splitTopic.videos}
+          />
+        </FadeUp>
+      )}
+
+      <FadeUp>
+        <QuoteBlock />
+      </FadeUp>
+
+      {rowTopics.map(({ topic, videos }) => (
+        <FadeUp key={topic.slug}>
+          <CategoryRow kicker="Topic" title={topic.title} href={`/topic/${topic.slug}`} videos={videos} />
+        </FadeUp>
+      ))}
+
+      <FadeUp>
+        <CategoryCards categories={categories} />
+      </FadeUp>
+
+      {popular.length > 0 && (
+        <FadeUp>
+          <CategoryRow kicker="Beloved by millions" title="Most watched" videos={popular} />
+        </FadeUp>
+      )}
     </div>
   );
 }

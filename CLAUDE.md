@@ -10,7 +10,15 @@ Actions, YouTube Data API, optional Groq).
 
 **All frontend/UI work MUST follow `docs/DESIGN.md`** — it is the binding
 design spec (colors, typography, layouts, motion, page specs). The
-code-reviewer treats deviations from it as findings.
+code-reviewer treats deviations from it as findings. Since 2026-07-12 the
+design is the "Midnight" system ported from `goloka-final.html` (the
+approved prototype in the repo root, still the visual source of truth):
+midnight-indigo canvas, marigold/flame gold accents, Marcellus + Figtree +
+Tiro Devanagari Hindi. The tokens — palette, the shared `--pad` gutter,
+radii, easing — live in `web/app/globals.css` (`:root` + `@theme`, plus the
+prototype's component CSS class-ified under `@layer components`); change
+design values there, not inline, and every animation is
+`prefers-reduced-motion`-guarded.
 
 ## Commands
 
@@ -19,7 +27,8 @@ code-reviewer treats deviations from it as findings.
 npm run dev        # dev server at localhost:3000
 npm run build      # production build — must pass before any handoff
 npm run lint       # eslint
-npm run test       # vitest — pure-logic unit tests (web/lib/*.test.ts)
+npm run test       # vitest (run mode) — pure-logic unit tests (web/lib/*.test.ts)
+npx vitest run lib/format.test.ts   # one test file (from web/); add -t "name" to filter by test name
 
 # Worker (run from repo root)
 pip install -r worker/requirements.txt
@@ -77,6 +86,19 @@ Key frontend conventions (breaking these is what past reviews flagged):
 - `videos` has `view_count` (popularity) and a generated `search_tsv`
   (full-text GIN index). New search should use FTS, not `title ILIKE`.
 - Queries must stay bounded (`limit`/`range`) — free-tier discipline.
+- **Browser-only personalization** (Continue Watching, Recent Searches)
+  lives in `web/lib/*.ts` localStorage stores read through
+  `useSyncExternalStore` with a neutral server snapshot (so SSR and the
+  first client render agree — no hydration mismatch); nothing is ever sent
+  to the server. `recent-searches.ts` additionally notifies its own
+  subscribers on write, because a same-tab `localStorage` write doesn't
+  fire the `storage` event.
+- **Keep client boundaries thin**: server components fetch and render;
+  interactivity is carved into the smallest possible client component, and
+  server-rendered content is passed through it as `children` (the RSC
+  children-as-props pattern). `Shelf`/`FadeUp` wrap server children, and
+  `Thumbnail` isolates the image-load fade so `VideoCard` stays a server
+  component — follow this rather than making a whole card client.
 - **Brand mark**: the Thousand-Petal Lotus, "Concept A — Thousand-Petal
   Bloom" (owner-chosen; Brahma-samhita 5.2). Two offset petal rings (8
   outer + 8 inner at 22.5°) around a hexagonal saffron pericarp, in a

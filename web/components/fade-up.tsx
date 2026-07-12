@@ -1,24 +1,38 @@
-"use client"; // framer-motion needs the browser to animate, so this wraps
-// server-rendered children in a client boundary. The children themselves
-// (e.g. a CategoryRow built from server data) stay server components -
-// only this thin wrapper opts into the client.
+"use client"; // IntersectionObserver only exists in the browser. The
+// children (e.g. a CategoryRow built from server data) stay server
+// components - only this thin wrapper opts into the client.
 
-import { motion, useReducedMotion } from "framer-motion";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 
-// The section-entrance motion (DESIGN.md #5): fade up 12px, once, 250ms.
-// Under prefers-reduced-motion the whole thing is skipped - children render
-// in place with no initial hidden state and no animation.
+// The prototype's scroll reveal (DESIGN.md #5.7): the section rises 26px as
+// it enters the viewport, and any .card children stagger in after it via
+// CSS nth-child transition delays (globals.css .reveal rules). One observer
+// per section, unobserved after firing. Under prefers-reduced-motion the
+// CSS forces everything visible with no transition - so this observer
+// firing late (or never) can't hide content.
 export function FadeUp({ children }: { children: ReactNode }) {
-  const reduce = useReducedMotion();
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      (entries) =>
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in");
+            io.unobserve(entry.target);
+          }
+        }),
+      { threshold: 0.1 }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   return (
-    <motion.div
-      initial={reduce ? false : { opacity: 0, y: 12 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.25, ease: "easeOut" }}
-    >
+    <div ref={ref} className="reveal">
       {children}
-    </motion.div>
+    </div>
   );
 }

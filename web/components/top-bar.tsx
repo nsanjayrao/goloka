@@ -1,58 +1,47 @@
-import { Search } from "lucide-react";
+"use client"; // the glassy header needs the browser's scroll position:
+// transparent gradient at the top of the page, gaining blur + a gold
+// hairline after 40px (prototype behavior). Everything else is static.
+
 import Link from "next/link";
+import { useEffect, useState } from "react";
 
-import { Container } from "@/components/container";
 import { LogoMark } from "@/components/icons/logo-mark";
-import { TopBarSearch } from "@/components/top-bar-search";
 
-// Apple-TV black header (DESIGN.md #4, owner decision 2026-07-03): one
-// persistent near-black translucent bar with white text on every page and
-// at every scroll position - tv.apple.com's global nav. The old
-// transparent-over-hero-then-frosted switching is gone, which also let
-// this go back to being a plain server component (no pathname check, no
-// IntersectionObserver).
+// Fixed midnight header (DESIGN.md #6): lotus wordmark in Marcellus,
+// uppercase nav links (hidden under 600px - the bottom tab bar covers
+// mobile), and the search pill linking to /search. Styles live in
+// globals.css (.site-header etc.), ported from the prototype.
 export function TopBar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 40);
+    onScroll(); // a page can load already scrolled (e.g. back navigation)
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <header
-      className="sticky top-0 z-40 border-b border-white/10 bg-black/80 backdrop-blur-lg"
-      // The page's tokens are near-black-on-white, which would vanish on a
-      // black bar. Every child (logo, search pill, icons) styles itself
-      // with the tokens, so locally overriding the CSS variables here
-      // re-skins the whole bar to white tones in one place (DESIGN.md #2).
-      style={
-        {
-          "--bg": "#000000",
-          "--text": "#ffffff",
-          "--text-muted": "rgba(255,255,255,0.75)",
-          "--accent": "#f0a83c",
-          "--surface": "rgba(255,255,255,0.18)",
-          "--border": "rgba(255,255,255,0.35)",
-        } as React.CSSProperties
-      }
-    >
-      <Container className="flex h-14 items-center justify-between gap-4 sm:h-16">
-        <Link
-          href="/"
-          className="flex shrink-0 items-center gap-1.5 font-heading text-xl font-medium tracking-tight text-text"
-        >
-          <LogoMark className="size-6" />
-          Goloka<span className="text-accent">.</span>
+    <header className={scrolled ? "site-header scrolled" : "site-header"}>
+      <Link href="/" className="wordmark">
+        <LogoMark className="size-7" />
+        Goloka
+      </Link>
+      <nav className="site-nav" aria-label="Main">
+        <Link className="nav-link" href="/browse">
+          Browse
         </Link>
-
-        <div className="flex flex-1 justify-center">
-          <TopBarSearch />
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1">
-          <Link
-            href="/search"
-            aria-label="Search"
-            className="inline-flex size-8 items-center justify-center rounded-md text-text-muted transition-colors hover:text-text sm:hidden"
-          >
-            <Search className="size-5" />
-          </Link>
-        </div>
-      </Container>
+        <Link className="nav-link" href="/leaders">
+          Leaders
+        </Link>
+        <Link className="search-pill" href="/search" aria-label="Search Goloka">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="M20 20l-4-4" />
+          </svg>
+          Search
+        </Link>
+      </nav>
     </header>
   );
 }

@@ -10,7 +10,7 @@ import { EmptyState } from "@/components/empty-state";
 // fails and lands back here; once the connection returns it goes home.
 export default function OfflinePage() {
   return (
-    <Container className="py-20">
+    <Container className="page-top pb-20">
       <EmptyState
         title="You're offline"
         message="Goloka needs a connection to fetch videos — reconnect and try again."

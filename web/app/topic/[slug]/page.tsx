@@ -50,7 +50,7 @@ export default async function TopicPage({ params }: Props) {
 
   if (count === 0) {
     return (
-      <Container className="py-10">
+      <Container className="page-top pb-10">
         <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{topic.title}</h1>
         <EmptyState message="Nothing here yet — like Vrindavan before the festival. Check back soon." />
       </Container>
@@ -58,7 +58,7 @@ export default async function TopicPage({ params }: Props) {
   }
 
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <CategoryBanner
         category={topic.title}
         thumbnail={bannerVideos[0]?.thumbnail_url ?? null}

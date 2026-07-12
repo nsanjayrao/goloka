@@ -28,14 +28,10 @@ export function BottomTabBar() {
   return (
     <nav
       aria-label="Primary"
-      className="fixed inset-x-0 bottom-0 z-40 rounded-t-section border-t border-white/10 bg-black/75 shadow-[0_-4px_24px_rgba(0,0,0,0.18)] backdrop-blur-xl sm:hidden"
-      style={{
-        paddingBottom: "env(safe-area-inset-bottom)",
-        ...({
-          "--accent": "#f0a83c",
-          "--text-muted": "rgba(255,255,255,0.6)",
-        } as React.CSSProperties),
-      }}
+      // Midnight glass slab: same recipe as the scrolled header (DESIGN.md
+      // #6). The global tokens are already dark, so no local overrides.
+      className="fixed inset-x-0 bottom-0 z-40 rounded-t-section border-t border-hairline/60 bg-midnight/85 shadow-[0_-4px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:hidden"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
       <div className="relative flex h-14 items-stretch justify-around">
         {/* Gold indicator at the active tab's top edge - one element that

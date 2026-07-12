@@ -21,8 +21,8 @@ function lotusDataUri(): string {
     .join("");
   const svg =
     `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' width='150' height='150'>` +
-    `<g fill='#1d1d1f'>${petals}</g>` +
-    `<circle cx='32' cy='32' r='5' fill='#b97a16'/></svg>`;
+    `<g fill='#E8A33D'>${petals}</g>` +
+    `<circle cx='32' cy='32' r='5' fill='#F5C97B'/></svg>`;
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
@@ -43,7 +43,7 @@ export default async function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#ffffff",
+          backgroundColor: "#0A0F26",
           fontFamily: "Fraunces",
         }}
       >
@@ -57,12 +57,12 @@ export default async function OpengraphImage() {
             marginTop: 24,
             fontSize: 96,
             fontWeight: 600,
-            color: "#1d1d1f",
+            color: "#F3EDDF",
           }}
         >
-          Goloka<span style={{ color: "#b97a16" }}>.</span>
+          Goloka<span style={{ color: "#E8A33D" }}>.</span>
         </div>
-        <div style={{ marginTop: 4, fontSize: 30, color: "#6e6e73" }}>
+        <div style={{ marginTop: 4, fontSize: 30, color: "#9AA3C7" }}>
           Eternal abode of divine love
         </div>
       </div>

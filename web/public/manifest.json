@@ -4,8 +4,8 @@
   "description": "Eternal abode of divine love — a free index of ISKCON lectures, kirtans, and festivals.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#FFFFFF",
-  "theme_color": "#FFFFFF",
+  "background_color": "#0A0F26",
+  "theme_color": "#0A0F26",
   "icons": [
     {
       "src": "/icons/icon-192.png",
@@ -33,3 +33,4 @@
     }
   ]
 }
+

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
 // rather than added to the app's fixed Home/Browse/Search nav (DESIGN.md).
 export default function AboutPage() {
   return (
-    <Container className="py-10">
+    <Container className="page-top pb-10">
       <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">About Goloka</h1>
 
       <div className="mt-6 max-w-2xl space-y-6 text-text-muted">
