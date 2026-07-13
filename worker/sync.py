@@ -15,6 +15,7 @@ Usage:
 
 import json
 import os
+import random
 import re
 import sys
 import time
@@ -248,10 +249,30 @@ TOPIC_RULES = {
     "nrsimha": re.compile(r"nrsimha|narasimha|nrisimha|nrisingha|नृसिंह|नरसिंह", re.I),
 }
 
+# Broad CANDIDATE patterns: "could this possibly be about the topic?".
+# A video whose title/description matches none of these is (for this
+# catalog) never about the topic - it skips the LLM entirely, which is what
+# keeps a full-catalog enrich inside two free tiers (the first attempt sent
+# all 15.8k videos to the LLM and 429-walled BOTH providers). The LLM's job
+# is to adjudicate the candidates: "Radhika" in a speaker name matches the
+# broad pattern but gets rejected by its judgment.
+TOPIC_CANDIDATES = {
+    "radharani": re.compile(r"radh|kishori|barsana|राध|किशोरी|बरसान", re.I),
+    "vrindavan": re.compile(r"v[ri]+ndavan|brindavan|\bvraja?\b|\bbraja?\b|वृन्दावन|वृंदावन|ब्रज", re.I),
+    "gita": re.compile(r"gita|गीता", re.I),
+    "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
+    "nrsimha": re.compile(r"n[ra]?[ri]?simha|narsingh|नृसिंह|नरसिंह", re.I),
+}
+
 
 def topics_from_rules(title: str, description: str) -> set[str]:
     text = f"{title}\n{description[:300]}"
     return {slug for slug, pattern in TOPIC_RULES.items() if pattern.search(text)}
+
+
+def candidate_topics(title: str, description: str) -> set[str]:
+    text = f"{title}\n{description[:300]}"
+    return {slug for slug, pattern in TOPIC_CANDIDATES.items() if pattern.search(text)}
 
 
 # Groq returns the spoken language as free text ("English", "en", "Hindi",
@@ -324,102 +345,110 @@ def _extract_json(text: str) -> dict:
     return json.loads(text[start:end + 1])
 
 
-def _echo_matches(echo: str, title: str) -> bool:
-    """True when the LLM's echoed title-start really is this video's title.
-    Batch models occasionally shift results one index over - seen in
-    practice tagging 'Neurological Disorders: An Ayurvedic Perspective' as
-    Radharani content - so every row must prove it's talking about ITS
-    video. Comparison ignores case/whitespace/punctuation (the echo often
-    normalizes quotes or drops a pipe)."""
-    e = re.sub(r"\W+", "", echo or "").lower()
-    t = re.sub(r"\W+", "", title or "").lower()
-    return bool(e) and t.startswith(e[:16])
+def _batch_keys(n: int) -> list[str]:
+    """Distinct random 3-char ASCII keys, one per batch item. Results are
+    matched by KEY, not list position: batch models occasionally shift
+    results one slot over (seen in practice tagging 'Neurological
+    Disorders: An Ayurvedic Perspective' as Radharani content), and a
+    title-echo check turned out to mass-fail on Devanagari titles (models
+    transliterate them). Random ASCII keys survive any language."""
+    alphabet = "abcdefghjkmnpqrstuvwxyz23456789"
+    keys: set[str] = set()
+    while len(keys) < n:
+        keys.add("".join(random.choices(alphabet, k=3)))
+    return list(keys)
+
+
+# 429 backoff schedule per provider, per wall-cycle. Free tiers meter by
+# the MINUTE - the old 1/2/4/8s ladder gave up before a minute window could
+# ever reset, which is how a long run "429-walled" both providers.
+BACKOFF_WAITS = [2, 8, 30, 60]
+# When EVERY provider is walled, wait this long and try the whole cycle
+# again before abandoning the batch - a skipped batch is rows with no
+# verdict, which costs a whole extra enrich pass later.
+WALL_WAIT = 120
+WALL_CYCLES = 3
 
 
 def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
     """Classify a BATCH of videos in one LLM call, failing over between
-    providers (Groq -> NVIDIA) on 429s/errors. `items` = [{"title",
+    providers (Groq -> NVIDIA) on 429s/errors, and waiting out a full
+    rate-limit wall rather than skipping. `items` = [{"title",
     "description"}]. Returns a list aligned by index, each {"category",
-    "language", "topics"} or None. Best-effort - if every provider fails,
-    the whole batch returns None and the caller falls back."""
+    "language", "topics"} or None."""
     global _preferred_provider
     if not PROVIDERS or not USE_LLM or not items:
         return [None] * len(items)
 
+    keys = _batch_keys(len(items))
+    key_to_idx = {k: i for i, k in enumerate(keys)}
     numbered = "\n".join(
-        f'{i}. {it["title"]} :: {(it.get("description") or "")[:160]}'
+        f'{keys[i]}. {it["title"]} :: {(it.get("description") or "")[:160]}'
         for i, it in enumerate(items)
     )
     topic_lines = "\n".join(f'- "{slug}": {desc}' for slug, desc in TOPIC_DEFS.items())
     prompt = (
-        "Classify each ISKCON/Krishna-consciousness YouTube video below. For each, give:\n"
-        '- "t": the first few words of that video\'s title, copied verbatim\n'
+        "Classify each ISKCON/Krishna-consciousness YouTube video below. Each line "
+        "starts with the video's 3-character key. For each video, give:\n"
+        '- "k": that video\'s key, copied exactly\n'
         f'- "category": one of {CATEGORIES}\n'
         '- "language": its main spoken language, or null\n'
         '- "topics": which of these the video is PRIMARILY about - 0 to 3 of:\n'
         f"{topic_lines}\n"
         "A person's NAME containing Radha/Radhika/Vrindavan does not make the video about that topic.\n\n"
         f"{numbered}\n\n"
-        'Reply with JSON only: {"results": [{"i": <index>, "t": <title start>, '
-        '"category": <category>, "language": <language or null>, "topics": [<slugs>]}, ...]} '
-        "covering every index."
+        'Reply with JSON only: {"results": [{"k": <key>, "category": <category>, '
+        '"language": <language or null>, "topics": [<slugs>]}, ...]} covering every key.'
     )
 
-    for offset in range(len(PROVIDERS)):
-        p = PROVIDERS[(_preferred_provider + offset) % len(PROVIDERS)]
-        for attempt in range(4):
-            try:
-                body = {
-                    "model": p["model"],
-                    "messages": [{"role": "user", "content": prompt}],
-                    "temperature": 0,
-                    "max_tokens": 2048,
-                }
-                if p["json_mode"]:
-                    body["response_format"] = {"type": "json_object"}
-                resp = requests.post(
-                    p["url"],
-                    headers={"Authorization": f"Bearer {p['key']}", "User-Agent": "Mozilla/5.0"},
-                    json=body,
-                    timeout=90,
-                )
-                if resp.status_code == 429:
-                    wait = 2 ** attempt
-                    print(f"    {p['name']} 429 - backing off {wait}s")
-                    time.sleep(wait)
-                    continue
-                resp.raise_for_status()
-                data = _extract_json(resp.json()["choices"][0]["message"]["content"])
-                out: list[dict | None] = [None] * len(items)
-                mismatches = 0
-                for row in data.get("results", []):
-                    idx = row.get("i")
-                    if not (isinstance(idx, int) and 0 <= idx < len(items)):
-                        continue
-                    # Echo check: the row must prove it's about ITS video.
-                    # A row with a wrong/missing echo is discarded (that video
-                    # just gets no LLM verdict) rather than trusted - a
-                    # misaligned verdict is worse than none.
-                    if not _echo_matches(row.get("t") or "", items[idx]["title"]):
-                        mismatches += 1
-                        continue
-                    raw_topics = row.get("topics") or []
-                    out[idx] = {
-                        "category": row.get("category") if row.get("category") in CATEGORIES else None,
-                        "language": normalize_language(row.get("language")),
-                        "topics": [t for t in raw_topics if t in TOPIC_DEFS],
+    for cycle in range(WALL_CYCLES):
+        for offset in range(len(PROVIDERS)):
+            p = PROVIDERS[(_preferred_provider + offset) % len(PROVIDERS)]
+            for wait in BACKOFF_WAITS:
+                try:
+                    body = {
+                        "model": p["model"],
+                        "messages": [{"role": "user", "content": prompt}],
+                        "temperature": 0,
+                        "max_tokens": 2048,
                     }
-                if mismatches:
-                    print(f"    {p['name']}: dropped {mismatches}/{len(items)} rows on echo mismatch")
-                return out
-            except Exception as exc:  # this provider is unhealthy - try the next
-                print(f"    {p['name']} batch failed: {exc}")
-                break
-        else:
-            print(f"    {p['name']} rate-limited out")
-        # Reaching here means this provider gave up - prefer the next one for
-        # subsequent batches too, not just this one.
-        _preferred_provider = (_preferred_provider + offset + 1) % len(PROVIDERS)
+                    if p["json_mode"]:
+                        body["response_format"] = {"type": "json_object"}
+                    resp = requests.post(
+                        p["url"],
+                        headers={"Authorization": f"Bearer {p['key']}", "User-Agent": "Mozilla/5.0"},
+                        json=body,
+                        timeout=90,
+                    )
+                    if resp.status_code == 429:
+                        print(f"    {p['name']} 429 - backing off {wait}s")
+                        time.sleep(wait)
+                        continue
+                    resp.raise_for_status()
+                    data = _extract_json(resp.json()["choices"][0]["message"]["content"])
+                    out: list[dict | None] = [None] * len(items)
+                    for row in data.get("results", []):
+                        idx = key_to_idx.get(str(row.get("k") or "").strip().lower())
+                        if idx is None:
+                            continue
+                        raw_topics = row.get("topics") or []
+                        out[idx] = {
+                            "category": row.get("category") if row.get("category") in CATEGORIES else None,
+                            "language": normalize_language(row.get("language")),
+                            "topics": [t for t in raw_topics if t in TOPIC_DEFS],
+                        }
+                    return out
+                except Exception as exc:  # this provider is unhealthy - try the next
+                    print(f"    {p['name']} batch failed: {exc}")
+                    break
+            else:
+                print(f"    {p['name']} rate-limited out")
+            # This provider gave up - prefer the next one for subsequent
+            # batches too, not just this one.
+            _preferred_provider = (_preferred_provider + offset + 1) % len(PROVIDERS)
+        if cycle < WALL_CYCLES - 1:
+            print(f"    all providers walled - waiting {WALL_WAIT}s before retrying the batch")
+            time.sleep(WALL_WAIT)
     print("    all LLM providers failed for this batch")
     return [None] * len(items)
 
@@ -428,38 +457,56 @@ def classify_videos(videos: list[dict], fallbacks: list[str]) -> list[dict]:
     """Per-video {"category","language","topics","topics_fresh"}.
 
     Category: regex rules first (they win), LLM for the misses, then
-    `fallbacks[i]` for anything still unclassified. Topics: EVERY video goes
-    through the LLM (topic "aboutness" is a judgment call the rules can't
-    make), and the result is unioned with the high-precision TOPIC_RULES.
-    `topics_fresh` is False when no LLM verdict arrived for that video -
-    enrich() uses it to keep a row's existing tags instead of wiping them
-    on a provider outage."""
-    results = [
-        {
-            "category": classify_with_rules(v["title"], v.get("description") or ""),
-            "language": None,
-            "topics": topics_from_rules(v["title"], v.get("description") or ""),
-            "topics_fresh": False,
-        }
-        for v in videos
-    ]
+    `fallbacks[i]` for anything still unclassified.
 
-    for start in range(0, len(videos), LLM_BATCH):
-        chunk = videos[start:start + LLM_BATCH]
+    Topics: strict TOPIC_RULES auto-assign; the LLM adjudicates only the
+    CANDIDATES (broad TOPIC_CANDIDATES matches) - a video mentioning
+    nothing topic-shaped never spends an LLM call, which is what keeps a
+    full-catalog pass inside the free tiers. LLM verdicts are intersected
+    with the video's candidates (a verdict for a topic the text never
+    hinted at is a hallucination or a misalignment, not a discovery).
+
+    `topics_fresh` is False only when a video NEEDED an LLM verdict and
+    none arrived - enrich() then keeps the row's existing tags instead of
+    wiping them on a provider outage."""
+    results = []
+    to_llm: list[dict] = []
+    llm_idx: list[int] = []
+    candidates: list[set[str]] = []
+    for i, v in enumerate(videos):
+        title, desc = v["title"], v.get("description") or ""
+        strict = topics_from_rules(title, desc)
+        cand = candidate_topics(title, desc)
+        category = classify_with_rules(title, desc)
+        # The LLM earns its call: unclassified category, or a topic
+        # candidacy the strict rules couldn't already settle.
+        needs_llm = category is None or bool(cand - strict)
+        results.append({
+            "category": category,
+            "language": None,
+            "topics": set(strict),
+            "topics_fresh": not needs_llm,
+        })
+        candidates.append(cand | strict)
+        if needs_llm:
+            to_llm.append(v)
+            llm_idx.append(i)
+
+    for start in range(0, len(to_llm), LLM_BATCH):
+        chunk = to_llm[start:start + LLM_BATCH]
         for j, tag in enumerate(classify_batch_with_llm(chunk)):
             if not tag:
                 continue
-            r = results[start + j]
+            target = llm_idx[start + j]
+            r = results[target]
             if not r["category"]:
                 r["category"] = tag["category"]
             r["language"] = tag["language"]
-            r["topics"] |= set(tag["topics"])
+            r["topics"] |= set(tag["topics"]) & candidates[target]
             r["topics_fresh"] = True
-        # Proactive pacing, on top of classify_batch_with_llm's reactive 429
-        # backoff: a sustained multi-thousand-video pass (e.g. --enrich over
-        # the whole catalog) hit the free tier's rate limit constantly at
-        # 0.5s between batches. 2s keeps well clear of it without making a
-        # long run agonizingly slow.
+        # Proactive pacing on top of the reactive 429 backoff - free tiers
+        # meter by the minute, and candidate-gating already keeps total
+        # volume low.
         time.sleep(2.0)
 
     for i, r in enumerate(results):
