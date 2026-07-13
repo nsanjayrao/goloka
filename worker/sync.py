@@ -242,7 +242,11 @@ TOPIC_DEFS = {
 # Prabhu", "Radhika Devi Dasi") - name-vs-subject is exactly the judgment
 # call that belongs to the LLM, not a regex.
 TOPIC_RULES = {
-    "radharani": re.compile(r"radharani|radh[ae][\s-]*a?shtami|radhastami|\bkishori\b|\bbarsana\b|राधारानी|राधाष्टमी", re.I),
+    # Only the festival names auto-assign: "Radharani"/"Kishori" are also
+    # PEOPLE'S names (Sriprada Radharani Devi Dasi...) - seen mistagging in
+    # production, so those words are candidates for LLM judgment, never
+    # rule-certain.
+    "radharani": re.compile(r"radh[ae][\s-]*a?shtami|radhastami|राधाष्टमी", re.I),
     "vrindavan": re.compile(r"vrindavan|vrndavan|brindavan|वृन्दावन|वृंदावन", re.I),
     "gita": re.compile(r"bhagavad[\s-]*gita|bhagavadgita|\bgita\b|भगवद्[\s-]*गीता", re.I),
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
@@ -257,7 +261,7 @@ TOPIC_RULES = {
 # is to adjudicate the candidates: "Radhika" in a speaker name matches the
 # broad pattern but gets rejected by its judgment.
 TOPIC_CANDIDATES = {
-    "radharani": re.compile(r"radh|kishori|barsana|राध|किशोरी|बरसान", re.I),
+    "radharani": re.compile(r"radh|kishori|barsana|राध|किशोरी|बरसान", re.I),  # broad on purpose - LLM adjudicates
     "vrindavan": re.compile(r"v[ri]+ndavan|brindavan|\bvraja?\b|\bbraja?\b|वृन्दावन|वृंदावन|ब्रज", re.I),
     "gita": re.compile(r"gita|गीता", re.I),
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
