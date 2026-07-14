@@ -45,13 +45,13 @@ YT_API = "https://www.googleapis.com/youtube/v3"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-8b-instant"
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
-# Owner-chosen (2026-07-13): GLM on NVIDIA's free NIM tier. Verified on the
-# real classification prompt: correct JSON (inside ```json fences - the
-# parser strips them), and it passed both precision traps (no "radharani"
-# for a title containing "aradhana" or a mere deity-name mention).
-# meta/llama-3.1-8b-instruct also works if this model is ever retired;
-# meta/llama-3.3-70b-instruct queue-timed-out when tested - avoid.
-NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "z-ai/glm-5.2")
+# Swapped 2026-07-14 (owner-approved): z-ai/glm-5.2 read-timed-out on every
+# call during the big enrich run (31 straight 90s timeouts - free NIM queue),
+# making the failover dead weight. meta/llama-3.1-8b-instruct answered the
+# real classification prompt in ~2s with clean JSON, and is the same base
+# model as GROQ_MODEL, so both providers classify alike.
+# meta/llama-3.3-70b-instruct queue-timed-out when tested - avoid big models.
+NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct")
 # Videos classified per LLM call. Batching (vs one call per video) is what
 # keeps a big backfill under the free-tier rate limits - one 429 wall last
 # time was caused by ~900 single-video calls per channel.
