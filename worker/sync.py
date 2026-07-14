@@ -403,7 +403,12 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
         '- "language": its main spoken language, or null\n'
         '- "topics": which of these the video is PRIMARILY about - 0 to 3 of:\n'
         f"{topic_lines}\n"
-        "A person's NAME containing Radha/Radhika/Vrindavan does not make the video about that topic.\n\n"
+        # The counter-examples are real production false positives (2026-07-14):
+        # an 8B judge needs to SEE the speaker-name trap, not just be told.
+        "A person's NAME containing Radha/Radhika/Kishori/Vrindavan does not make the "
+        'video about that topic. E.g. "Kirtan with Radhika Das", "H.G. Radhika Vallabh '
+        'Prabhu | S.B. 3.14.36", "Sriprada Radharani Devi Dasi\'s life story" are NOT '
+        "radharani - the words are people's names there.\n\n"
         f"{numbered}\n\n"
         'Reply with JSON only: {"results": [{"k": <key>, "category": <category>, '
         '"language": <language or null>, "topics": [<slugs>]}, ...]} covering every key.'
