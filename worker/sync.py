@@ -54,8 +54,12 @@ NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
 NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct")
 # Videos classified per LLM call. Batching (vs one call per video) is what
 # keeps a big backfill under the free-tier rate limits - one 429 wall last
-# time was caused by ~900 single-video calls per channel.
-LLM_BATCH = 15
+# time was caused by ~900 single-video calls per channel. 30 is calibrated
+# against Groq's 6,000 TPM cap with real catalog rows (2026-07-14): prompt
+# is ~104 tokens/video (~118 on Devanagari-heavy rows), so a 30-batch plus
+# its sized max_tokens tops out ~5.6k - under the cap, which Groq enforces
+# per REQUEST with a non-retryable 413 when prompt + max_tokens exceed it.
+LLM_BATCH = 30
 # `--no-llm` skips the Groq classifier (regex + fallback only). Use it for a
 # fast enrich pass that fills view_count + regex categories without fighting
 # Groq's per-minute free-tier limit; run plain `--enrich` later for the LLM
@@ -414,7 +418,12 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
                         "model": p["model"],
                         "messages": [{"role": "user", "content": prompt}],
                         "temperature": 0,
-                        "max_tokens": 2048,
+                        # Sized to the batch, not a flat 2048: Groq counts the
+                        # RESERVATION (prompt + max_tokens) against its 6k TPM
+                        # cap and hard-413s a request that alone exceeds it.
+                        # Measured completion is ~36 tokens/video; 60 + a 220
+                        # base is ~70% headroom against truncated JSON.
+                        "max_tokens": 220 + 60 * len(items),
                     }
                     if p["json_mode"]:
                         body["response_format"] = {"type": "json_object"}
