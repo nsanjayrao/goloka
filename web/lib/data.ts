@@ -259,7 +259,7 @@ export async function getVideoCount(filters: Partial<VideoPageFilters> = {}): Pr
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
     if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
-    if (filters.topicSlug) query = query.contains("tags", [filters.topicSlug]);
+    if (filters.topicSlug) query = query.contains("tags", JSON.stringify([filters.topicSlug]));
     const { count, error } = await query;
     if (error) throw error;
     return count ?? 0;
@@ -322,7 +322,7 @@ export async function getVideosPage(
       if (range.lt !== undefined) query = query.lt("duration_seconds", range.lt);
     }
     if (filters.titleKeywords?.length) query = query.or(titleKeywordFilter(filters.titleKeywords));
-    if (filters.topicSlug) query = query.contains("tags", [filters.topicSlug]);
+    if (filters.topicSlug) query = query.contains("tags", JSON.stringify([filters.topicSlug]));
 
     const { data, error } = await query
       .order(filters.sort === "popular" ? "view_count" : "published_at", {
