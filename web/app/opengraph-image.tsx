@@ -28,10 +28,11 @@ function lotusDataUri(): string {
 
 export default async function OpengraphImage() {
   // `next build` runs from web/, so cwd is web/ and the font sits at app/.
-  // A STATIC single-weight WOFF (not the variable TTF) - satori's font
-  // parser can't read variable fonts, and can't decode WOFF2, so plain
-  // WOFF is the format that works.
-  const fraunces = await readFile(join(process.cwd(), "app/fraunces-og.woff"));
+  // Marcellus-Regular.ttf (Google Fonts OFL): a STATIC single-weight TTF -
+  // satori's font parser can't read variable fonts or WOFF2, but static
+  // TTF/WOFF work. Marcellus is the site's display face (DESIGN.md #3),
+  // so the share card finally matches the wordmark it advertises.
+  const marcellus = await readFile(join(process.cwd(), "app/marcellus-og.ttf"));
 
   return new ImageResponse(
     (
@@ -44,7 +45,7 @@ export default async function OpengraphImage() {
           alignItems: "center",
           justifyContent: "center",
           backgroundColor: "#0A0F26",
-          fontFamily: "Fraunces",
+          fontFamily: "Marcellus",
         }}
       >
         {/* satori renders the data-URI SVG as an image; eslint's next/image
@@ -56,20 +57,21 @@ export default async function OpengraphImage() {
             display: "flex",
             marginTop: 24,
             fontSize: 96,
-            fontWeight: 600,
+            fontWeight: 400, // Marcellus ships a single weight
+            letterSpacing: "0.06em", // matches the site wordmark
             color: "#F3EDDF",
           }}
         >
           Goloka<span style={{ color: "#E8A33D" }}>.</span>
         </div>
-        <div style={{ marginTop: 4, fontSize: 30, color: "#9AA3C7" }}>
+        <div style={{ marginTop: 8, fontSize: 30, letterSpacing: "0.12em", color: "#9AA3C7" }}>
           Eternal abode of divine love
         </div>
       </div>
     ),
     {
       ...size,
-      fonts: [{ name: "Fraunces", data: fraunces, style: "normal", weight: 600 }],
+      fonts: [{ name: "Marcellus", data: marcellus, style: "normal", weight: 400 }],
     }
   );
 }
