@@ -500,22 +500,17 @@
     stroke-linejoin: round;
   }
 
-  /* ---------- live strip ---------- */
-  .live-strip {
-    margin-top: clamp(30px, 5vh, 54px);
-    padding: 0 var(--pad);
-  }
-  .live-strip .strip-label {
+  /* ---------- live section ---------- */
+  /* The kicker line of the "Live from the dhāma" section carries the
+     pulsing red dot (owner feedback 2026-07-18: the old label-only strip
+     read as an orphan - it's a full section-head now). */
+  .kicker.live-kicker {
     display: inline-flex;
     align-items: center;
     gap: 9px;
-    font-size: 12px;
-    letter-spacing: 0.22em;
-    text-transform: uppercase;
     color: var(--flame);
-    margin-bottom: 14px;
   }
-  .live-strip .strip-label::before {
+  .kicker.live-kicker::before {
     content: "";
     width: 8px;
     height: 8px;

@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { HeroImage } from "@/components/hero-image";
 import { SectionHeader } from "@/components/section-header";
 import { cleanTitle, formatDuration } from "@/lib/format";
 import type { Video } from "@/lib/types";
@@ -33,15 +34,11 @@ export function SplitFeature({
       <SectionHeader title={title} kicker={kicker} href={href} />
       <div className="split">
         <Link className="feature" href={`/watch/${feature.youtube_video_id}`}>
-          {feature.thumbnail_url && (
-            <Image
-              className="bg"
-              src={feature.thumbnail_url}
-              alt=""
-              fill
-              sizes="(max-width: 820px) 100vw, 60vw"
-            />
-          )}
+          {/* HeroImage, not the DB thumbnail_url: the stored thumb is the
+              320px mqdefault, which stretched over this ~800px card looked
+              blurry and pale (owner feedback 2026-07-18). maxresdefault
+              with hqdefault fallback keeps the artwork crisp. */}
+          <HeroImage videoId={feature.youtube_video_id} alt="" className="bg" />
           <div className="f-body">
             <span className="f-tag">{tag}</span>
             <h3 title={featureTitle}>{featureTitle}</h3>

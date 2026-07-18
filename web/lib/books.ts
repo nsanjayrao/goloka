@@ -7,7 +7,9 @@
 // styled typographic "spines" in the site's own design system.
 //
 // Store links use the store's SEARCH page rather than deep product URLs:
-// Shopify product slugs change with reprints/editions, search is stable.
+// product slugs change with reprints/editions, search is stable. The store
+// is BigCommerce - /search.php?search_query= (verified live 2026-07-18;
+// the Shopify-style /search?q= used at first 404'd on every card).
 // OWNER: add, remove, and reorder freely - order here is display order.
 
 export type Book = {
@@ -24,7 +26,7 @@ export type Book = {
   searchQuery?: string;
 };
 
-const STORE = "https://store.krishna.com/search?q=";
+const STORE = "https://store.krishna.com/search.php?search_query=";
 
 export const BOOKS: Book[] = [
   {
