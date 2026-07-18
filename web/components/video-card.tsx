@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import { Thumbnail } from "@/components/thumbnail";
 import { cleanTitle, formatDuration, formatRelativeDate, formatViews } from "@/lib/format";
+import { languageCode } from "@/lib/language-codes";
 import type { Video } from "@/lib/types";
 
 const CARD_SIZES = "(min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 72vw";
@@ -24,6 +25,10 @@ export function VideoCard({
   const title = cleanTitle(video.title);
   const duration = formatDuration(video.duration_seconds);
   const isLive = video.is_live === true;
+  // English is the catalog's default - badging it on every card would be
+  // noise. Only non-English audio is the signal a devotee needs at a
+  // glance, so the chip renders for that case alone.
+  const lang = video.language && video.language !== "English" ? languageCode(video.language) : null;
   // channel · relative date · view count - the CSS puts the · separators
   // between spans, so missing pieces never leave a dangling dot.
   const metaBits = [
@@ -42,6 +47,11 @@ export function VideoCard({
         )}
         {isLive && <span className="live-badge">Live</span>}
         {rank !== undefined && !isLive && <span className="rank">{rank}</span>}
+        {lang && (
+          <span className="lang" title={video.language ?? undefined}>
+            {lang}
+          </span>
+        )}
         <span className="play" aria-hidden="true">
           <span>
             <svg viewBox="0 0 16 16">
