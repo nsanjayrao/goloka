@@ -153,7 +153,12 @@ with .22-.24em tracking.
 - Keyboard: visible flame focus rings everywhere; one h1 per page; alt
   text on thumbnails; aria-labels on rows/arrows/progress bars.
 - Lighthouse mobile targets: Performance ≥ 90, Accessibility ≥ 95,
-  CLS < 0.05.
+  CLS < 0.05. Measured 2026-07-18 (production, median of warm runs):
+  Accessibility 100, Best-Practices 100, SEO 100, CLS 0, Performance 85
+  (watch page 81). The remaining perf gap is structural and accepted:
+  first-visit LCP carries the (shortened, 1.5s) darshan curtain plus the
+  full-viewport hero artwork over simulated 4G - closing it would mean
+  cutting signature elements, which the owner declined.
 
 ## 8. Known defects & alignment rules (override the prototype)
 
