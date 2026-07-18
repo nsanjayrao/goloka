@@ -7,7 +7,7 @@ import { SectionHeader } from "@/components/section-header";
 // #5.8): scripture, diya, mridanga, ॐ set in Marcellus, peacock feather,
 // prasadam bowl. Never emoji, never an icon library. A category without a
 // mapping falls back to the ॐ.
-const CATEGORY_ICONS: Record<string, ReactNode> = {
+export const CATEGORY_ICONS: Record<string, ReactNode> = {
   Lectures: (
     <svg viewBox="0 0 34 34" aria-hidden="true">
       <path d="M17 8c-3-2.6-7.5-3-12-2v20c4.5-1 9-.6 12 2 3-2.6 7.5-3 12-2V6c-4.5-1-9-.6-12 2z" />
@@ -41,17 +41,25 @@ const CATEGORY_ICONS: Record<string, ReactNode> = {
       <path d="M13 12c-1.5-2 1.5-3 0-5m5 5c-1.5-2 1.5-3 0-5m5 5c-1.5-2 1.5-3 0-5" />
     </svg>
   ),
+  // Film-strip, drawn in the same 1.4-stroke line style as the prototype set.
+  Documentaries: (
+    <svg viewBox="0 0 34 34" aria-hidden="true">
+      <rect x="5" y="9" width="24" height="16" rx="2" />
+      <path d="M10 9v16M24 9v16M5 14h5M5 20h5M24 14h5M24 20h5" />
+    </svg>
+  ),
 };
 
-const OM_ICON = <span className="om">ॐ</span>;
+export const OM_ICON = <span className="om">ॐ</span>;
 
-const CATEGORY_BLURBS: Record<string, string> = {
+export const CATEGORY_BLURBS: Record<string, string> = {
   Lectures: "Wisdom from the scriptures",
   Festivals: "Sacred celebrations and pastimes",
   "Kirtans & Bhajans": "Soulful melodies that uplift",
   General: "Talks, teachings and more",
   Kids: "For our youngest devotees",
   "Prasadam & Cooking": "Sanctified food and recipes",
+  Documentaries: "Lives, places and history of the movement",
 };
 
 // "Browse by category" (DESIGN.md #5.8): the real categories from the

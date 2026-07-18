@@ -11,7 +11,6 @@ import {
   getChannelsInCategory,
   getLanguagesInCategory,
   getVideoCount,
-  getVideosByCategory,
   getVideosPage,
 } from "@/lib/data";
 import { categorySubtitle } from "@/lib/category-meta";
@@ -65,12 +64,11 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   // `filteredCount` is shown near the grid ONLY when filters narrow the
   // set, so the banner's count never lies but the filtered total is still
   // visible.
-  const [categoryCount, channels, languages, videos, bannerVideos] = await Promise.all([
+  const [categoryCount, channels, languages, videos] = await Promise.all([
     getVideoCount({ category }),
     getChannelsInCategory(category),
     getLanguagesInCategory(category),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
-    getVideosByCategory(category, 1),
   ]);
   const filteredCount = hasActiveFilters ? await getVideoCount(filters) : categoryCount;
 
@@ -85,12 +83,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
 
   return (
     <Container className="page-top pb-10">
-      <CategoryBanner
-        category={category}
-        thumbnail={bannerVideos[0]?.thumbnail_url ?? null}
-        count={categoryCount}
-        subtitle={categorySubtitle(category)}
-      />
+      <CategoryBanner category={category} count={categoryCount} subtitle={categorySubtitle(category)} />
 
       {(channels.length > 0 || languages.length > 0) && (
         <div className="mt-6">

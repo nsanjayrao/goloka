@@ -44,10 +44,9 @@ export default async function TopicPage({ params }: Props) {
   // substring ("aradhana" is not Radharani content).
   const filters = { topicSlug: topic.slug };
 
-  const [count, videos, bannerVideos] = await Promise.all([
+  const [count, videos] = await Promise.all([
     getVideoCount(filters),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
-    getVideosPage(filters, 0, 1), // newest match -> banner artwork
   ]);
 
   if (count === 0) {
@@ -61,12 +60,7 @@ export default async function TopicPage({ params }: Props) {
 
   return (
     <Container className="page-top pb-10">
-      <CategoryBanner
-        category={topic.title}
-        thumbnail={bannerVideos[0]?.thumbnail_url ?? null}
-        count={count}
-        subtitle={topic.subtitle}
-      />
+      <CategoryBanner category={topic.title} count={count} subtitle={topic.subtitle} />
       <div className="mt-8">
         <VideoGrid initialVideos={videos} filters={filters} />
       </div>
