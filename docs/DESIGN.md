@@ -92,8 +92,9 @@ with .22-.24em tracking.
 
 1. **Darshan curtain preloader** — two indigo panels part from a glowing
    gold seam. First visit per session only (sessionStorage), auto-opens
-   ≤2.6s even if load stalls, removes itself from the DOM, skipped
-   under reduced motion.
+   ≤1.5s even if load stalls (shortened from 2.6s, owner decision
+   2026-07-18: the longer theatre dominated first-visit LCP), removes
+   itself from the DOM, skipped under reduced motion.
 2. **Living āratī lamp** — breathing/flickering radial gold glow behind
    the hero (pure CSS, keyframes verbatim); low-intensity variant behind
    the watch-page player and in the footer.

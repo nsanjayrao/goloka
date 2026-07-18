@@ -37,19 +37,22 @@ export function Veil() {
       if (opened) return;
       opened = true;
       el.classList.add("open");
-      // The panel transition runs 1.1s with a .9s delay - remove from the
-      // DOM once it has fully played out (prototype used 2300ms).
-      removeTimer = setTimeout(() => setGone(true), 2300);
+      // Panel transition: 1.1s glide after a .35s delay (globals.css) -
+      // remove from the DOM right after it has played out.
+      removeTimer = setTimeout(() => setGone(true), 1600);
     };
 
-    const onLoad = () => setTimeout(open, 250);
+    // Shortened theatre (owner decision 2026-07-18): the original ~2.6s
+    // curtain dominated first-visit LCP on every page. 150ms after load /
+    // 1.5s failsafe keeps the darshan moment without taxing the reveal.
+    const onLoad = () => setTimeout(open, 150);
     if (document.readyState === "complete") {
-      setTimeout(open, 400);
+      setTimeout(open, 150);
     } else {
       window.addEventListener("load", onLoad, { once: true });
     }
-    // Never trap the user behind the curtain (prototype failsafe).
-    const failsafe = setTimeout(open, 2600);
+    // Never trap the user behind the curtain.
+    const failsafe = setTimeout(open, 1500);
 
     return () => {
       window.removeEventListener("load", onLoad);

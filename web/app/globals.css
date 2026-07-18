@@ -156,7 +156,8 @@
     bottom: 0;
     width: 50.5%;
     background: linear-gradient(160deg, #101637 0%, #0a0f26 100%);
-    transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1) 0.9s;
+    /* .35s delay (was .9s): the shortened curtain (owner, 2026-07-18). */
+    transition: transform 1.1s cubic-bezier(0.7, 0, 0.2, 1) 0.35s;
   }
   .veil .panel.l {
     left: 0;
@@ -176,8 +177,8 @@
     background: linear-gradient(to bottom, transparent, var(--flame), transparent);
     filter: blur(1px);
     opacity: 0;
-    animation: seam-glow 1s ease 0.2s forwards;
-    transition: opacity 0.4s 0.9s;
+    animation: seam-glow 0.7s ease 0.1s forwards;
+    transition: opacity 0.4s 0.35s;
   }
   .veil .v-mark {
     position: relative;
@@ -190,8 +191,8 @@
     align-items: center;
     gap: 14px;
     opacity: 0;
-    animation: v-in 0.8s ease 0.15s forwards;
-    transition: opacity 0.4s 0.8s, transform 0.8s 0.8s;
+    animation: v-in 0.6s ease 0.1s forwards;
+    transition: opacity 0.4s 0.35s, transform 0.8s 0.35s;
   }
   .veil.open .panel.l {
     transform: translateX(-101%);
