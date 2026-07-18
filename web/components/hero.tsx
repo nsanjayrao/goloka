@@ -8,10 +8,13 @@ import { useEffect, useState } from "react";
 
 import { AartiPeriod } from "@/components/aarti-period";
 import { HeroImage } from "@/components/hero-image";
+import { useDataSaver } from "@/lib/data-saver";
 
 // The embers canvas is pure decoration and renders nothing server-side -
 // loading it lazily keeps its code out of the critical hero bundle
-// (Lighthouse TBT was 550ms with everything eager).
+// (Lighthouse TBT was 550ms with everything eager). In data-saver mode it's
+// skipped entirely (see the `!dataSaver &&` gate below) so the dynamic
+// import is never even requested - real bytes saved, not just deferred.
 const Embers = dynamic(() => import("@/components/embers").then((m) => m.Embers), {
   ssr: false,
 });
@@ -36,6 +39,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
   const [active, setActive] = useState(0);
   const [fading, setFading] = useState(false);
   const [paused, setPaused] = useState(false);
+  const dataSaver = useDataSaver();
   // `generation` bumps on every manual jump so the active progress bar
   // remounts (key change) and its fill animation restarts from zero.
   const [generation, setGeneration] = useState(0);
@@ -82,7 +86,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
         <HeroImage key={feature.videoId} videoId={feature.videoId} alt="" priority />
       </div>
       <div className="lamp" aria-hidden="true" />
-      <Embers />
+      {!dataSaver && <Embers />}
 
       <AartiPeriod />
       {/* No .rise on the h1: it's the page's LCP element, and an opacity-0

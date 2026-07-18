@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { DataSaverToggle } from "@/components/data-saver-toggle";
 import { LogoMark } from "@/components/icons/logo-mark";
 
 // The prototype footer (DESIGN.md #5.10): mahā-mantra inscription in
@@ -39,6 +40,7 @@ export function Footer() {
           <a href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion">
             Suggest a channel
           </a>
+          <DataSaverToggle />
         </nav>
       </div>
       <p className="disclaimer">
