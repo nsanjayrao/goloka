@@ -906,6 +906,23 @@
     border-radius: 6px;
     letter-spacing: 0.04em;
   }
+  /* Language chip, top-right of the thumb (top-left is LIVE/rank, bottom-
+     right is .dur) - same dark-glass recipe as .dur. English is the
+     catalog's default, so it's never badged; only non-English videos get
+     the chip, since that's the actual signal a devotee needs at a glance. */
+  .lang {
+    position: absolute;
+    right: 8px;
+    top: 8px;
+    background: rgba(10, 15, 38, 0.85);
+    backdrop-filter: blur(4px);
+    color: var(--flame);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    padding: 3px 8px;
+    border-radius: 6px;
+  }
   .live-badge {
     position: absolute;
     left: 8px;
