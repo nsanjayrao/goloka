@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "i.ytimg.com" },
       { protocol: "https", hostname: "yt3.ggpht.com" },
     ],
+    // Next 16 silently coerces an undeclared `quality` prop back to 75 -
+    // 50 must be listed here for the hero backdrop's quality={50} (it
+    // renders at 34% opacity under a scrim; 50 is visually identical and
+    // the image is the page's LCP element on mobile).
+    qualities: [50, 75],
   },
 };
 
