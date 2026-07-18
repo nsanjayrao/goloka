@@ -143,6 +143,16 @@ with .22-.24em tracking.
   website link-out, inward /channel link when indexed, and the LIVE
   badge when the temple's channel is currently streaming (ISR 600 to
   track the 15-min live check).
+- **Accounts (Phase 4, 2026-07-18)**: OPTIONAL Google sign-in whose only
+  data is two lists (favourite / watch_later in `saved_videos`,
+  RLS-scoped). Auth is entirely client-side — server components stay
+  anonymous, shared pages identical for everyone. Watch HISTORY stays in
+  localStorage forever (the privacy line). Surfaces: heart + bookmark on
+  the watch page (a tap while signed out starts Google sign-in and
+  returns to the same page), /library with two grids, Library in the
+  header/footer and as the 4th mobile tab. About page words this
+  honestly — "no accounts" became "optional account, two lists, nothing
+  else, delete = gone".
 - **Empty states / skeletons**: shyama surfaces, muted text — never
   white flashes.
 - PWA: `themeColor` #0A0F26; manifest colors match.

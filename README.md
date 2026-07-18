@@ -51,4 +51,4 @@ Next.js on Vercel (free tier)  ──  responsive PWA, YouTube embeds   (web/ �
 - [x] Phase 1b — Next.js frontend: browse by category, search, YouTube embeds, PWA
 - [ ] Phase 2 — speaker/artist pages, filters (language, duration), playlists
 - [x] Phase 3 — books & devotional-essentials directory (official link-outs), temple directory
-- [ ] Phase 4 — accounts: favourites, watch-later (Supabase auth)
+- [x] Phase 4 — accounts: favourites, watch-later (Supabase auth, Google sign-in, client-side only)

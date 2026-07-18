@@ -1,8 +1,10 @@
-// The frontend is read-only: it only ever uses the public anon key, which is
-// safe to expose to the browser because Postgres RLS (db/schema.sql) allows
-// anyone to `select` from channels/videos and nobody to write. The
-// service_role key (write access) lives only in worker/.env and GitHub
-// Actions secrets - it must never appear here.
+// The frontend uses only the public anon key, which is safe to expose:
+// Postgres RLS (db/schema.sql) allows anyone to `select` from
+// channels/videos, and the one writable table (saved_videos, Phase 4) is
+// scoped to the signed-in user's own rows by auth.uid(). The service_role
+// key (full write access) lives only in worker/.env and GitHub Actions
+// secrets - it must never appear here. This same client carries Supabase
+// Auth (Google sign-in) with its default localStorage session.
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;

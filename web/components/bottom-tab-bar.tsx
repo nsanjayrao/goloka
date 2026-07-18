@@ -1,7 +1,7 @@
 "use client"; // usePathname (to highlight the active tab) only works on
 // the client - there's no server-side equivalent for "which route is this".
 
-import { Compass, Home, Search } from "lucide-react";
+import { Bookmark, Compass, Home, Search } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -11,6 +11,7 @@ const TABS = [
   { href: "/", label: "Home", icon: Home },
   { href: "/browse", label: "Browse", icon: Compass },
   { href: "/search", label: "Search", icon: Search },
+  { href: "/library", label: "Library", icon: Bookmark },
 ] as const;
 
 // Mobile-only bottom tab bar (DESIGN.md #4: "this is what makes the PWA feel
@@ -35,12 +36,12 @@ export function BottomTabBar() {
     >
       <div className="relative flex h-14 items-stretch justify-around">
         {/* Gold indicator at the active tab's top edge - one element that
-            springs between tabs (each tab is 1/3, so translateX steps by its
+            springs between tabs (each tab is 1/4, so translateX steps by its
             own width). Hidden when no tab is active (e.g. a /watch page). */}
         {activeIndex >= 0 && (
           <span
             aria-hidden
-            className="pointer-events-none absolute left-0 top-0 h-[3px] w-1/3 transition-transform duration-300 ease-spring motion-reduce:transition-none"
+            className="pointer-events-none absolute left-0 top-0 h-[3px] w-1/4 transition-transform duration-300 ease-spring motion-reduce:transition-none"
             style={{ transform: `translateX(${activeIndex * 100}%)` }}
           >
             <span className="mx-auto block h-full w-7 rounded-full bg-accent" />

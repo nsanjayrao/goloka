@@ -83,6 +83,34 @@ alter table videos add column if not exists is_live boolean not null default fal
 alter table videos add column if not exists live_viewer_count integer;
 create index if not exists videos_is_live_idx on videos (published_at desc) where is_live;
 
+-- Accounts (Phase 4, 2026-07-18): optional sign-in (Google via Supabase
+-- Auth) whose ONLY data is the user's saved lists - favourites and
+-- watch-later. Watch HISTORY stays in the browser (localStorage) by design;
+-- the account never sees it. No FK to videos: a saved id survives catalog
+-- pruning, and the frontend joins by youtube_video_id at read time.
+create table if not exists saved_videos (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  youtube_video_id text not null,
+  kind text not null check (kind in ('favourite', 'watch_later')),
+  created_at timestamptz not null default now(),
+  primary key (user_id, youtube_video_id, kind)
+);
+create index if not exists saved_videos_user_idx
+  on saved_videos (user_id, kind, created_at desc);
+
+-- RLS: a signed-in user sees and edits ONLY their own rows; the anon role
+-- sees nothing. auth.uid() comes from the JWT the browser sends.
+alter table saved_videos enable row level security;
+drop policy if exists "select own saved" on saved_videos;
+create policy "select own saved" on saved_videos
+  for select using (auth.uid() = user_id);
+drop policy if exists "insert own saved" on saved_videos;
+create policy "insert own saved" on saved_videos
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "delete own saved" on saved_videos;
+create policy "delete own saved" on saved_videos
+  for delete using (auth.uid() = user_id);
+
 -- Anyone may read (the site is public); only the service key (sync worker) may write.
 alter table channels enable row level security;
 alter table videos enable row level security;

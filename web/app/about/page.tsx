@@ -44,13 +44,18 @@ export default function AboutPage() {
         </section>
 
         <section>
-          <h2 className="font-heading text-xl font-medium text-text">No accounts, no tracking</h2>
+          <h2 className="font-heading text-xl font-medium text-text">Privacy, honestly</h2>
           <p className="mt-2">
-            There&apos;s nothing to sign up for. Goloka doesn&apos;t collect names,
-            emails, or viewing habits. The one personalization feature it has —
-            &quot;Continue Watching&quot; on the home page — is stored only in your own
-            browser and never sent anywhere; clearing your browser data clears
-            it completely.
+            Goloka never tracks what you watch. &quot;Continue Watching&quot; lives only
+            in your own browser and is never sent anywhere — clearing your
+            browser data clears it completely, signed in or not.
+          </p>
+          <p className="mt-2">
+            Signing in is optional and exists for exactly one thing: keeping
+            your favourites and watch-later list with you across devices.
+            That&apos;s all an account stores — two lists of video links. No
+            viewing history, no analytics profile, nothing sold or shared.
+            Delete your account and everything it held is deleted with it.
           </p>
         </section>
 
