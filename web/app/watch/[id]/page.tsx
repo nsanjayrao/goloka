@@ -7,7 +7,7 @@ import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
 import { RecordWatch } from "@/components/record-watch";
 import { SaveButtons } from "@/components/save-buttons";
-import { ShareButton } from "@/components/share-button";
+import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
 import { VideoDescription } from "@/components/video-description";
 import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
 import { getMoreFromCategory, getVideoByYoutubeId } from "@/lib/data";
@@ -139,6 +139,7 @@ export default async function WatchPage({ params }: Props) {
               {video.published_at && <span>{formatRelativeDate(video.published_at)}</span>}
               {video.duration_seconds != null && <span>{formatDuration(video.duration_seconds)}</span>}
               <ShareButton title={title} path={`/watch/${video.youtube_video_id}`} />
+              <WhatsAppShareButton title={title} path={`/watch/${video.youtube_video_id}`} />
               <SaveButtons youtubeVideoId={video.youtube_video_id} />
             </div>
           </div>

@@ -7,7 +7,11 @@ import { getAllCategories, getLatestVideos } from "@/lib/data";
 
 // Canonical is the bare /search - the ?q= variants shouldn't be indexed as
 // separate pages.
-export const metadata: Metadata = { title: "Search", alternates: { canonical: "/search" } };
+export const metadata: Metadata = {
+  title: "Search",
+  description: "Search ISKCON lectures, kirtans, and festivals indexed on Goloka.",
+  alternates: { canonical: "/search" },
+};
 
 export default async function SearchPage() {
   // Both feed the resting state (before the user types): chips to browse

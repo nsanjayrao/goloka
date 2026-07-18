@@ -6,7 +6,11 @@ import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
 import { getAllCategories, getVideoCount } from "@/lib/data";
 
-export const metadata: Metadata = { title: "Browse", alternates: { canonical: "/browse" } };
+export const metadata: Metadata = {
+  title: "Browse",
+  description: "Browse ISKCON lectures, kirtans, festivals, and more by category on Goloka.",
+  alternates: { canonical: "/browse" },
+};
 
 // Re-generate at most every 30 minutes so new categories/counts appear
 // without a redeploy (same reasoning as the home page).
