@@ -28,6 +28,7 @@ export function Footer() {
         </div>
         <nav className="foot-links" aria-label="Footer">
           <Link href="/">Home</Link>
+          <Link href="/start">Begin Here</Link>
           <Link href="/browse">Browse</Link>
           <Link href="/search">Search</Link>
           <Link href="/leaders">Leaders</Link>
