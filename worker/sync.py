@@ -96,14 +96,19 @@ EXCLUDED_VIDEO_IDS = {
 
 # Checked in order, first match wins - keep the most specific/leftmost intent
 # first. Deliberately avoids over-broad terms like a bare "krishna"/"hare
-# krishna" that appear in nearly every title.
+# krishna" that appear in nearly every title. Judged against the TITLE only
+# (see classify_with_rules): the 2026-07-14 audit found 3,024 rows whose
+# category came from a DESCRIPTION phrase - channel boilerplate ("we stream
+# devotional programs" -> Kirtans) or credits ("Sweet Piano Music" ->
+# Prasadam). \bsweet\b and animat were removed for the same reason: "sweet
+# pastimes" and "animated film" say nothing about food or kids' content.
 CATEGORY_RULES = [
-    (re.compile(r"kirtan|bhajan|maha[- ]?mantra|\bchant|harinam|sankirtan|abhang|aarti|arati|\bdhun\b", re.I), "Kirtans & Bhajans"),
-    (re.compile(r"lecture|\bclass\b|bhagavatam|bhagavad[- ]?gita|\bgita\b|katha|seminar|pravachan|pravacana|discourse|srimad|teachings|philosophy|\bsb\s?\d|\bbg\s?\d", re.I), "Lectures"),
-    (re.compile(r"ratha?[- ]?yatra|janmashtami|janmastami|gaura[- ]?purnima|radha?[- ]?ashtami|radhastami|ekadashi|festival|\bkartik\b|damodara|govardhan|nrsimha|nrisimha|narasimha|jhulan|vyasa[- ]?puja|appearance day|disappearance day|tirobhava|\bholi\b|diwali|deepotsav|balaram[a]?[- ]?purnima|nityananda[- ]?trayodashi", re.I), "Festivals"),
+    (re.compile(r"kirtan|bhajan|maha[- ]?mantra|\bchant|harinam|sankirtan|abhang|aarti|arati|\bdhun\b|कीर्तन|भजन|आरती", re.I), "Kirtans & Bhajans"),
+    (re.compile(r"lecture|\bclass\b|bhagavatam|bhagavad[- ]?gita|\bgita\b|katha|seminar|pravachan|pravacana|discourse|srimad|teachings|philosophy|\bsb\s?\d|\bbg\s?\d|कथा|प्रवचन", re.I), "Lectures"),
+    (re.compile(r"ratha?[- ]?yatra|janmashtami|janmastami|gaura[- ]?purnima|radha?[- ]?ashtami|radhastami|ekadashi|festival|\bkartik\b|damodara|govardhan|nrsimha|nrisimha|narasimha|jhulan|vyasa[- ]?puja|appearance day|disappearance day|tirobhava|\bholi\b|diwali|deepotsav|balaram[a]?[- ]?purnima|nityananda[- ]?trayodashi|m[ao]h?otsava?|utsava?\b|brahmotsava?|snana?[- ]?yatra|\bmela\b|महोत्सव|उत्सव", re.I), "Festivals"),
     (re.compile(r"documentary|biography|life story|history of|the story of", re.I), "Documentaries"),
-    (re.compile(r"prasadam|prasad\b|recipe|cooking|\bcook\b|kitchen|laddu|halava|halwa|khichdi|khichuri|sabji|subji|\bsweet\b|bhoga|naivedya", re.I), "Prasadam & Cooking"),
-    (re.compile(r"\bkids\b|children|cartoon|animat|little krishna|for kids|nursery", re.I), "Kids"),
+    (re.compile(r"prasadam|prasad\b|recipe|cooking|\bcook\b|kitchen|laddu|halava|halwa|khichdi|khichuri|sabji|subji|\bsweets\b|bhoga|naivedya", re.I), "Prasadam & Cooking"),
+    (re.compile(r"\bkids\b|children|cartoon|little krishna|for kids|nursery", re.I), "Kids"),
 ]
 
 
@@ -215,7 +220,10 @@ def fetch_video_details(video_ids: list[str]) -> dict[str, dict]:
 
 
 def classify_with_rules(title: str, description: str) -> str | None:
-    text = f"{title}\n{description[:300]}"
+    # TITLE only, links stripped - the same discipline as topics_from_rules.
+    # A row with no title match is decided by the LLM, which DOES see the
+    # description and can weigh it as context rather than as a trigger.
+    text = _matchable(title)
     for pattern, category in CATEGORY_RULES:
         if pattern.search(text):
             return category
@@ -229,8 +237,10 @@ def classify_with_rules(title: str, description: str) -> str | None:
 # LLM is specifically told not to).
 TOPIC_DEFS = {
     "radharani": (
-        "Srimati Radharani herself - her glories, pastimes, Radhastami; "
-        "NOT videos that merely mention Radha in a deity or temple name"
+        "Srimati Radharani herself - her glories, pastimes, Radhastami, and "
+        "temple darshans of Radha deities (owner decision 2026-07-18: a "
+        "darshan OF Sri Radha belongs on Her page); NOT videos where Radha "
+        "appears only in a PERSON's name"
     ),
     "vrindavan": "the holy dham of Vrindavan - parikrama, its temples and pastime places",
     "gita": "Bhagavad-gita teaching - a class on its verses or philosophy",
@@ -246,15 +256,19 @@ TOPIC_DEFS = {
 # Prabhu", "Radhika Devi Dasi") - name-vs-subject is exactly the judgment
 # call that belongs to the LLM, not a regex.
 TOPIC_RULES = {
-    # Only the festival names auto-assign: "Radharani"/"Kishori" are also
-    # PEOPLE'S names (Sriprada Radharani Devi Dasi...) - seen mistagging in
-    # production, so those words are candidates for LLM judgment, never
-    # rule-certain.
+    # Only the festival names auto-assign: "Radharani"/"Kishori"/"Narasimha"
+    # are also PEOPLE'S names (Sriprada Radharani Devi Dasi, HG Narasimha
+    # Nitai Prabhu...) - both seen mistagging in production (2026-07-14
+    # audit: 16 nrsimha tags were speakers named Narasimha), so those words
+    # are candidates for LLM judgment, never rule-certain. Rules also judge
+    # the TITLE only (see topics_from_rules) - a description mention is
+    # channel boilerplate territory and goes through the LLM.
     "radharani": re.compile(r"radh[ae][\s-]*a?shtami|radhastami|राधाष्टमी", re.I),
-    "vrindavan": re.compile(r"vrindavan|vrndavan|brindavan|वृन्दावन|वृंदावन", re.I),
-    "gita": re.compile(r"bhagavad[\s-]*gita|bhagavadgita|\bgita\b|भगवद्[\s-]*गीता", re.I),
+    "vrindavan": re.compile(r"vrindavan|vrndavan|brindavan|vṛndāvana?|वृन्दावन|वृंदावन", re.I),
+    "gita": re.compile(r"bhagavad[\s-]*g[īi]t[āa]|bhagavadg[īi]t[āa]|\bg[īi]t[āa]\b|भगवद्[\s-]*गीता", re.I),
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
-    "nrsimha": re.compile(r"nrsimha|narasimha|nrisimha|nrisingha|नृसिंह|नरसिंह", re.I),
+    "nrsimha": re.compile(
+        r"(nrsimha|narasimha|nrisimha|nrisingha|narsingh|नृसिंह|नरसिंह)a?[\s-]*(chaturda?sh?i|jayanti|चतुर्दशी)", re.I),
 }
 
 # Broad CANDIDATE patterns: "could this possibly be about the topic?".
@@ -266,20 +280,43 @@ TOPIC_RULES = {
 # broad pattern but gets rejected by its judgment.
 TOPIC_CANDIDATES = {
     "radharani": re.compile(r"radh|kishori|barsana|राध|किशोरी|बरसान", re.I),  # broad on purpose - LLM adjudicates
-    "vrindavan": re.compile(r"v[ri]+ndavan|brindavan|\bvraja?\b|\bbraja?\b|वृन्दावन|वृंदावन|ब्रज", re.I),
-    "gita": re.compile(r"gita|गीता", re.I),
+    "vrindavan": re.compile(r"v[ri]+ndavan|v[ṛr][iī]*nd[āa]van|brindavan|\bvraja?\b|\bbraja?\b|वृन्दावन|वृंदावन|ब्रज", re.I),
+    "gita": re.compile(r"g[īi]+t[āa]|geet[āa]|गीता|\bbg\b", re.I),  # \bbg\b: "BG–2.8" class titles
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
     "nrsimha": re.compile(r"n[ra]?[ri]?simha|narsingh|नृसिंह|नरसिंह", re.I),
 }
 
+# Social-media boilerplate must never vote: URLs and @handles like
+# facebook.com/iskconvrindavann tagged every daily upload of a channel as
+# "vrindavan" (504 such rows in the 2026-07-14 audit).
+_LINK_RE = re.compile(r"https?://\S+|www\.\S+|@[\w.]+", re.I)
+
+# "Gopi Gita"/"Venu Gita" are Srimad-Bhagavatam chapters, not Bhagavad-gita.
+# The 8B judge kept tagging them gita even with a prompt counter-example
+# (tested 2026-07-14), so the phrase is erased before any gita pattern -
+# rule, candidate, or the LLM gate - can see it. A video that ALSO mentions
+# Bhagavad-gita elsewhere still matches on that mention.
+_NOT_BHAGAVAD_GITA_RE = re.compile(r"(gopi|venu)[\s-]*g(?:ee|[īi]+)t[āa]?|गोपी\s*गीता?|वेणु\s*गीता?", re.I)
+
+
+def _strip_links(text: str) -> str:
+    return _LINK_RE.sub(" ", text)
+
+
+def _matchable(text: str) -> str:
+    return _NOT_BHAGAVAD_GITA_RE.sub(" ", _strip_links(text))
+
 
 def topics_from_rules(title: str, description: str) -> set[str]:
-    text = f"{title}\n{description[:300]}"
+    # TITLE only (description ignored on purpose): venue lines and channel
+    # promos in descriptions are never rule-certain - candidate_topics still
+    # sees the description, so those rows reach the LLM for judgment.
+    text = _matchable(title)
     return {slug for slug, pattern in TOPIC_RULES.items() if pattern.search(text)}
 
 
 def candidate_topics(title: str, description: str) -> set[str]:
-    text = f"{title}\n{description[:300]}"
+    text = _matchable(f"{title}\n{description[:300]}")
     return {slug for slug, pattern in TOPIC_CANDIDATES.items() if pattern.search(text)}
 
 
@@ -390,8 +427,11 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
 
     keys = _batch_keys(len(items))
     key_to_idx = {k: i for i, k in enumerate(keys)}
+    # Links stripped for the same reason as in the rules: a video is not
+    # about vrindavan because its channel's facebook handle contains it.
+    # (Also saves tokens - social boilerplate is most of many descriptions.)
     numbered = "\n".join(
-        f'{keys[i]}. {it["title"]} :: {(it.get("description") or "")[:160]}'
+        f'{keys[i]}. {it["title"]} :: {_strip_links(it.get("description") or "")[:160]}'
         for i, it in enumerate(items)
     )
     topic_lines = "\n".join(f'- "{slug}": {desc}' for slug, desc in TOPIC_DEFS.items())
@@ -399,16 +439,24 @@ def classify_batch_with_llm(items: list[dict]) -> list[dict | None]:
         "Classify each ISKCON/Krishna-consciousness YouTube video below. Each line "
         "starts with the video's 3-character key. For each video, give:\n"
         '- "k": that video\'s key, copied exactly\n'
-        f'- "category": one of {CATEGORIES}\n'
+        '- "category": one of "Lectures" (talks, classes, katha, Q&A, podcasts), '
+        '"Kirtans & Bhajans" (devotional music, chanting, aarti), '
+        '"Festivals" (celebrations, yatras, utsavs, abhishekas, live festival darshan), '
+        '"Documentaries" (films, histories, biographies, interviews), '
+        '"Prasadam & Cooking" (food, recipes), "Kids" (content made for children), '
+        '"General" (none of these)\n'
         '- "language": its main spoken language, or null\n'
         '- "topics": which of these the video is PRIMARILY about - 0 to 3 of:\n'
         f"{topic_lines}\n"
         # The counter-examples are real production false positives (2026-07-14):
         # an 8B judge needs to SEE the speaker-name trap, not just be told.
-        "A person's NAME containing Radha/Radhika/Kishori/Vrindavan does not make the "
-        'video about that topic. E.g. "Kirtan with Radhika Das", "H.G. Radhika Vallabh '
-        'Prabhu | S.B. 3.14.36", "Sriprada Radharani Devi Dasi\'s life story" are NOT '
-        "radharani - the words are people's names there.\n\n"
+        "A person's NAME containing Radha/Radhika/Kishori/Narasimha/Vrindavan does not "
+        'make the video about that topic. E.g. "Kirtan with Radhika Das" and "H.G. '
+        'Radhika Vallabh Prabhu | S.B. 3.14.36" are NOT radharani, and "HG Narasimha '
+        'Nitai Prabhu || BG-1.43" is a class BY a speaker named Narasimha, NOT nrsimha. '
+        'A video recorded AT a Vrindavan temple is not thereby ABOUT vrindavan. '
+        'The topic gita means Bhagavad-gita ONLY: "Gopi Gita" / "गोपी गीत" katha (the '
+        "gopis' song, Srimad-Bhagavatam 10.31) is NOT the gita topic.\n\n"
         f"{numbered}\n\n"
         'Reply with JSON only: {"results": [{"k": <key>, "category": <category>, '
         '"language": <language or null>, "topics": [<slugs>]}, ...]} covering every key.'
