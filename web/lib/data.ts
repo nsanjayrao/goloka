@@ -4,6 +4,7 @@
 // it returns an empty/neutral value instead of throwing. That's what lets
 // every page render its empty state instead of crashing - the app-wide
 // "database may be empty or unreachable" requirement.
+import { expandQueryWord } from "@/lib/search-expansion";
 import { supabase } from "@/lib/supabase";
 import type { Channel, DurationBucket, Video } from "@/lib/types";
 
@@ -422,15 +423,39 @@ export async function getMoreFromCategory(
 // Turns free-typed input into a prefix tsquery ("krishna prasadam" ->
 // "krishna:* & prasadam:*"), so a debounced search-as-you-type box still
 // matches on partial words. Postgres tsquery syntax reserves & | ! ( ) : *,
-// so those are stripped out of each word first (a lone "&" etc. would
-// otherwise be a syntax error, not a literal search term).
-function toPrefixTsQuery(input: string): string {
+// so those are stripped out of each word (and every expanded variant, since
+// a stray one of those characters could in principle ride along in a
+// variant) first - a lone "&" etc. would otherwise be a syntax error, not a
+// literal search term.
+//
+// Each word additionally goes through expandQueryWord (lib/search-expansion)
+// before being turned into tsquery syntax: "ekādaśī" doesn't just become
+// "ekādaśī:*", it becomes a parenthesized OR of every spelling worth trying -
+// "(ekadashi:* | ekadasi:* | एकादशी:* | ...)" - so a visitor typing in IAST,
+// plain Latin, or Devanagari all reach the same videos. Postgres's tsquery
+// grammar accepts a parenthesized "|" group as a single term, so this
+// composes with the existing "&" between words without any RPC/schema change
+// (see search_videos_ranked in db/schema.sql, which just passes this string
+// straight to to_tsquery('simple', ...)).
+//
+// Exported (not just used internally) so search-expansion.test.ts can assert
+// on the exact tsquery string end-to-end, rather than re-implementing this
+// assembly logic a second time in the test file.
+export function toPrefixTsQuery(input: string): string {
+  const stripReserved = (word: string) => word.replace(/[&|!():*]/g, "");
+
   return input
     .trim()
     .split(/\s+/)
-    .map((word) => word.replace(/[&|!():*]/g, ""))
+    .map(stripReserved)
     .filter(Boolean)
-    .map((word) => `${word}:*`)
+    .map((word) => {
+      const variants = [...expandQueryWord(word)].map(stripReserved).filter(Boolean);
+      if (variants.length === 0) return "";
+      if (variants.length === 1) return `${variants[0]}:*`;
+      return `(${variants.map((variant) => `${variant}:*`).join(" | ")})`;
+    })
+    .filter(Boolean)
     .join(" & ");
 }
 
