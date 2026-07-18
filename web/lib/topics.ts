@@ -80,6 +80,27 @@ export const TOPICS: Record<string, Topic> = {
     // Nrsimha Chaturdashi usually falls in late April or early-to-mid May.
     festivalWindow: { startMonth: 4, startDay: 20, endMonth: 5, endDay: 20 },
   },
+  prabhupada: {
+    slug: "prabhupada",
+    title: "Śrīla Prabhupāda",
+    subtitle: "The founder-ācārya — his life, teachings and remembrances.",
+    keywords: ["prabhupada", "prabhupad"],
+    showOnHomepage: true,
+  },
+  ekadashi: {
+    slug: "ekadashi",
+    title: "Ekādaśī",
+    subtitle: "Vrat kathas, glories and observance of the sacred fasting day.",
+    keywords: ["ekadashi", "ekadasi"],
+    showOnHomepage: true,
+  },
+  japa: {
+    slug: "japa",
+    title: "The Holy Name",
+    subtitle: "Japa and the practice of chanting the mahā-mantra.",
+    keywords: ["japa", "holy name", "mahamantra"],
+    showOnHomepage: true,
+  },
 };
 
 /** Whether `now` falls within a topic's festivalWindow (inclusive), by

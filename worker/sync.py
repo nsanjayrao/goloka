@@ -249,6 +249,17 @@ TOPIC_DEFS = {
     "gita": "Bhagavad-gita teaching - a class on its verses or philosophy",
     "janmashtami": "Sri Krishna Janmashtami - Krishna's appearance day celebrations",
     "nrsimha": "Lord Nrsimhadeva - his pastimes, prayers, Nrsimha Chaturdashi",
+    "prabhupada": (
+        "Srila Prabhupada HIMSELF - his life story, pastimes, instructions, "
+        "vyasa-puja or (dis)appearance day, remembrances by disciples; NOT a "
+        "video that merely quotes him or credits him as ISKCON's founder"
+    ),
+    "ekadashi": "Ekadashi - vrat katha, glories, fasting and observance of the sacred day",
+    "japa": (
+        "chanting the holy name as a PRACTICE - japa sessions, japa "
+        "workshops/tips, the glories of the maha-mantra; NOT every kirtan "
+        "performance"
+    ),
 }
 
 # High-precision word patterns per topic - the floor the LLM builds on (its
@@ -272,6 +283,11 @@ TOPIC_RULES = {
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
     "nrsimha": re.compile(
         r"(nrsimha|narasimha|nrisimha|nrisingha|narsingh|नृसिंह|नरसिंह)a?[\s-]*(chaturda?sh?i|jayanti|चतुर्दशी)", re.I),
+    # "prabhupada" has NO strict rule on purpose: his name in a title is
+    # usually a quote-attribution ("Srila Prabhupada on X") - whether the
+    # video is ABOUT him is always the LLM's call.
+    "ekadashi": re.compile(r"ekadash?i|ekadasi|एकादशी", re.I),
+    "japa": re.compile(r"\bjapa\b|जप\b", re.I),
 }
 
 # Broad CANDIDATE patterns: "could this possibly be about the topic?".
@@ -287,7 +303,16 @@ TOPIC_CANDIDATES = {
     "gita": re.compile(r"g[īi]+t[āa]|geet[āa]|गीता|\bbg\b", re.I),  # \bbg\b: "BG–2.8" class titles
     "janmashtami": re.compile(r"janmashtami|janmastami|gokulashtami|जन्माष्टमी", re.I),
     "nrsimha": re.compile(r"n[ra]?[ri]?simha|narsingh|नृसिंह|नरसिंह", re.I),
+    "prabhupada": re.compile(r"prabhup[āa]d|प्रभुपाद", re.I),
+    "ekadashi": re.compile(r"ekadash?i|ekadasi|एकादशी", re.I),
+    "japa": re.compile(r"\bjapa?\b|holy name|mah[āa][\s-]*mantra|mahamantra|जप|हरे कृष्ण महामंत्र", re.I),
 }
+
+# Candidacy judged on the TITLE alone for these topics: their words live in
+# channel-description boilerplate on THOUSANDS of rows ("...founded by His
+# Divine Grace A.C. Bhaktivedanta Swami Prabhupada"), which would flood the
+# LLM with non-candidates and drown the free tiers.
+TITLE_ONLY_CANDIDATES = {"prabhupada"}
 
 # Social-media boilerplate must never vote: URLs and @handles like
 # facebook.com/iskconvrindavann tagged every daily upload of a channel as
@@ -320,7 +345,12 @@ def topics_from_rules(title: str, description: str) -> set[str]:
 
 def candidate_topics(title: str, description: str) -> set[str]:
     text = _matchable(f"{title}\n{description[:300]}")
-    return {slug for slug, pattern in TOPIC_CANDIDATES.items() if pattern.search(text)}
+    title_text = _matchable(title)
+    return {
+        slug
+        for slug, pattern in TOPIC_CANDIDATES.items()
+        if pattern.search(title_text if slug in TITLE_ONLY_CANDIDATES else text)
+    }
 
 
 # Groq returns the spoken language as free text ("English", "en", "Hindi",
