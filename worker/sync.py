@@ -251,7 +251,8 @@ TOPIC_DEFS = {
     "nrsimha": "Lord Nrsimhadeva - his pastimes, prayers, Nrsimha Chaturdashi",
     "prabhupada": (
         "Srila Prabhupada HIMSELF - his life story, pastimes, instructions, "
-        "vyasa-puja or (dis)appearance day, remembrances by disciples; NOT a "
+        "vyasa-puja or (dis)appearance day, remembrances by disciples, and "
+        "recipes of his favourite dishes (owner decision 2026-07-18); NOT a "
         "video that merely quotes him or credits him as ISKCON's founder"
     ),
     "ekadashi": "Ekadashi - vrat katha, glories, fasting and observance of the sacred day",
