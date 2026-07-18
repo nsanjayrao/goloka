@@ -57,7 +57,10 @@ export function Shelf({ children, label }: { children: React.ReactNode; label?: 
           </svg>
         </button>
       )}
-      <div ref={scrollerRef} onScroll={updateScrollState} className="row" role="list" aria-label={label}>
+      {/* role="group" (not "list"): list requires listitem children, but
+          the cards are plain links - group carries the aria-label without
+          imposing child roles (this exact rule cost an a11y point). */}
+      <div ref={scrollerRef} onScroll={updateScrollState} className="row" role="group" aria-label={label}>
         {children}
       </div>
     </div>

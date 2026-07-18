@@ -45,6 +45,10 @@ export function HeroImage({
       fill
       priority={priority}
       sizes="100vw"
+      // The hero artwork renders at 34% opacity under a heavy scrim
+      // (globals.css .hero-media) - quality 50 is visually identical there
+      // and meaningfully shrinks the LCP payload on mobile.
+      quality={50}
       // Ambient motion is the carousel's slow Ken Burns (passed via
       // `className` on the active slide), so no hover scale here.
       className={cn("object-cover", className)}

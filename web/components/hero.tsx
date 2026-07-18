@@ -2,12 +2,19 @@
 // runtime state. The component still server-renders its first feature's
 // full markup (h1 included), so SEO and no-JS visitors get real content.
 
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AartiPeriod } from "@/components/aarti-period";
-import { Embers } from "@/components/embers";
 import { HeroImage } from "@/components/hero-image";
+
+// The embers canvas is pure decoration and renders nothing server-side -
+// loading it lazily keeps its code out of the critical hero bundle
+// (Lighthouse TBT was 550ms with everything eager).
+const Embers = dynamic(() => import("@/components/embers").then((m) => m.Embers), {
+  ssr: false,
+});
 
 // One featured item, serialized by the server (app/page.tsx) from real
 // data - the hand-curated `featured` videos, falling back to the newest.
