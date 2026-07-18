@@ -370,25 +370,58 @@ LANGUAGE_ALIASES = {
     "ml": "Malayalam", "mal": "Malayalam", "malayalam": "Malayalam",
     "pa": "Punjabi", "pan": "Punjabi", "punjabi": "Punjabi",
     "or": "Odia", "ori": "Odia", "odia": "Odia", "oriya": "Odia",
-    "es": "Spanish", "spanish": "Spanish",
-    "pt": "Portuguese", "portuguese": "Portuguese",
+    "es": "Spanish", "spanish": "Spanish", "español": "Spanish", "espanol": "Spanish", "castellano": "Spanish",
+    "pt": "Portuguese", "portuguese": "Portuguese", "português": "Portuguese", "portugues": "Portuguese",
     "ru": "Russian", "russian": "Russian",
+    # Bilingual EN+RU streams (an English speaker with live Russian
+    # translation - a common ISKCON format): filed under Russian, since the
+    # Russian-speaking audience is who filters for them.
+    "english/russian": "Russian", "en/ru": "Russian", "ru/en": "Russian", "russian/english": "Russian",
     "fr": "French", "french": "French",
     "de": "German", "german": "German",
+    "it": "Italian", "ita": "Italian", "italian": "Italian", "italiano": "Italian",
     "sa": "Sanskrit", "sanskrit": "Sanskrit",
+    "uk": "Ukrainian", "ukr": "Ukrainian", "ukrainian": "Ukrainian", "ukranian": "Ukrainian", "ukraine": "Ukrainian",
+    "hu": "Hungarian", "hun": "Hungarian", "hungarian": "Hungarian",
+    "lt": "Lithuanian", "lithuanian": "Lithuanian",
+    "tr": "Turkish", "turkish": "Turkish",
+    "zh": "Chinese", "chinese": "Chinese", "mandarin": "Chinese",
+    "nl": "Dutch", "dutch": "Dutch",
+    "pl": "Polish", "polish": "Polish",
+    "rus": "Russian", "rusian": "Russian",
 }
 
 
 def normalize_language(lang: str | None) -> str | None:
     if not lang or not isinstance(lang, str):
         return None
-    key = lang.strip().lower()
+    key = re.sub(r"\s+", " ", lang.strip().lower())
     if key in ("null", "none", "n/a", "unknown", ""):
         return None
+    if key in LANGUAGE_ALIASES:
+        return LANGUAGE_ALIASES[key]
+
+    # Pattern pass for the free-text tail the alias table can't enumerate
+    # (2026-07-18 audit of 6,649 rows found 40+ raw spellings):
+    # - "english only" -> "english"
+    # - "dubbed in russian" -> "russian"
+    # - bilingual combos ("English/Ukrainian", "Eng/Rus", "Sanskrit &
+    #   Bengali"): filed under the LAST language named - it's the
+    #   translation-target audience, who are the ones filtering for it.
+    key = re.sub(r"\bonly\b", " ", key).strip()
+    dubbed = re.fullmatch(r"dubbed (?:in )?(.+)", key)
+    if dubbed:
+        key = dubbed.group(1).strip()
+    if key in LANGUAGE_ALIASES:
+        return LANGUAGE_ALIASES[key]
+    parts = [p.strip() for p in re.split(r"[/&+,]|\band\b", key) if p.strip()]
+    if len(parts) > 1 and parts[-1] in LANGUAGE_ALIASES:
+        return LANGUAGE_ALIASES[parts[-1]]
+
     # Fall back to title-casing whatever the model returned, so even a
     # language missing from the alias table above still gets consistent
     # casing instead of a raw, unpredictable string.
-    return LANGUAGE_ALIASES.get(key, lang.strip().title())
+    return lang.strip().title()
 
 
 # The LLM providers, tried in order. Both speak the OpenAI chat-completions

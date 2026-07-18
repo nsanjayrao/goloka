@@ -350,8 +350,15 @@ export async function getLanguagesInCategory(category: string): Promise<string[]
       .not("language", "is", null)
       .limit(3000);
     if (error) throw error;
+    // Junk guard: historical rows have carried literal "null"/"unknown"
+    // strings and raw 2-letter codes as languages - the worker normalizes
+    // at write time now, but a chip list should never trust old data.
+    const JUNK = new Set(["null", "none", "unknown", "n/a", ""]);
     const seen = new Set<string>();
-    for (const row of data ?? []) seen.add(row.language as string);
+    for (const row of data ?? []) {
+      const language = (row.language as string).trim();
+      if (!JUNK.has(language.toLowerCase()) && language.length > 2) seen.add(language);
+    }
     return [...seen].sort();
   }, []);
 }
