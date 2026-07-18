@@ -5,6 +5,7 @@
 import Image from "next/image";
 import { useState } from "react";
 
+import { useDataSaver } from "@/lib/data-saver";
 import { cn } from "@/lib/utils";
 
 // Full-bleed hero art (DESIGN.md #4: "highest available resolution
@@ -33,6 +34,7 @@ export function HeroImage({
   className?: string;
 }) {
   const [fellBack, setFellBack] = useState(false);
+  const dataSaver = useDataSaver();
 
   const src = fellBack
     ? `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`
@@ -47,8 +49,9 @@ export function HeroImage({
       sizes="100vw"
       // The hero artwork renders at 34% opacity under a heavy scrim
       // (globals.css .hero-media) - quality 50 is visually identical there
-      // and meaningfully shrinks the LCP payload on mobile.
-      quality={50}
+      // and meaningfully shrinks the LCP payload on mobile. Data-saver mode
+      // goes further still, down to 35 - still under the same scrim.
+      quality={dataSaver ? 35 : 50}
       // Ambient motion is the carousel's slow Ken Burns (passed via
       // `className` on the active slide), so no hover scale here.
       className={cn("object-cover", className)}

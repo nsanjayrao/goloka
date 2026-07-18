@@ -5,6 +5,7 @@ import { cache } from "react";
 
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
+import { LiteEmbed } from "@/components/lite-embed";
 import { RecordWatch } from "@/components/record-watch";
 import { SaveButtons } from "@/components/save-buttons";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
@@ -105,16 +106,11 @@ export default async function WatchPage({ params }: Props) {
           <div className="mx-auto max-w-4xl">
             {/* Standard, unmodified YouTube embed via youtube-nocookie.com -
                 Goloka is an index, never a host (see README). No custom
-                controls, no download/proxy of the video itself. */}
-            <div className="relative aspect-video overflow-hidden rounded-xl shadow-2xl">
-              <iframe
-                src={`https://www.youtube-nocookie.com/embed/${video.youtube_video_id}`}
-                title={title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                allowFullScreen
-                className="absolute inset-0 h-full w-full"
-              />
-            </div>
+                controls, no download/proxy of the video itself. LiteEmbed
+                itself decides whether to render the iframe immediately or
+                a tap-to-load facade, based on the visitor's data-saver
+                preference - this page always renders it, unconditionally. */}
+            <LiteEmbed videoId={video.youtube_video_id} title={title} />
 
             <h1 className="mt-6 font-heading text-2xl font-medium leading-snug text-text sm:text-3xl">
               {title}
