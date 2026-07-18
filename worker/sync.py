@@ -261,6 +261,12 @@ TOPIC_DEFS = {
         "workshops/tips, the glories of the maha-mantra; NOT every kirtan "
         "performance"
     ),
+    "kartika": (
+        "the sacred month of Kartika/Damodara - the Damodarastaka prayer, "
+        "lamp (dipa) offerings to Lord Damodara, Kartika vrata and month-long "
+        "observances; NOT any random video that merely happens to be "
+        "uploaded in October"
+    ),
 }
 
 # High-precision word patterns per topic - the floor the LLM builds on (its
@@ -289,6 +295,11 @@ TOPIC_RULES = {
     # video is ABOUT him is always the LLM's call.
     "ekadashi": re.compile(r"ekadash?i|ekadasi|एकादशी", re.I),
     "japa": re.compile(r"\bjapa\b|जप\b", re.I),
+    # Strict on purpose: bare "kartik" alone can still be a person's name
+    # elsewhere in this catalog, but paired with the month/prayer spelling
+    # or Damodarastaka it's unambiguous, so it's rule-certain rather than a
+    # candidate for the LLM.
+    "kartika": re.compile(r"k[āa]rtik[āa]?|damodar[āa]?[\s-]*ashtak|dāmodarāṣṭak|दामोदर[\s-]*अष्टक|कार्तिक", re.I),
 }
 
 # Broad CANDIDATE patterns: "could this possibly be about the topic?".
@@ -307,6 +318,7 @@ TOPIC_CANDIDATES = {
     "prabhupada": re.compile(r"prabhup[āa]d|प्रभुपाद", re.I),
     "ekadashi": re.compile(r"ekadash?i|ekadasi|एकादशी", re.I),
     "japa": re.compile(r"\bjapa?\b|holy name|mah[āa][\s-]*mantra|mahamantra|जप|हरे कृष्ण महामंत्र", re.I),
+    "kartika": re.compile(r"kartik|damodar|कार्तिक|दामोदर", re.I),  # broad on purpose - LLM adjudicates
 }
 
 # Candidacy judged on the TITLE alone for these topics: their words live in
