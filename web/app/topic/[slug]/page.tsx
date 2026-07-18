@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { CategoryBanner } from "@/components/category-banner";
 import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
+import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
 import { VideoGrid } from "@/components/video-grid";
 import { CATEGORY_PAGE_SIZE, getVideoCount, getVideosPage } from "@/lib/data";
 import { TOPIC_LIST, TOPICS } from "@/lib/topics";
@@ -61,6 +62,16 @@ export default async function TopicPage({ params }: Props) {
   return (
     <Container className="page-top pb-10">
       <CategoryBanner category={topic.title} count={count} subtitle={topic.subtitle} />
+
+      {/* Topic pages are a saved search devotees pass around - give the
+          collection its own share row rather than relying on the browser
+          address bar. */}
+      <div className="mt-4 flex flex-wrap items-center gap-2 text-[13px] text-text-muted">
+        <span>Share this collection</span>
+        <WhatsAppShareButton title={topic.title} path={`/topic/${topic.slug}`} />
+        <ShareButton title={topic.title} path={`/topic/${topic.slug}`} />
+      </div>
+
       <div className="mt-8">
         <VideoGrid initialVideos={videos} filters={filters} />
       </div>

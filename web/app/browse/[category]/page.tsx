@@ -32,6 +32,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const decoded = safeDecodeURIComponent(category);
   return {
     title: decoded ?? "Browse",
+    description: decoded
+      ? `${decoded} on Goloka — ${categorySubtitle(decoded)?.toLowerCase() ?? "talks, teachings, and more"}.`
+      : undefined,
     // `category` is the already-encoded route segment, so it drops straight
     // into the canonical path without re-encoding.
     alternates: { canonical: `/browse/${category}` },

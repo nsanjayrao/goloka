@@ -22,6 +22,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const channel = decoded === null ? null : await getChannel(decoded);
   return {
     title: channel?.title ?? "Channel",
+    description: channel
+      ? `Lectures, kirtans, and more from ${channel.title} on Goloka.`
+      : undefined,
     // `handle` is the already-encoded route segment - drop it in as-is.
     alternates: { canonical: `/channel/${handle}` },
   };
