@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { CalendarStrip } from "@/components/calendar-strip";
 import { CategoryCards } from "@/components/category-cards";
 import { CategoryRow } from "@/components/category-row";
 import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
@@ -95,6 +96,10 @@ export default async function HomePage() {
 
       <FadeUp>
         <LiveStrip videos={live} />
+      </FadeUp>
+
+      <FadeUp>
+        <CalendarStrip />
       </FadeUp>
 
       {/* Client-side personalization: renders null for first-time visitors. */}

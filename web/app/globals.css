@@ -1185,6 +1185,100 @@
     max-width: 70ch;
   }
 
+  /* ---------- vaishnava calendar strip ---------- */
+  /* Slim gold-hairline band (components/calendar-strip.tsx) - quieter than
+     a full .home-section on purpose, so it reads as a divider between the
+     live strip and the rows below rather than another competing shelf.
+     .is-today swaps the hairline and state pill to flame, with the same
+     pulsing-dot recipe as .kicker.live-kicker. */
+  .cal-strip {
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+    background: linear-gradient(120deg, rgba(232, 163, 61, 0.05), transparent 60%);
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .cal-strip.is-today {
+    border-color: var(--flame);
+    background: linear-gradient(120deg, rgba(245, 201, 123, 0.12), transparent 70%);
+  }
+  /* Horizontal padding comes from the shared .gutter class on the element
+     (DESIGN.md #4 - one --pad source, same idiom as .live-grid.gutter);
+     this only owns the vertical rhythm. */
+  .cal-strip-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 20px;
+    padding-block: 16px;
+  }
+  .cal-strip-main {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 4px 12px;
+    min-width: 0;
+  }
+  .cal-strip-kicker {
+    font-family: var(--body);
+    font-size: 12px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .cal-strip-name {
+    font-family: var(--display);
+    font-weight: 400;
+    font-size: clamp(16px, 2vw, 20px);
+    color: var(--chandan);
+    transition: color 0.25s;
+  }
+  .cal-strip-main:hover .cal-strip-name,
+  .cal-strip-main:focus-visible .cal-strip-name {
+    color: var(--flame);
+  }
+  .cal-strip-meta {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .cal-strip-state {
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    transition: color 0.25s;
+  }
+  .cal-strip-state:hover,
+  .cal-strip-state:focus-visible {
+    color: var(--flame);
+  }
+  .cal-strip.is-today .cal-strip-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    color: var(--flame);
+  }
+  .cal-strip.is-today .cal-strip-state::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--flame);
+    box-shadow: 0 0 8px rgba(245, 201, 123, 0.8);
+    animation: pulse 1.6s infinite;
+  }
+  .cal-strip-ics {
+    font-size: 12px;
+    letter-spacing: 0.06em;
+    color: var(--muted);
+    transition: color 0.25s;
+  }
+  .cal-strip-ics:hover,
+  .cal-strip-ics:focus-visible {
+    color: var(--flame);
+  }
+
   /* ---------- shared full-bleed gutter (DESIGN.md #4) ---------- */
   .gutter {
     padding-inline: var(--pad);

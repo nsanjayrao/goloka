@@ -47,6 +47,12 @@ export const TOPICS: Record<string, Topic> = {
     // catch Radhe Radhe, Radhika, Barsana (Her village) and Kishori (Her name).
     keywords: ["radha", "radhe", "radhik", "barsana", "kishori"],
     showOnHomepage: true,
+    // Radhastami (Her appearance day) is 2026-09-19 (Bhadrapada shukla
+    // ashtami, Mayapur/IST - see vaishnava-calendar.ts's canonical-location
+    // comment for why one location is picked for a lunar date). A ~2-week
+    // window centered on that day, same "wider than the single day" idea as
+    // janmashtami's below.
+    festivalWindow: { startMonth: 9, startDay: 12, endMonth: 9, endDay: 26 },
   },
   vrindavan: {
     slug: "vrindavan",
@@ -100,6 +106,20 @@ export const TOPICS: Record<string, Topic> = {
     subtitle: "Japa and the practice of chanting the mahā-mantra.",
     keywords: ["japa", "holy name", "mahamantra"],
     showOnHomepage: true,
+  },
+  kartika: {
+    slug: "kartika",
+    title: "Kārtika · Dāmodara",
+    subtitle: "The sacred month of lamp offerings to Lord Damodara and the Damodarastaka prayer.",
+    keywords: ["kartika", "kartik", "damodara", "damodarastak"],
+    // No homepage shelf year-round (owner said false) - it only surfaces via
+    // the festivalWindow shelf below, while the month is actually live.
+    showOnHomepage: false,
+    // Kartika (a.k.a. Damodara month) runs roughly mid-October to
+    // mid-November on the Gregorian calendar, like Janmashtami/Nrsimha above
+    // this is a fixed approximation of a lunar-calendar month, not the exact
+    // tithi boundary.
+    festivalWindow: { startMonth: 10, startDay: 15, endMonth: 11, endDay: 15 },
   },
 };
 
