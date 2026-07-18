@@ -85,7 +85,11 @@ export function Hero({ features }: { features: HeroFeature[] }) {
       <Embers />
 
       <AartiPeriod />
-      <h1 className={`rise d1 hero-swap${fading ? " fading" : ""}`}>{feature.title}</h1>
+      {/* No .rise on the h1: it's the page's LCP element, and an opacity-0
+          entrance held LCP ~1s past first paint (Lighthouse round 2). The
+          eyebrow/sub/actions still rise around it, so the composition keeps
+          its motion without taxing the metric. */}
+      <h1 className={`hero-swap${fading ? " fading" : ""}`}>{feature.title}</h1>
       <p className={`sub rise d2 hero-swap${fading ? " fading" : ""}`}>
         {feature.channel ? (
           <>
