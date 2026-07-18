@@ -31,6 +31,8 @@ export function Footer() {
           <Link href="/browse">Browse</Link>
           <Link href="/search">Search</Link>
           <Link href="/leaders">Leaders</Link>
+          <Link href="/books">Books</Link>
+          <Link href="/temples">Temples</Link>
           <Link href="/about">About</Link>
           <a href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion">
             Suggest a channel

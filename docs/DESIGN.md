@@ -133,6 +133,16 @@ with .22-.24em tracking.
   as one row, lamp glow behind the player at low intensity.
 - **Browse/search/topic/channel/leaders/about**: same tokens, header,
   footer, card components; grids of the same `.card` language.
+- **Books (/books, Phase 3)**: typographic "spine" cards — gold rule +
+  Marcellus title on a shyama gradient, NO cover artwork (rights-safe,
+  metadata-only). Dual link-outs per book (Vedabase read-free + official
+  BBT store search URLs; deep product links rot, search is stable) plus
+  an inward "Classes →" link. "Devotional essentials" links official
+  stores only — never third-party sellers (owner decision 2026-07-18).
+- **Temples (/temples, Phase 3)**: curated cards (lib/temples.ts) with
+  website link-out, inward /channel link when indexed, and the LIVE
+  badge when the temple's channel is currently streaming (ISR 600 to
+  track the 15-min live check).
 - **Empty states / skeletons**: shyama surfaces, muted text — never
   white flashes.
 - PWA: `themeColor` #0A0F26; manifest colors match.

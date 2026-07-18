@@ -34,6 +34,12 @@ export function TopBar() {
         <Link className="nav-link" href="/leaders">
           Leaders
         </Link>
+        <Link className="nav-link" href="/books">
+          Books
+        </Link>
+        <Link className="nav-link" href="/temples">
+          Temples
+        </Link>
         <Link className="search-pill" href="/search" aria-label="Search Goloka">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />

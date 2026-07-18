@@ -15,10 +15,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getSitemapVideos(500),
   ]);
 
-  const staticRoutes: MetadataRoute.Sitemap = ["", "/browse", "/search"].map((path) => ({
-    url: `${SITE_URL}${path}`,
-    changeFrequency: "daily",
-  }));
+  const staticRoutes: MetadataRoute.Sitemap = ["", "/browse", "/search", "/leaders", "/books", "/temples"].map(
+    (path) => ({
+      url: `${SITE_URL}${path}`,
+      changeFrequency: "daily",
+    })
+  );
 
   const categoryRoutes: MetadataRoute.Sitemap = categories.map((category) => ({
     url: `${SITE_URL}/browse/${encodeURIComponent(category)}`,
