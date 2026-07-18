@@ -1,0 +1,29 @@
+name: Live darshan check
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"   # every 15 min (GitHub may add a few minutes of drift)
+  workflow_dispatch: {}      # allow manual runs from the Actions tab
+
+# A slow run must never overlap the next tick - one checker at a time.
+concurrency:
+  group: live-check
+  cancel-in-progress: true
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install -r worker/requirements.txt
+      # No issue-filing here (unlike sync.yml): a missed live check
+      # self-heals 15 minutes later, and 96 runs/day would spam issues on
+      # any transient failure. The twice-daily sync remains the canary.
+      - run: python worker/sync.py --live
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

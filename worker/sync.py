@@ -11,6 +11,9 @@ Usage:
     python sync.py --full     # backfill: up to ~1000 videos per channel
     python sync.py --enrich   # re-process EXISTING rows: refresh view_count
                               #   and re-run classification (no channel fetch)
+    python sync.py --live     # fast pass: refresh is_live/live_viewer_count
+                              #   for channels flagged "live" in channels.json
+                              #   (runs every 15 min via live.yml - no LLM)
 """
 
 import json
@@ -636,6 +639,101 @@ def enrich(db) -> None:
     print(f"Enrich done. {total} row(s) refreshed.")
 
 
+def live_check(db) -> None:
+    """Fast live-darshan pass (--live, every 15 min via live.yml): refreshes
+    is_live/live_viewer_count for channels flagged "live": true in
+    channels.json, and indexes a brand-new stream the moment it starts (the
+    12h sync would otherwise miss a morning ārati until afternoon).
+
+    Quota economics (the reason this exists as its own mode): the uploads
+    playlist id is the channel id with UC -> UU, so each live channel costs
+    1 unit for playlistItems + a shared videos.list unit per 50 candidates -
+    ~10 units per run, ~1,000/day at 15-min cadence, a tenth of the 10k
+    daily budget. Never calls the LLM: a new live row gets rules-only
+    category/tags and the next sync/enrich refines it.
+    """
+    channels_file = Path(__file__).resolve().parent / "channels.json"
+    entries = [e for e in json.loads(channels_file.read_text(encoding="utf-8")) if e.get("live")]
+    if not entries:
+        print('No channels flagged "live": true in channels.json - nothing to check.')
+        return
+
+    candidates: dict[str, dict] = {}  # youtube_video_id -> playlist snippet
+    channel_of: dict[str, str] = {}  # youtube_video_id -> youtube_channel_id
+    for entry in entries:
+        channel_id = entry.get("youtube_channel_id")
+        if not channel_id:
+            print(f"    {entry.get('handle')}: needs youtube_channel_id for --live - skipped")
+            continue
+        uploads = "UU" + channel_id[2:]  # uploads playlist, derived for free
+        try:
+            # A live stream sits at the top of the uploads playlist; 8 covers
+            # channels that upload clips while a stream runs.
+            for video in fetch_playlist_videos(uploads, max_pages=1)[:8]:
+                candidates[video["youtube_video_id"]] = video
+                channel_of[video["youtube_video_id"]] = channel_id
+        except Exception as exc:  # one broken channel shouldn't kill the pass
+            print(f"    {entry.get('handle') or channel_id}: playlist fetch failed: {exc}")
+
+    live_now: dict[str, int | None] = {}  # youtube_video_id -> viewers
+    ids = list(candidates)
+    for i in range(0, len(ids), 50):
+        data = yt_get("videos", part="snippet,liveStreamingDetails",
+                      id=",".join(ids[i:i + 50]), maxResults=50)
+        for item in data.get("items", []):
+            if item.get("snippet", {}).get("liveBroadcastContent") != "live":
+                continue
+            viewers = item.get("liveStreamingDetails", {}).get("concurrentViewers")
+            live_now[item["id"]] = int(viewers) if viewers and str(viewers).isdigit() else None
+
+    added = updated = 0
+    if live_now:
+        pk_rows = (db.table("channels").select("id, youtube_channel_id")
+                   .in_("youtube_channel_id", sorted({channel_of[v] for v in live_now}))
+                   .execute()).data or []
+        pk_of = {r["youtube_channel_id"]: r["id"] for r in pk_rows}
+        existing = (db.table("videos").select("youtube_video_id")
+                    .in_("youtube_video_id", list(live_now)).execute()).data or []
+        existing_ids = {r["youtube_video_id"] for r in existing}
+
+        for vid, viewers in live_now.items():
+            if vid in existing_ids:
+                # Known row: touch ONLY the live fields - category/tags/
+                # language belong to the classifier, not this fast loop.
+                db.table("videos").update(
+                    {"is_live": True, "live_viewer_count": viewers}
+                ).eq("youtube_video_id", vid).execute()
+                updated += 1
+            elif channel_of[vid] in pk_of:
+                v = candidates[vid]
+                db.table("videos").upsert({
+                    "youtube_video_id": vid,
+                    "title": v["title"],
+                    "description": v["description"],
+                    "published_at": v["published_at"],
+                    "thumbnail_url": v["thumbnail_url"],
+                    "channel_id": pk_of[channel_of[vid]],
+                    "is_live": True,
+                    "live_viewer_count": viewers,
+                    "category": classify_with_rules(v["title"], v.get("description") or "") or "General",
+                    "tags": sorted(topics_from_rules(v["title"], v.get("description") or "")),
+                }, on_conflict="youtube_video_id").execute()
+                added += 1
+
+    # Streams that ended since the last pass lose the badge.
+    stale = (db.table("videos").select("youtube_video_id")
+             .eq("is_live", True).execute()).data or []
+    cleared = 0
+    for r in stale:
+        if r["youtube_video_id"] not in live_now:
+            db.table("videos").update(
+                {"is_live": False, "live_viewer_count": None}
+            ).eq("youtube_video_id", r["youtube_video_id"]).execute()
+            cleared += 1
+
+    print(f"Live check done. live={len(live_now)} (new {added}, updated {updated}), cleared={cleared}")
+
+
 def main() -> None:
     missing = [k for k, v in {
         "YOUTUBE_API_KEY": YOUTUBE_API_KEY,
@@ -649,6 +747,10 @@ def main() -> None:
 
     if "--enrich" in sys.argv:
         enrich(db)
+        return
+
+    if "--live" in sys.argv:
+        live_check(db)
         return
 
     full = "--full" in sys.argv

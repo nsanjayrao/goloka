@@ -24,8 +24,10 @@ import type { Video } from "@/lib/types";
 
 // Without this, Next.js bakes the page once at build time and it never
 // updates. `revalidate` = ISR: serve the cached page, rebuild it in the
-// background at most every 30 minutes, so the 12-hour sync's new videos appear.
-export const revalidate = 1800;
+// background at most every 10 minutes - tightened from 30 (2026-07-18) so
+// the "Live from the dhāma" strip tracks the 15-minute live check instead
+// of showing streams that ended half an hour ago.
+export const revalidate = 600;
 
 export const metadata: Metadata = { alternates: { canonical: "/" } };
 

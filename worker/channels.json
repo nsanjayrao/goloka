@@ -3,30 +3,36 @@
     "youtube_channel_id": "UCZ8S3qwowiFztAQBRTawWfA",
     "handle": "@hktv108",
     "_title": "Hare Krsna TV (3.06M subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "youtube_channel_id": "UCypj9Vvizo4cCERfDFIG3zw",
     "handle": "@mayapurtvofficial",
     "_title": "Mayapur TV (808K subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "youtube_channel_id": "UCAA6IsLVfbHrP1I_lzxv09Q",
     "handle": "@iskconvrndavan",
     "_title": "ISKCON Vrindavan (834K subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "handle": "@ISKCONBangalore",
     "_title": "ISKCON Bangalore (1.1M subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "youtube_channel_id": "UCPXnayBvF7ynbG_I3VOTgIg",
+    "live": true
   },
   {
     "youtube_channel_id": "UCKsPhfStsvK9NKPjXj0DLvg",
     "handle": "@rg108",
     "_title": "Radha Gopinath Media - ISKCON Desire Tree (110K subs)",
-    "default_category": "Lectures"
+    "default_category": "Lectures",
+    "live": true
   },
   {
     "youtube_channel_id": "UCz22l7kbce-uFJAoaZqxD1A",
@@ -38,7 +44,8 @@
     "youtube_channel_id": "UChWqU4PXRLrL4SlOwgRNa9w",
     "handle": "@iskcondwarka",
     "_title": "ISKCON Dwarka (1.86M subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "youtube_channel_id": "UCNdfrZjfMwP_FBKELSiuYyQ",
@@ -62,13 +69,15 @@
     "youtube_channel_id": "UC1vJ4RlWSHP6n0xL2G1tkYQ",
     "handle": "@iskconjuhutemple",
     "_title": "ISKCON Juhu Mumbai (136K subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "youtube_channel_id": "UCDV_sYpz7cfHR6gd_oVXtTQ",
     "handle": "@krishnatemple",
     "_title": "ISKCON Bhaktivedanta Manor (41.3K subs)",
-    "default_category": "General"
+    "default_category": "General",
+    "live": true
   },
   {
     "youtube_channel_id": "UC2825KTrZp-Tciln-B5lSQA",
