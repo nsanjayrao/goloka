@@ -187,3 +187,40 @@ as $$
 $$;
 
 grant execute on function search_videos_ranked(text, int) to anon, authenticated;
+
+-- Shared collections (Phase 4 follow-up, 2026-07-19): a signed-in devotee
+-- turns one of their saved lists into a single link ("Ekadasi lectures for
+-- Ma") anyone can open, signed in or not. `id` is a 10-char unguessable slug
+-- generated client-side from crypto.getRandomValues (web/lib/collections.ts)
+-- rather than a serial/uuid primary key, so the public URL IS the primary
+-- key - no separate lookup column. `video_ids` is a plain jsonb array of
+-- youtube_video_id strings (same "no FK, join at read time" choice as
+-- saved_videos above): a collection referencing a since-pruned video simply
+-- renders what's left instead of ever breaking.
+create table if not exists shared_collections (
+  id text primary key,
+  owner_id uuid not null references auth.users(id) on delete cascade,
+  title text not null check (char_length(title) <= 80),
+  video_ids jsonb not null check (jsonb_typeof(video_ids) = 'array'),
+  created_at timestamptz not null default now()
+);
+create index if not exists shared_collections_owner_idx
+  on shared_collections (owner_id, created_at desc);
+
+-- RLS: the whole point is a link that works for anyone, signed in or not -
+-- so SELECT is public. Only the owner may INSERT (as themselves) or DELETE
+-- their own rows. Deliberately NO update policy: a shared collection is an
+-- immutable snapshot of what was on the list at share time. That's simpler
+-- (no "who can edit a link already in someone's WhatsApp chat" question) and
+-- more abuse-resistant (nobody can silently swap a link's contents after
+-- it's been shared).
+alter table shared_collections enable row level security;
+drop policy if exists "public read shared collections" on shared_collections;
+create policy "public read shared collections" on shared_collections
+  for select using (true);
+drop policy if exists "insert own shared collections" on shared_collections;
+create policy "insert own shared collections" on shared_collections
+  for insert with check (auth.uid() = owner_id);
+drop policy if exists "delete own shared collections" on shared_collections;
+create policy "delete own shared collections" on shared_collections
+  for delete using (auth.uid() = owner_id);
