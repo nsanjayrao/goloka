@@ -3,6 +3,7 @@
 // server-rendered and passed through as `children` (RSC children-as-props),
 // so only this thin scroll container opts into the client.
 
+import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState } from "react";
 
 // The prototype row (DESIGN.md #5.7): full-bleed scroller with --pad-wide
@@ -10,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 // hover (hover-capable devices only, via CSS). Arrows are real buttons -
 // keyboard-focusable, with a :focus-visible reveal in globals.css.
 export function Shelf({ children, label }: { children: React.ReactNode; label?: string }) {
+  const t = useTranslations("shelf");
   const scrollerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(false);
@@ -44,14 +46,14 @@ export function Shelf({ children, label }: { children: React.ReactNode; label?: 
   return (
     <div className="row-wrap">
       {canScrollLeft && (
-        <button type="button" className="row-arrow prev" aria-label="Scroll back" onClick={() => step(-1)}>
+        <button type="button" className="row-arrow prev" aria-label={t("scrollBack")} onClick={() => step(-1)}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M15 5l-7 7 7 7" />
           </svg>
         </button>
       )}
       {canScrollRight && (
-        <button type="button" className="row-arrow next" aria-label="Scroll forward" onClick={() => step(1)}>
+        <button type="button" className="row-arrow next" aria-label={t("scrollForward")} onClick={() => step(1)}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <path d="M9 5l7 7-7 7" />
           </svg>

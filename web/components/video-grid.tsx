@@ -2,6 +2,7 @@
 // so far) - that's client-only state, unlike the initial page which the
 // server already rendered.
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -27,6 +28,8 @@ export function VideoGrid({
   const [videos, setVideos] = useState(initialVideos);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(initialVideos.length === CATEGORY_PAGE_SIZE);
+  const t = useTranslations("buttons");
+  const tEmpty = useTranslations("emptyState");
 
   async function loadMore() {
     setLoading(true);
@@ -37,7 +40,7 @@ export function VideoGrid({
   }
 
   if (videos.length === 0) {
-    return <EmptyState message="No videos match these filters yet — try a different one." />;
+    return <EmptyState message={tEmpty("noFilterMatch")} />;
   }
 
   return (
@@ -50,7 +53,7 @@ export function VideoGrid({
       {hasMore && (
         <div className="mt-8 flex justify-center">
           <Button variant="outline" onClick={loadMore} disabled={loading}>
-            {loading ? "Loading…" : "Load more"}
+            {loading ? t("loading") : t("loadMore")}
           </Button>
         </div>
       )}

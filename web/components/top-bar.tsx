@@ -2,17 +2,22 @@
 // transparent gradient at the top of the page, gaining blur + a gold
 // hairline after 40px (prototype behavior). Everything else is static.
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { LogoMark } from "@/components/icons/logo-mark";
+import { Link } from "@/i18n/navigation";
 
 // Fixed midnight header (DESIGN.md #6): lotus wordmark in Marcellus,
 // uppercase nav links (hidden under 600px - the bottom tab bar covers
 // mobile), and the search pill linking to /search. Styles live in
-// globals.css (.site-header etc.), ported from the prototype.
+// globals.css (.site-header etc.), ported from the prototype. `Link` comes
+// from i18n/navigation (not next/link) so every nav href automatically
+// carries the current locale's prefix (or none, for English).
 export function TopBar() {
   const [scrolled, setScrolled] = useState(false);
+  const t = useTranslations("nav");
+  const tLandmarks = useTranslations("landmarks");
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -27,28 +32,28 @@ export function TopBar() {
         <LogoMark className="size-7" />
         Goloka
       </Link>
-      <nav className="site-nav" aria-label="Main">
+      <nav className="site-nav" aria-label={tLandmarks("main")}>
         <Link className="nav-link" href="/browse">
-          Browse
+          {t("browse")}
         </Link>
         <Link className="nav-link" href="/leaders">
-          Leaders
+          {t("leaders")}
         </Link>
         <Link className="nav-link" href="/books">
-          Books
+          {t("books")}
         </Link>
         <Link className="nav-link" href="/temples">
-          Temples
+          {t("temples")}
         </Link>
         <Link className="nav-link" href="/library">
-          Library
+          {t("library")}
         </Link>
-        <Link className="search-pill" href="/search" aria-label="Search Goloka">
+        <Link className="search-pill" href="/search" aria-label={t("searchAria")}>
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
             <path d="M20 20l-4-4" />
           </svg>
-          Search
+          {t("search")}
         </Link>
       </nav>
     </header>

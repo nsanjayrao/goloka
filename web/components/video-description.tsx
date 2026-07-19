@@ -1,9 +1,11 @@
 "use client"; // the "More"/"Less" toggle is local UI state.
 
+import { useTranslations } from "next-intl";
 import { useState } from "react";
 
 export function VideoDescription({ description }: { description: string }) {
   const [expanded, setExpanded] = useState(false);
+  const t = useTranslations("buttons");
 
   return (
     <div>
@@ -15,7 +17,7 @@ export function VideoDescription({ description }: { description: string }) {
         onClick={() => setExpanded((prev) => !prev)}
         className="mt-2 text-sm font-medium text-accent-strong hover:underline"
       >
-        {expanded ? "Less" : "More"}
+        {expanded ? t("less") : t("more")}
       </button>
     </div>
   );

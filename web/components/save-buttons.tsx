@@ -2,6 +2,7 @@
 // the browser - the server renders neutral, unsaved buttons.
 
 import { Bookmark, Heart } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { signInWithGoogle, useSession } from "@/lib/auth";
@@ -17,6 +18,7 @@ const EMPTY: Set<SavedKind> = new Set();
 export function SaveButtons({ youtubeVideoId }: { youtubeVideoId: string }) {
   const { session } = useSession();
   const [fetched, setFetched] = useState<Set<SavedKind>>(EMPTY);
+  const t = useTranslations("buttons");
 
   useEffect(() => {
     if (!session) return; // signed out: `saved` below derives to empty
@@ -58,8 +60,8 @@ export function SaveButtons({ youtubeVideoId }: { youtubeVideoId: string }) {
   }
 
   const buttons: { kind: SavedKind; label: string; onLabel: string; icon: typeof Heart }[] = [
-    { kind: "favourite", label: "Favourite", onLabel: "Favourited", icon: Heart },
-    { kind: "watch_later", label: "Watch later", onLabel: "Saved", icon: Bookmark },
+    { kind: "favourite", label: t("favourite"), onLabel: t("favourited"), icon: Heart },
+    { kind: "watch_later", label: t("watchLater"), onLabel: t("saved"), icon: Bookmark },
   ];
 
   return (

@@ -2,12 +2,13 @@
 // runtime state. The component still server-renders its first feature's
 // full markup (h1 included), so SEO and no-JS visitors get real content.
 
+import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AartiPeriod } from "@/components/aarti-period";
 import { HeroImage } from "@/components/hero-image";
+import { Link } from "@/i18n/navigation";
 import { useDataSaver } from "@/lib/data-saver";
 
 // The embers canvas is pure decoration and renders nothing server-side -
@@ -19,8 +20,9 @@ const Embers = dynamic(() => import("@/components/embers").then((m) => m.Embers)
   ssr: false,
 });
 
-// One featured item, serialized by the server (app/page.tsx) from real
-// data - the hand-curated `featured` videos, falling back to the newest.
+// One featured item, serialized by the server (app/[locale]/page.tsx) from
+// real data - the hand-curated `featured` videos, falling back to the
+// newest.
 export type HeroFeature = {
   videoId: string;
   title: string;
@@ -40,6 +42,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
   const [fading, setFading] = useState(false);
   const [paused, setPaused] = useState(false);
   const dataSaver = useDataSaver();
+  const t = useTranslations("hero");
   // `generation` bumps on every manual jump so the active progress bar
   // remounts (key change) and its fill animation restarts from zero.
   const [generation, setGeneration] = useState(0);
@@ -97,7 +100,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
       <p className={`sub rise d2 hero-swap${fading ? " fading" : ""}`}>
         {feature.channel ? (
           <>
-            From <b>{feature.channel}</b>
+            {t.rich("fromChannel", { channel: feature.channel, b: (chunks) => <b>{chunks}</b> })}
             {feature.subtitle ? <>. {feature.subtitle}</> : null}
           </>
         ) : (
@@ -109,10 +112,10 @@ export function Hero({ features }: { features: HeroFeature[] }) {
           <svg viewBox="0 0 16 16" aria-hidden="true">
             <path d="M4 2.5v11l9-5.5z" />
           </svg>
-          Watch now
+          {t("watchNow")}
         </Link>
         <Link className="btn ghost" href="/browse">
-          Browse everything
+          {t("browseEverything")}
         </Link>
       </div>
 
@@ -120,7 +123,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
         <div
           className={`hero-progress rise d3${paused ? " paused" : ""}`}
           role="tablist"
-          aria-label="Featured videos"
+          aria-label={t("featuredAria")}
         >
           {features.map((f, index) => (
             <button
@@ -128,7 +131,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
               type="button"
               role="tab"
               aria-selected={index === active}
-              aria-label={`Featured ${index + 1} of ${features.length}: ${f.title}`}
+              aria-label={t("featuredItemAria", { index: index + 1, total: features.length, title: f.title })}
               className={index === active ? "active" : undefined}
               onClick={() => show(index)}
             />

@@ -1,6 +1,7 @@
 "use client"; // the whole page is per-user: session, saved lists.
 
 import { Link2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { EmptyState } from "@/components/empty-state";
@@ -38,6 +39,7 @@ function ShareCollectionButton({
   videos: Video[];
   onCreated: () => void;
 }) {
+  const t = useTranslations("library");
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [creating, setCreating] = useState(false);
@@ -74,7 +76,7 @@ function ShareCollectionButton({
   if (link) {
     return (
       <div className="flex flex-wrap items-center gap-2 text-[13px]">
-        <span className="text-text-muted">Link ready —</span>
+        <span className="text-text-muted">{t("linkReady")}</span>
         <ShareButton title={link.title} path={`/c/${link.id}`} />
         <WhatsAppShareButton title={link.title} path={`/c/${link.id}`} />
         <button
@@ -82,7 +84,7 @@ function ShareCollectionButton({
           onClick={reset}
           className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
         >
-          Done
+          {t("done")}
         </button>
       </div>
     );
@@ -96,25 +98,25 @@ function ShareCollectionButton({
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           maxLength={80}
-          placeholder="Ekādaśī lectures for Mā"
-          aria-label="Title for this shared link"
+          placeholder={t("titlePlaceholder")}
+          aria-label={t("titleInputAria")}
           className="h-8 w-52 rounded-full border border-border bg-surface px-3 text-[13px] text-text outline-none placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-accent"
         />
         <Button type="submit" size="sm" disabled={creating || !title.trim()}>
-          {creating ? "Creating…" : "Create link"}
+          {creating ? t("creating") : t("createLink")}
         </Button>
         <button
           type="button"
           onClick={reset}
           className="text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
         >
-          Cancel
+          {t("cancel")}
         </button>
         {failed && (
           // #E58A8A: the palette's "red on dark surfaces" shade (DESIGN.md
           // #2 - live red is #E05B5B but reads too hot for small body text).
           <span className="text-[13px] text-[#E58A8A]" role="alert">
-            Couldn&apos;t create the link — try again.
+            {t("createFailed")}
           </span>
         )}
       </form>
@@ -128,13 +130,16 @@ function ShareCollectionButton({
       className="inline-flex items-center gap-1.5 text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
     >
       <Link2 className="size-3.5" />
-      Share as link
+      {t("shareAsLink")}
     </button>
   );
 }
 
 export function LibraryClient() {
   const { session, hydrated } = useSession();
+  const t = useTranslations("library");
+  const tButtons = useTranslations("buttons");
+  const tEmpty = useTranslations("emptyState");
   // Fetched data is tagged with the user it belongs to and DERIVED against
   // the live session (never reset-in-effect): sign out, and stale lists are
   // simply ignored; sign in again, and the fetch overwrites them.
@@ -178,61 +183,43 @@ export function LibraryClient() {
   // Before hydration nothing personal can be known - render the neutral
   // heading so there's no layout jump either way.
   if (!hydrated) {
-    return <h1 className="font-heading text-3xl text-text sm:text-4xl">My Library</h1>;
+    return <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("title")}</h1>;
   }
 
   if (!session) {
     return (
       <div className="mx-auto max-w-md py-14 text-center">
-        <h1 className="font-heading text-3xl text-text">My Library</h1>
-        <p className="mt-3 text-text-muted">
-          Sign in to keep favourites and a watch-later list that follow you
-          across devices.
-        </p>
-        <button
-          type="button"
-          onClick={signInWithGoogle}
-          className="btn gold mt-6"
-        >
-          Continue with Google
+        <h1 className="font-heading text-3xl text-text">{t("title")}</h1>
+        <p className="mt-3 text-text-muted">{t("signInPrompt")}</p>
+        <button type="button" onClick={signInWithGoogle} className="btn gold mt-6">
+          {t("continueWithGoogle")}
         </button>
-        <p className="mt-6 text-[13px] leading-relaxed text-text-muted/80">
-          Your account stores only these two lists — what you watch is never
-          sent to the server, signed in or not. Deleting your account deletes
-          everything.
-        </p>
+        <p className="mt-6 text-[13px] leading-relaxed text-text-muted/80">{t("privacyNote")}</p>
       </div>
     );
   }
 
   const grids: { title: string; videos: Video[]; empty: string }[] = [
-    {
-      title: "Favourites",
-      videos: favourites,
-      empty: "Nothing favourited yet — tap the heart on any video.",
-    },
-    {
-      title: "Watch later",
-      videos: watchLater,
-      empty: "Nothing saved for later yet — tap the bookmark on any video.",
-    },
+    { title: t("favouritesTitle"), videos: favourites, empty: tEmpty("noFavourites") },
+    { title: t("watchLaterTitle"), videos: watchLater, empty: tEmpty("noWatchLater") },
   ];
 
   return (
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-heading text-3xl text-text sm:text-4xl">My Library</h1>
+        <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("title")}</h1>
         <button
           type="button"
           onClick={signOut}
           className="text-sm text-text-muted transition-colors hover:text-flame"
         >
-          Sign out{session.user.email ? ` (${session.user.email})` : ""}
+          {tButtons("signOut")}
+          {session.user.email ? ` (${session.user.email})` : ""}
         </button>
       </div>
 
       {loaded && favourites.length === 0 && watchLater.length === 0 ? (
-        <EmptyState message="Your library is empty — the heart and bookmark on any video fill it." />
+        <EmptyState message={tEmpty("libraryEmpty")} />
       ) : (
         grids.map(({ title, videos, empty }) => (
           <section key={title} className="mt-10">
@@ -247,7 +234,7 @@ export function LibraryClient() {
               )}
             </div>
             {videos.length === 0 ? (
-              <p className="mt-3 text-sm text-text-muted">{loaded ? empty : "Loading…"}</p>
+              <p className="mt-3 text-sm text-text-muted">{loaded ? empty : tButtons("loading")}</p>
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                 {videos.map((video) => (
@@ -264,7 +251,7 @@ export function LibraryClient() {
           two lists plus, now, the links made from them). */}
       {loaded && collections.length > 0 && (
         <section className="mt-10">
-          <h2 className="font-heading text-2xl text-text">My shared links</h2>
+          <h2 className="font-heading text-2xl text-text">{t("mySharedLinks")}</h2>
           <ul className="mt-4 divide-y divide-border">
             {collections.map((collection) => (
               <li
@@ -287,7 +274,7 @@ export function LibraryClient() {
                     onClick={() => handleDelete(collection.id)}
                     className="text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
                   >
-                    Delete
+                    {t("delete")}
                   </button>
                 </div>
               </li>

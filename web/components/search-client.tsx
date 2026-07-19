@@ -2,13 +2,14 @@
 // debounce timer, results, and localStorage recent searches).
 
 import { Search } from "lucide-react";
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { VideoCard } from "@/components/video-card";
 import { VideoCardSkeleton } from "@/components/video-card-skeleton";
+import { Link } from "@/i18n/navigation";
 import { searchVideos } from "@/lib/data";
 import {
   clearRecentSearches,
@@ -23,8 +24,10 @@ import type { Video } from "@/lib/types";
 const GRID_CLASSES =
   "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5";
 
-// A short, curated set of go-to searches (topics + common terms). Static and
-// tiny - a real "trending" system would need query logging the site doesn't do.
+// A short, curated set of go-to searches (topics + common terms) - proper
+// nouns/titles, so they're left untranslated like other content-adjacent
+// values (DESIGN.md / i18n plan goal #4). Static and tiny - a real
+// "trending" system would need query logging the site doesn't do.
 const POPULAR_SEARCHES = [
   "Krishna",
   "Radharani",
@@ -54,6 +57,9 @@ export function SearchClient({
   categories: string[];
   latestVideos: Video[];
 }) {
+  const t = useTranslations("search");
+  const tNav = useTranslations("nav");
+  const tEmpty = useTranslations("emptyState");
   const urlQuery = useSearchParams().get("q") ?? "";
   const [query, setQuery] = useState(urlQuery);
 
@@ -133,8 +139,8 @@ export function SearchClient({
           onBlur={() => recordSearch(trimmedQuery)}
           type="search"
           enterKeyHint="search"
-          placeholder="Search lectures, kirtans, festivals…"
-          aria-label="Search Goloka"
+          placeholder={t("placeholder")}
+          aria-label={tNav("searchAria")}
           className="h-11 w-full rounded-full border border-border bg-surface/70 pl-11 pr-4 text-[15px] text-text shadow-card outline-none backdrop-blur-md transition-shadow placeholder:text-text-muted focus-visible:ring-2 focus-visible:ring-accent"
         />
       </form>
@@ -145,13 +151,13 @@ export function SearchClient({
             {recent.length > 0 && (
               <section>
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="font-heading text-2xl font-medium tracking-tight text-text">Recent</h2>
+                  <h2 className="font-heading text-2xl font-medium tracking-tight text-text">{t("recent")}</h2>
                   <button
                     type="button"
                     onClick={clearRecentSearches}
                     className="text-[13px] text-text-muted outline-none transition-colors hover:text-accent-strong focus-visible:text-accent-strong"
                   >
-                    Clear
+                    {t("clear")}
                   </button>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -163,7 +169,7 @@ export function SearchClient({
             )}
 
             <section>
-              <h2 className="mb-3 font-heading text-2xl font-medium tracking-tight text-text">Popular</h2>
+              <h2 className="mb-3 font-heading text-2xl font-medium tracking-tight text-text">{t("popular")}</h2>
               <div className="flex flex-wrap gap-2">
                 {POPULAR_SEARCHES.map((term) => (
                   <QueryChip key={term} label={term} onSelect={() => setQuery(term)} />
@@ -174,7 +180,7 @@ export function SearchClient({
             {categoryChips && (
               <section>
                 <h2 className="mb-3 font-heading text-2xl font-medium tracking-tight text-text">
-                  Browse by category
+                  {t("browseByCategory")}
                 </h2>
                 {categoryChips}
               </section>
@@ -183,7 +189,7 @@ export function SearchClient({
             {latestVideos.length > 0 && (
               <section>
                 <h2 className="mb-4 font-heading text-2xl font-medium tracking-tight text-text">
-                  Newest additions
+                  {t("newestAdditions")}
                 </h2>
                 <div className={GRID_CLASSES}>
                   {latestVideos.map((video) => (
@@ -204,7 +210,7 @@ export function SearchClient({
         )}
 
         {noResults && (
-          <EmptyState message="Nothing here yet — like Vrindavan before the festival. Try another search.">
+          <EmptyState message={tEmpty("tryAnotherSearch")}>
             {categoryChips && <div className="flex justify-center">{categoryChips}</div>}
           </EmptyState>
         )}

@@ -1,15 +1,12 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { DurationBucket } from "@/lib/types";
 
 type SortOption = "recent" | "popular";
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "recent", label: "Newest" },
-  { value: "popular", label: "Most watched" },
-];
-
+// Duration bucket labels ("<15m") are locale-neutral shorthand, left as-is.
 const DURATION_OPTIONS: { value: DurationBucket; label: string }[] = [
   { value: "short", label: "<15m" },
   { value: "medium", label: "15–45m" },
@@ -40,6 +37,11 @@ export function FilterChips({
   activeLanguage?: string;
   activeSort?: SortOption;
 }) {
+  const t = useTranslations("filterChips");
+  const SORT_OPTIONS: { value: SortOption; label: string }[] = [
+    { value: "recent", label: t("newest") },
+    { value: "popular", label: t("mostWatched") },
+  ];
   const basePath = `/browse/${encodeURIComponent(category)}`;
 
   // Build a URL from the FULL next filter state, so changing one chip never

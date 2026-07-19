@@ -1,6 +1,8 @@
 "use client"; // reads/writes the visitor's own data-saver preference
 // (lib/data-saver.ts, localStorage) - inherently client-only.
 
+import { useTranslations } from "next-intl";
+
 import { setDataSaver, useDataSaver } from "@/lib/data-saver";
 import { cn } from "@/lib/utils";
 
@@ -13,16 +15,17 @@ import { cn } from "@/lib/utils";
 // control, not a nav link.
 export function DataSaverToggle() {
   const on = useDataSaver();
+  const t = useTranslations("buttons");
 
   return (
     <button
       type="button"
       aria-pressed={on}
       onClick={() => setDataSaver(!on)}
-      title="Auto-enabled on slow connections"
+      title={t("dataSaverHint")}
       className="inline-flex shrink-0 items-center gap-2 rounded-full border border-border bg-surface px-3 py-1 text-[13px] font-normal normal-case tracking-normal text-text-muted outline-none transition-colors hover:border-hairline hover:text-text focus-visible:ring-2 focus-visible:ring-accent"
     >
-      Data saver
+      {t("dataSaver")}
       <span
         aria-hidden="true"
         className={cn(
@@ -30,7 +33,7 @@ export function DataSaverToggle() {
           on ? "bg-accent text-accent-ink" : "bg-shyama-2 text-text-muted"
         )}
       >
-        {on ? "On" : "Off"}
+        {on ? t("on") : t("off")}
       </span>
     </button>
   );

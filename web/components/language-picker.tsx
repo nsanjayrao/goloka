@@ -1,6 +1,8 @@
 "use client"; // reads/writes the visitor's own content-language preference
 // (lib/content-language.ts, localStorage) - inherently client-only.
 
+import { useTranslations } from "next-intl";
+
 import { LANGUAGE_OPTIONS, setContentLanguage, useContentLanguage } from "@/lib/content-language";
 import { cn } from "@/lib/utils";
 
@@ -9,9 +11,12 @@ import { cn } from "@/lib/utils";
 // with a small uppercase label), and the same chip language as FilterChips,
 // just a touch quieter (border-border/text-muted at rest) since this sits on
 // the home page rather than a filtered browse grid. Selecting a language, or
-// re-selecting the active one, is a toggle; "All" always clears.
+// re-selecting the active one, is a toggle; "All" always clears. The option
+// labels themselves (Hindi, Bengali, ...) are content-language names, not UI
+// chrome, so they stay as lib/content-language.ts defines them.
 export function LanguagePicker() {
   const preference = useContentLanguage();
+  const t = useTranslations("languagePicker");
 
   function select(value: string | null) {
     if (value === null) {
@@ -23,7 +28,7 @@ export function LanguagePicker() {
 
   return (
     <div className="gutter flex flex-wrap items-center gap-2 py-4">
-      <span className="mr-1 text-[12px] uppercase tracking-[0.22em] text-text-muted">Watch in</span>
+      <span className="mr-1 text-[12px] uppercase tracking-[0.22em] text-text-muted">{t("watchIn")}</span>
       {LANGUAGE_OPTIONS.map((option) => (
         <button
           key={option.value}
@@ -41,7 +46,7 @@ export function LanguagePicker() {
         onClick={() => select(null)}
         className={chipClass(preference === null)}
       >
-        All
+        {t("all")}
       </button>
     </div>
   );
