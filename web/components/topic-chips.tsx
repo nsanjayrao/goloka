@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import type { Topic } from "@/lib/topics";
 
@@ -20,11 +21,12 @@ export function TopicChips({
   topics: Topic[];
   activeSlug?: string;
 }) {
+  const t = useTranslations("topicChips");
   const basePath = `/channel/${handle}`;
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-[13px] text-text-muted">On:</span>
+      <span className="text-[13px] text-text-muted">{t("on")}</span>
       {topics.map((topic) => {
         const active = activeSlug === topic.slug;
         return (

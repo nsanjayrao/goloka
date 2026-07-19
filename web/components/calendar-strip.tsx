@@ -1,5 +1,6 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
+import { Link } from "@/i18n/navigation";
 import { daysUntil, nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calendar";
 
 // A quiet full-bleed band (DESIGN.md #4 shared --pad gutter) between the
@@ -16,28 +17,32 @@ import { daysUntil, nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calenda
 // happens); every other day it shows either the next ekadashi's countdown
 // or today's, flame-highlighted.
 export function CalendarStrip({ now = new Date() }: { now?: Date }) {
+  const t = useTranslations("calendarStrip");
   const today = todaysEkadashi(now);
   const upcoming = today ?? nextEkadashi(now);
   if (!upcoming) return null;
 
   const isToday = today !== null;
   const days = isToday ? 0 : daysUntil(upcoming.date, now);
-  const state = isToday ? "Today" : `In ${days} day${days === 1 ? "" : "s"}`;
+  const state = isToday ? t("today") : t("inDays", { days });
 
   return (
     <div className={`cal-strip${isToday ? " is-today" : ""}`}>
       <div className="cal-strip-row gutter">
         <Link href="/topic/ekadashi" className="cal-strip-main">
-          <span className="cal-strip-kicker">Vaiṣṇava calendar</span>
+          <span className="cal-strip-kicker">{t("kicker")}</span>
           <span className="cal-strip-name">{upcoming.name}</span>
         </Link>
         <div className="cal-strip-meta">
           <Link href="/topic/ekadashi" className="cal-strip-state">
             {state}
           </Link>
-          <Link href="/ekadashi.ics" className="cal-strip-ics">
-            Add to calendar ↓
-          </Link>
+          {/* A plain anchor, not the locale-aware Link: /ekadashi.ics
+              deliberately lives OUTSIDE the [locale] route tree (i18n plan
+              goal #3), so it must never gain a /hi, /bn, /ru, /es prefix. */}
+          <a href="/ekadashi.ics" className="cal-strip-ics">
+            {t("addToCalendar")}
+          </a>
         </div>
       </div>
     </div>

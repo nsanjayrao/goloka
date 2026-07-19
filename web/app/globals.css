@@ -1221,6 +1221,39 @@
     max-width: 70ch;
   }
 
+  /* ---------- footer language switcher (i18n) ---------- */
+  /* A quiet locale row (goal #6) - deliberately in the footer, not the
+     header, which has no room to spare (DESIGN.md #6 nav is already fixed
+     at Home/Browse/Search + the search pill). Each name is native-only:
+     हिन्दी never gets transliterated for a Russian-locale visitor. */
+  .lang-switcher {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin-top: 28px;
+    font-size: 13px;
+  }
+  .lang-globe {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.3;
+  }
+  .lang-link {
+    color: var(--muted);
+    transition: color 0.25s;
+  }
+  .lang-link:hover {
+    color: var(--flame);
+  }
+  .lang-link.active {
+    color: var(--accent);
+    font-weight: 600;
+  }
+
   /* ---------- vaishnava calendar strip ---------- */
   /* Slim gold-hairline band (components/calendar-strip.tsx) - quieter than
      a full .home-section on purpose, so it reads as a divider between the

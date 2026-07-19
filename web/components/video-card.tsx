@@ -1,6 +1,7 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 import { Thumbnail } from "@/components/thumbnail";
+import { Link } from "@/i18n/navigation";
 import { cleanTitle, formatDuration, formatRelativeDate, formatViews } from "@/lib/format";
 import { languageCode } from "@/lib/language-codes";
 import type { Video } from "@/lib/types";
@@ -22,6 +23,7 @@ export function VideoCard({
    * (the "Top 10" treatment). */
   rank?: number;
 }) {
+  const t = useTranslations("videoCard");
   const title = cleanTitle(video.title);
   const duration = formatDuration(video.duration_seconds);
   const isLive = video.is_live === true;
@@ -45,7 +47,7 @@ export function VideoCard({
         ) : (
           <div className="h-full w-full" />
         )}
-        {isLive && <span className="live-badge">Live</span>}
+        {isLive && <span className="live-badge">{t("live")}</span>}
         {rank !== undefined && !isLive && <span className="rank">{rank}</span>}
         {lang && (
           <span className="lang" title={video.language ?? undefined}>

@@ -1,13 +1,9 @@
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 
+import { Link } from "@/i18n/navigation";
 import { cleanTitle } from "@/lib/format";
 import type { Video } from "@/lib/types";
-
-// "1.9K watching" - compact notation, locale-stable for SSR.
-function formatWatching(count: number): string {
-  return `${new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(count)} watching`;
-}
 
 // Live from the dhāma (DESIGN.md #5.6): live darshan cards under the hero.
 // A full section (kicker + Marcellus title, like every other section) with
@@ -16,18 +12,26 @@ function formatWatching(count: number): string {
 // until getLiveVideos() returns rows. Text column is a <div> with
 // min-width:0 so long titles ellipsis, never overflow (#8.3/#8.5).
 export function LiveStrip({ videos }: { videos: Video[] }) {
+  const t = useTranslations("liveStrip");
   if (videos.length === 0) return null;
+
+  // "1.9K watching" - compact notation, locale-stable for SSR; the count
+  // itself is formatted once here and dropped into the translated template.
+  const formatWatching = (count: number) =>
+    t("watching", {
+      count: new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(count),
+    });
 
   return (
     <section id="live" className="home-section">
       <div className="section-head">
         <h2>
-          <span className="kicker live-kicker">Streaming now</span>
+          <span className="kicker live-kicker">{t("streamingNow")}</span>
           <span>
             <span className="mark" aria-hidden="true">
               ❋
             </span>
-            Live from the dhāma
+            {t("liveFromDhama")}
           </span>
         </h2>
       </div>

@@ -1,0 +1,240 @@
+{
+  "nav": {
+    "browse": "Explorar",
+    "leaders": "Maestros",
+    "books": "Libros",
+    "temples": "Templos",
+    "library": "Biblioteca",
+    "search": "Buscar",
+    "searchAria": "Buscar en Goloka"
+  },
+  "tabs": {
+    "home": "Inicio",
+    "browse": "Explorar",
+    "search": "Buscar",
+    "library": "Biblioteca"
+  },
+  "footer": {
+    "tagline": "Morada eterna del amor divino. Un índice gratuito y centralizado de conferencias, kīrtanes y festivales de ISKCON de canales oficiales.",
+    "home": "Inicio",
+    "beginHere": "Comenzar aquí",
+    "browse": "Explorar",
+    "search": "Buscar",
+    "leaders": "Maestros",
+    "books": "Libros",
+    "temples": "Templos",
+    "library": "Biblioteca",
+    "about": "Acerca de",
+    "suggestChannel": "Sugerir un canal",
+    "disclaimer": "Goloka es un índice, no un alojamiento — cada video se reproduce mediante el reproductor oficial de YouTube y enlaza de vuelta a su canal de origen. Todo el contenido pertenece a sus creadores.",
+    "languageLabel": "Idioma"
+  },
+  "sectionHeader": {
+    "viewAll": "Ver todo →"
+  },
+  "shelf": {
+    "scrollBack": "Desplazar hacia atrás",
+    "scrollForward": "Desplazar hacia adelante"
+  },
+  "landmarks": {
+    "primary": "Principal",
+    "main": "Contenido principal",
+    "footer": "Pie de página",
+    "language": "Idioma"
+  },
+  "hero": {
+    "watchNow": "Ver ahora",
+    "browseEverything": "Explorar todo",
+    "featuredAria": "Videos destacados",
+    "featuredItemAria": "Destacado {index} de {total}: {title}",
+    "fromChannel": "De <b>{channel}</b>"
+  },
+  "liveStrip": {
+    "streamingNow": "En vivo ahora",
+    "liveFromDhama": "En vivo desde el dhāma",
+    "watching": "{count} viendo"
+  },
+  "calendarStrip": {
+    "kicker": "Calendario vaisnava",
+    "today": "Hoy",
+    "inDays": "{days, plural, one {en # día} other {en # días}}",
+    "addToCalendar": "Añadir al calendario ↓"
+  },
+  "aarti": {
+    "mangalaHint": "únete al darshan de la mañana",
+    "shringaraHint": "recibe el darshan",
+    "rajabhogaHint": "escucha la clase del mediodía",
+    "sandhyaHint": "únete a la āratī de la tarde",
+    "shayanaHint": "una tranquila noche con el santo nombre"
+  },
+  "filterChips": {
+    "newest": "Más recientes",
+    "mostWatched": "Más vistos"
+  },
+  "categoryCards": {
+    "kicker": "Encuentra tu camino",
+    "title": "Explorar por categoría"
+  },
+  "home": {
+    "freshFromTheTemples": "Recién llegado de los templos",
+    "arrivedToday": "Llegado hoy",
+    "festivalDays": "Días de festival",
+    "topic": "Tema",
+    "belovedByMillions": "Amado por millones",
+    "mostWatched": "Más visto",
+    "continueWatching": "Continuar viendo",
+    "inYourLanguage": "En tu idioma"
+  },
+  "watchPage": {
+    "keepWatching": "Sigue viendo",
+    "moreFrom": "Más de {category}"
+  },
+  "emptyState": {
+    "default": "Todavía no hay nada aquí — como Vrindavan antes del festival. Vuelve pronto.",
+    "tryAnotherSearch": "Todavía no hay nada aquí — como Vrindavan antes del festival. Prueba otra búsqueda.",
+    "noFilterMatch": "Ningún video coincide con estos filtros todavía — prueba con otro.",
+    "libraryEmpty": "Tu biblioteca está vacía — toca el corazón o el marcador de cualquier video para llenarla.",
+    "noFavourites": "Aún no hay favoritos — toca el corazón de cualquier video.",
+    "noWatchLater": "Aún no hay nada guardado para más tarde — toca el marcador de cualquier video.",
+    "collectionGone": "Estos videos ya no están disponibles — el devoto que compartió esta lista, o los videos mismos, pueden haber cambiado.",
+    "notFoundTitle": "Página no encontrada",
+    "notFoundMessage": "Esta página se desvió del camino — aquí no hay nada que ver.",
+    "offlineTitle": "Estás sin conexión",
+    "offlineMessage": "Goloka necesita conexión para obtener los videos — reconéctate e inténtalo de nuevo.",
+    "notIndexedTitle": "No está en el índice de Goloka",
+    "notIndexedMessage": "Este video no está en el índice de Goloka — indexamos un conjunto seleccionado de canales oficiales de ISKCON. Aún puedes verlo en YouTube, o explorar lo que hay aquí."
+  },
+  "buttons": {
+    "share": "Compartir",
+    "copied": "Copiado",
+    "whatsapp": "WhatsApp",
+    "whatsappAria": "Compartir en WhatsApp",
+    "favourite": "Favorito",
+    "favourited": "En favoritos",
+    "watchLater": "Ver más tarde",
+    "saved": "Guardado",
+    "signOut": "Cerrar sesión",
+    "dataSaver": "Ahorro de datos",
+    "dataSaverHint": "Se activa automáticamente con conexiones lentas",
+    "on": "Activado",
+    "off": "Desactivado",
+    "loadMore": "Cargar más",
+    "loading": "Cargando…",
+    "more": "Más",
+    "less": "Menos",
+    "backToHome": "Volver al inicio",
+    "watchOnYoutube": "Ver en YouTube ↗",
+    "browseGoloka": "Explorar Goloka →"
+  },
+  "push": {
+    "title": "Notificaciones",
+    "description": "Anónimas y opcionales — sin cuenta, sin seguimiento, cancela cuando quieras.",
+    "blocked": "Las notificaciones de este sitio están bloqueadas en la configuración de tu navegador — permítelas allí primero.",
+    "unsupported": "Las notificaciones no están disponibles en este navegador — prueba con Chrome o Firefox, o añade Goloka a tu pantalla de inicio primero.",
+    "festivalsLabel": "🔔 Recordatorios de festivales",
+    "festivalsHint": "Un aviso discreto en las mañanas de ekādaśī.",
+    "liveLabel": "🔴 Alertas de darshan en vivo",
+    "liveHint": "En el momento en que un templo transmite en vivo."
+  },
+  "search": {
+    "h1": "Buscar",
+    "placeholder": "Buscar conferencias, kīrtanes, festivales…",
+    "recent": "Recientes",
+    "clear": "Borrar",
+    "popular": "Populares",
+    "browseByCategory": "Explorar por categoría",
+    "newestAdditions": "Novedades"
+  },
+  "languagePicker": {
+    "watchIn": "Ver en",
+    "all": "Todos"
+  },
+  "videoCard": {
+    "live": "En vivo"
+  },
+  "splitFeature": {
+    "featuredTag": "Destacado"
+  },
+  "liteEmbed": {
+    "tapToLoad": "Toca para cargar el reproductor",
+    "tapToLoadAria": "Toca para cargar el reproductor: {title}"
+  },
+  "topicChips": {
+    "on": "Tema:"
+  },
+  "library": {
+    "title": "Mi biblioteca",
+    "signInPrompt": "Inicia sesión para conservar tus favoritos y tu lista de ver más tarde en todos tus dispositivos.",
+    "continueWithGoogle": "Continuar con Google",
+    "privacyNote": "Tu cuenta solo guarda estas dos listas — lo que ves nunca se envía al servidor, hayas iniciado sesión o no. Eliminar tu cuenta elimina todo.",
+    "favouritesTitle": "Favoritos",
+    "watchLaterTitle": "Ver más tarde",
+    "shareAsLink": "Compartir como enlace",
+    "linkReady": "Enlace listo —",
+    "done": "Hecho",
+    "creating": "Creando…",
+    "createLink": "Crear enlace",
+    "cancel": "Cancelar",
+    "createFailed": "No se pudo crear el enlace — inténtalo de nuevo.",
+    "mySharedLinks": "Mis enlaces compartidos",
+    "delete": "Eliminar",
+    "titlePlaceholder": "Conferencias de ekādaśī para mamá",
+    "titleInputAria": "Título para este enlace compartido",
+    "shareCollection": "Compartir esta colección"
+  },
+  "pages": {
+    "about": {
+      "h1": "Acerca de Goloka",
+      "intro": "Goloka es un índice gratuito y sin publicidad de contenido de ISKCON en YouTube — conferencias, kīrtanes, festivales y documentales de docenas de templos y maestros, reunidos en un solo lugar tranquilo en vez de dispersos por toda la plataforma.",
+      "indexTitle": "Índice, nunca alojamiento",
+      "indexBody": "Goloka no almacena archivos de video. Cada entrada es solo metadatos — un título, una miniatura, una categoría — y cada video se reproduce mediante el reproductor estándar incrustado de YouTube. Ver aquí es igual que ver directamente en YouTube; Goloka solo facilita encontrarlo.",
+      "belongsTitle": "Todo el contenido pertenece a sus creadores",
+      "belongsBody": "Cada video enlaza de vuelta a su canal de origen. Goloka no realoja, reedita ni monetiza el contenido de nadie — es simplemente un directorio que señala hacia el trabajo que ya pertenece a los templos y oradores que lo crearon.",
+      "privacyTitle": "Privacidad, con honestidad",
+      "privacyBody1": "Goloka nunca rastrea lo que ves. \"Continuar viendo\" vive solo en tu propio navegador y nunca se envía a ningún sitio — borrar los datos de tu navegador lo elimina por completo, hayas iniciado sesión o no.",
+      "privacyBody2": "Iniciar sesión es opcional y existe para una sola cosa: mantener tu lista de favoritos y de ver más tarde contigo en todos tus dispositivos. Eso es todo lo que guarda una cuenta — dos listas de enlaces de video. Sin historial de visualización, sin perfil de análisis, nada se vende ni se comparte. Elimina tu cuenta y todo lo que contenía se elimina con ella.",
+      "independentTitle": "Un proyecto independiente",
+      "independentBody": "Goloka es un proyecto independiente y sin fines de lucro — no es un sitio web oficial de ISKCON, ni está afiliado a un templo en particular. Funciona enteramente sobre infraestructura de nivel gratuito, sin publicidad y sin nada a la venta.",
+      "helpTitle": "Ayuda a mejorarlo",
+      "helpBody": "¿Conoces un canal que debería estar aquí, o notaste algo mal categorizado? <sendNote>Envía una nota</sendNote> — cada sugerencia se lee."
+    },
+    "books": {
+      "h1": "Biblioteca sagrada",
+      "intro": "Los libros de Śrīla Prabhupāda — el corazón de todo lo enseñado en las conferencias indexadas aquí. Léelos gratis en el propio Vedabase del BBT, u obtén una copia impresa en la tienda oficial.",
+      "readFree": "Leer gratis ↗",
+      "getBook": "Obtener el libro ↗",
+      "classes": "Clases →",
+      "essentialsTitle": "Elementos devocionales esenciales",
+      "essentialsSubtitle": "Solo de la tienda oficial del BBT — Goloka enlaza, nunca vende.",
+      "disclaimer": "Todos los libros y artículos son publicados y vendidos por el Bhaktivedanta Book Trust y puntos de venta oficiales de ISKCON. Goloka es un índice — no aloja nada y no gana nada con estos enlaces."
+    },
+    "browse": {
+      "h1": "Explorar",
+      "byLeader": "Explorar por maestro espiritual →"
+    },
+    "leaders": {
+      "h1": "Maestros espirituales",
+      "intro": "Maestros y oradores de ISKCON cuyas conferencias, kīrtanes y clases están indexados en Goloka."
+    },
+    "start": {
+      "h1": "Comenzar aquí",
+      "intro": "¿Todo esto es nuevo para ti? Bienvenido. No necesitas saber sánscrito, poseer nada, ni creer nada todavía - solo mira estos diez videos cortos en orden. Cada uno responde una sola pregunta y señala suavemente hacia el siguiente.",
+      "videoUnavailable": "Este video no está disponible en este momento - vuelve pronto.",
+      "whereNextTitle": "A dónde ir después",
+      "whereNextBody": "Cuando estés listo para profundizar, la <books>Biblioteca sagrada</books> tiene los libros de Śrīla Prabhupāda - el Bhagavad-gītā es la siguiente lectura natural. O encuentra un <temples>templo</temples> cerca de ti y ve a presenciar una de estas veladas en persona."
+    },
+    "temples": {
+      "h1": "Templos",
+      "intro": "Los principales centros de ISKCON alrededor del mundo. Cada tarjeta enlaza al sitio web propio del templo; los templos cuyos canales indexa Goloka también enlazan aquí a su catálogo.",
+      "website": "Sitio web ↗",
+      "videosOnGoloka": "Videos en Goloka →",
+      "liveAria": "Transmitiendo en vivo ahora",
+      "live": "En vivo",
+      "knowTemple": "¿Conoces un templo que debería estar aquí? <sendNote>Envía una nota</sendNote>."
+    },
+    "shareTarget": {
+      "title": "Compartido con Goloka"
+    }
+  },
+  "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas."
+}

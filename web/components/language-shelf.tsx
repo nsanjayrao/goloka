@@ -5,6 +5,7 @@
 // materializes after mount for whoever has a preference set; everyone else
 // (the common case, and the server render itself) sees just the picker.
 
+import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { CategoryRow } from "@/components/category-row";
@@ -16,6 +17,7 @@ import type { Video } from "@/lib/types";
 
 export function LanguageShelf() {
   const preference = useContentLanguage();
+  const t = useTranslations("home");
 
   // Keyed by the language it was fetched for, not just a bare Video[]: that
   // way clearing the preference (or switching it) needs no synchronous
@@ -50,7 +52,7 @@ export function LanguageShelf() {
           doesn't leave a gap where the row would have been. */}
       {preference && videos.length > 0 && (
         <FadeUp>
-          <CategoryRow kicker="In your language" title={nativeLabel ?? preference} videos={videos} />
+          <CategoryRow kicker={t("inYourLanguage")} title={nativeLabel ?? preference} videos={videos} />
         </FadeUp>
       )}
       <LanguagePicker />

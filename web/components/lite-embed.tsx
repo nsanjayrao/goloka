@@ -1,6 +1,7 @@
 "use client"; // reads the data-saver preference and holds "has this
 // visitor tapped play yet" - both are runtime, browser-only state.
 
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useState } from "react";
 
@@ -21,6 +22,7 @@ import { useDataSaver } from "@/lib/data-saver";
 export function LiteEmbed({ videoId, title }: { videoId: string; title: string }) {
   const dataSaver = useDataSaver();
   const [activated, setActivated] = useState(false);
+  const t = useTranslations("liteEmbed");
 
   const showIframe = !dataSaver || activated;
 
@@ -38,7 +40,7 @@ export function LiteEmbed({ videoId, title }: { videoId: string; title: string }
         <button
           type="button"
           onClick={() => setActivated(true)}
-          aria-label={`Tap to load player: ${title}`}
+          aria-label={t("tapToLoadAria", { title })}
           className="group absolute inset-0 h-full w-full cursor-pointer"
         >
           <Image
@@ -60,7 +62,7 @@ export function LiteEmbed({ videoId, title }: { videoId: string; title: string }
               </svg>
             </span>
             <span className="rounded-full bg-midnight/85 px-3 py-1 text-[13px] font-medium tracking-wide text-chandan backdrop-blur-sm">
-              Tap to load player
+              {t("tapToLoad")}
             </span>
           </span>
         </button>

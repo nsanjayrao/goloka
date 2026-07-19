@@ -1,5 +1,6 @@
 "use client"; // toggles the browser's own Notification/Push API state.
 
+import { useTranslations } from "next-intl";
 import { useState, useSyncExternalStore } from "react";
 
 import {
@@ -11,17 +12,9 @@ import {
 } from "@/lib/push";
 import { cn } from "@/lib/utils";
 
-const OPTIONS: { topic: PushTopic; label: string; hint: string }[] = [
-  {
-    topic: "festivals",
-    label: "🔔 Festival reminders",
-    hint: "One quiet ping on ekādaśī mornings.",
-  },
-  {
-    topic: "live",
-    label: "🔴 Live darshan alerts",
-    hint: "The moment a temple goes live.",
-  },
+const OPTIONS: { topic: PushTopic; labelKey: "festivalsLabel" | "liveLabel"; hintKey: "festivalsHint" | "liveHint" }[] = [
+  { topic: "festivals", labelKey: "festivalsLabel", hintKey: "festivalsHint" },
+  { topic: "live", labelKey: "liveLabel", hintKey: "liveHint" },
 ];
 
 // A quiet, sign-in-independent row for /library: notifications are
@@ -40,6 +33,8 @@ function subscribeNever() {
 }
 
 export function PushToggle() {
+  const t = useTranslations("push");
+  const tButtons = useTranslations("buttons");
   // isPushSupported()/getNotificationPermission() read navigator/Notification,
   // which don't exist during SSR - deferring the read until after hydration
   // avoids a mismatch (the same reasoning as lib/auth.ts's `hydrated` flag,
@@ -57,8 +52,7 @@ export function PushToggle() {
   if (!isPushSupported()) {
     return (
       <div className="rounded-feature border border-border bg-surface px-5 py-4 text-[13px] text-text-muted">
-        Notifications aren&apos;t available on this browser — try Chrome or
-        Firefox, or add Goloka to your home screen first.
+        {t("unsupported")}
       </div>
     );
   }
@@ -73,24 +67,18 @@ export function PushToggle() {
 
   return (
     <div className="rounded-feature border border-border bg-surface px-5 py-4">
-      <h2 className="font-heading text-lg text-text">Notifications</h2>
-      <p className="mt-1 text-[13px] text-text-muted">
-        Anonymous and opt-in — no account, no tracking, unsubscribe anytime.
-      </p>
-      {blocked && (
-        <p className="mt-3 text-[13px] text-lotus">
-          Notifications are blocked for this site in your browser settings —
-          allow them there first.
-        </p>
-      )}
+      <h2 className="font-heading text-lg text-text">{t("title")}</h2>
+      <p className="mt-1 text-[13px] text-text-muted">{t("description")}</p>
+      {blocked && <p className="mt-3 text-[13px] text-lotus">{t("blocked")}</p>}
       <div className="mt-4 flex flex-col gap-3">
-        {OPTIONS.map(({ topic, label, hint }) => {
+        {OPTIONS.map(({ topic, labelKey, hintKey }) => {
           const on = topics.includes(topic);
+          const label = t(labelKey);
           return (
             <div key={topic} className="flex items-center justify-between gap-4">
               <div>
                 <div className="text-[15px] text-text">{label}</div>
-                <div className="text-[13px] text-text-muted">{hint}</div>
+                <div className="text-[13px] text-text-muted">{t(hintKey)}</div>
               </div>
               <button
                 type="button"
@@ -104,7 +92,7 @@ export function PushToggle() {
                   on ? "bg-accent text-accent-ink" : "bg-shyama-2 text-text-muted"
                 )}
               >
-                {on ? "On" : "Off"}
+                {on ? tButtons("on") : tButtons("off")}
               </button>
             </div>
           );

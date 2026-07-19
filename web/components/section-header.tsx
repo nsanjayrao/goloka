@@ -1,8 +1,13 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+
+import { Link } from "@/i18n/navigation";
 
 // Shared section heading (DESIGN.md #4): optional small uppercase kicker on
 // its OWN line above the Marcellus title (#8.2 - never beside it), the gold
-// ❋ mark, and a "View all →" baseline-aligned on the right.
+// ❋ mark, and a "View all →" baseline-aligned on the right. `title`/`kicker`
+// are already-translated strings from the caller (page copy vs. dynamic
+// category/topic names need different treatment, so this component itself
+// stays presentation-only).
 export function SectionHeader({
   title,
   kicker,
@@ -12,6 +17,7 @@ export function SectionHeader({
   kicker?: string;
   href?: string;
 }) {
+  const t = useTranslations("sectionHeader");
   return (
     <div className="section-head">
       <h2>
@@ -25,7 +31,7 @@ export function SectionHeader({
       </h2>
       {href && (
         <Link href={href} className="view-all">
-          View all →
+          {t("viewAll")}
         </Link>
       )}
     </div>

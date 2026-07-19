@@ -2,8 +2,10 @@
 // can't know their timezone - so the server renders a sensible default and
 // the client corrects it on hydration.
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { useSyncExternalStore } from "react";
+
+import { Link } from "@/i18n/navigation";
 
 // Time-aware temple period (DESIGN.md #5.4) - the hero eyebrow follows the
 // temple day: Maṅgala-ārati 4-8, Śṛṅgāra-darśana 8-12, Rāja-bhoga 12-16,
@@ -11,13 +13,18 @@ import { useSyncExternalStore } from "react";
 // a destination plus a soft invitation, so the label becomes a tappable
 // entry into what's actually happening at the temple right now.
 //
+// The period LABEL (e.g. "Maṅgala-ārati · the day begins") is fixed
+// liturgical Sanskrit terminology and stays identical in every locale, like
+// the mahā-mantra (i18n plan goal #4/#5); only the `hintKey` - the soft
+// invitation after it ("join the morning darshan") - is translated.
+//
 // NOTE: the "/#live" destinations depend on the live section carrying
 // id="live" - that's owned elsewhere. Until it exists, the link just lands
 // on the home page top, which is a graceful fallback, not a broken link.
 type Period = {
   label: string;
   href: string;
-  hint: string;
+  hintKey: "mangalaHint" | "shringaraHint" | "rajabhogaHint" | "sandhyaHint" | "shayanaHint";
 };
 
 type PeriodKey = "mangala" | "shringara" | "rajabhoga" | "sandhya" | "shayana";
@@ -29,27 +36,27 @@ const PERIODS: Record<PeriodKey, Period> = {
   mangala: {
     label: "Maṅgala-ārati · the day begins",
     href: "/#live",
-    hint: "join the morning darshan",
+    hintKey: "mangalaHint",
   },
   shringara: {
     label: "Śṛṅgāra-darśana · morning worship",
     href: "/#live",
-    hint: "take darshan",
+    hintKey: "shringaraHint",
   },
   rajabhoga: {
     label: "Rāja-bhoga · midday offering",
     href: "/browse/Lectures",
-    hint: "hear the midday class",
+    hintKey: "rajabhogaHint",
   },
   sandhya: {
     label: "Sandhyā-ārati · evening lamps",
     href: "/#live",
-    hint: "join the evening ārati",
+    hintKey: "sandhyaHint",
   },
   shayana: {
     label: "Śayana · the temple rests",
     href: "/topic/japa",
-    hint: "a quiet evening of the holy name",
+    hintKey: "shayanaHint",
   },
 };
 
@@ -78,15 +85,13 @@ export function AartiPeriod() {
     () => DEFAULT_KEY
   );
   const period = PERIODS[key];
+  const t = useTranslations("aarti");
+  const hint = t(period.hintKey);
 
   return (
-    <Link
-      href={period.href}
-      className="eyebrow rise"
-      aria-label={`${period.label} — ${period.hint}`}
-    >
+    <Link href={period.href} className="eyebrow rise" aria-label={`${period.label} — ${hint}`}>
       {period.label}
-      <span className="eyebrow-hint"> · {period.hint} →</span>
+      <span className="eyebrow-hint"> · {hint} →</span>
     </Link>
   );
 }

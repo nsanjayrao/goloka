@@ -2,16 +2,16 @@
 // the client - there's no server-side equivalent for "which route is this".
 
 import { Bookmark, Compass, Home, Search } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 
+import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { href: "/", label: "Home", icon: Home },
-  { href: "/browse", label: "Browse", icon: Compass },
-  { href: "/search", label: "Search", icon: Search },
-  { href: "/library", label: "Library", icon: Bookmark },
+  { href: "/", key: "home", icon: Home },
+  { href: "/browse", key: "browse", icon: Compass },
+  { href: "/search", key: "search", icon: Search },
+  { href: "/library", key: "library", icon: Bookmark },
 ] as const;
 
 // Mobile-only bottom tab bar (DESIGN.md #4: "this is what makes the PWA feel
@@ -19,16 +19,20 @@ const TABS = [
 // pass: deeper blur, rounded top corners + a soft upward shadow so it reads as
 // a floating glass slab, a gold indicator that springs between tabs, and a
 // gentle icon scale on the active tab. `env(safe-area-inset-bottom)` keeps it
-// clear of the iOS home indicator.
+// clear of the iOS home indicator. `usePathname` comes from i18n/navigation,
+// which strips the locale prefix - so the active-tab match below works
+// identically in every locale.
 export function BottomTabBar() {
   const pathname = usePathname();
+  const t = useTranslations("tabs");
+  const tLandmarks = useTranslations("landmarks");
   const activeIndex = TABS.findIndex(({ href }) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href)
   );
 
   return (
     <nav
-      aria-label="Primary"
+      aria-label={tLandmarks("primary")}
       // Midnight glass slab: same recipe as the scrolled header (DESIGN.md
       // #6). The global tokens are already dark, so no local overrides.
       className="fixed inset-x-0 bottom-0 z-40 rounded-t-section border-t border-hairline/60 bg-midnight/85 shadow-[0_-4px_24px_rgba(0,0,0,0.4)] backdrop-blur-xl sm:hidden"
@@ -48,7 +52,7 @@ export function BottomTabBar() {
           </span>
         )}
 
-        {TABS.map(({ href, label, icon: Icon }, index) => {
+        {TABS.map(({ href, key, icon: Icon }, index) => {
           const active = index === activeIndex;
           return (
             <Link
@@ -66,7 +70,7 @@ export function BottomTabBar() {
                   active && "scale-110"
                 )}
               />
-              {label}
+              {t(key)}
             </Link>
           );
         })}

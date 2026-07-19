@@ -1,7 +1,8 @@
-import Link from "next/link";
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { SectionHeader } from "@/components/section-header";
+import { Link } from "@/i18n/navigation";
 
 // The custom gold line icons, copied EXACTLY from the prototype (DESIGN.md
 // #5.8): scripture, diya, mridanga, ॐ set in Marcellus, peacock feather,
@@ -52,6 +53,12 @@ export const CATEGORY_ICONS: Record<string, ReactNode> = {
 
 export const OM_ICON = <span className="om">ॐ</span>;
 
+// Category NAMES and their blurbs are database-driven English values (the
+// canonical list lives in worker/sync.py) - a known i18n limitation (i18n
+// plan goal #4): translating them would mean either a hardcoded name->key
+// mapping that drifts from the worker's source of truth, or translating raw
+// DB content, neither of which this pass takes on. They render as-is in
+// every locale.
 export const CATEGORY_BLURBS: Record<string, string> = {
   Lectures: "Wisdom from the scriptures",
   Festivals: "Sacred celebrations and pastimes",
@@ -67,11 +74,12 @@ export const CATEGORY_BLURBS: Record<string, string> = {
 // each with its gold line icon. Cells never go under 200px and text wraps
 // fully (#8.1) - both enforced in globals.css .cats/.cat.
 export function CategoryCards({ categories }: { categories: string[] }) {
+  const t = useTranslations("categoryCards");
   if (categories.length === 0) return null;
 
   return (
     <section className="home-section cv">
-      <SectionHeader kicker="Find your path" title="Browse by category" />
+      <SectionHeader kicker={t("kicker")} title={t("title")} />
       <div className="cats">
         {categories.map((category) => (
           <Link key={category} href={`/browse/${encodeURIComponent(category)}`} className="cat">

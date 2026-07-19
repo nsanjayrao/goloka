@@ -1,6 +1,7 @@
 "use client"; // reads localStorage (lib/recently-watched.ts) - inherently
 // client-only, and per-visitor, so it can't be server-rendered.
 
+import { useTranslations } from "next-intl";
 import { useMemo, useSyncExternalStore } from "react";
 
 import { CategoryRow } from "@/components/category-row";
@@ -41,6 +42,7 @@ function toVideoShape(entry: RecentlyWatchedEntry): Video {
 }
 
 export function ContinueWatchingShelf() {
+  const t = useTranslations("home");
   // useSyncExternalStore (not useEffect+useState): this reads an external
   // store (localStorage), and the snapshot is the raw string so repeated
   // calls compare equal via Object.is when nothing changed - the server
@@ -61,7 +63,7 @@ export function ContinueWatchingShelf() {
   if (videos.length === 0) return null;
   return (
     <FadeUp>
-      <CategoryRow title="Continue Watching" videos={videos} />
+      <CategoryRow title={t("continueWatching")} videos={videos} />
     </FadeUp>
   );
 }

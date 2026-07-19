@@ -1,8 +1,9 @@
+import { useTranslations } from "next-intl";
 import Image from "next/image";
-import Link from "next/link";
 
 import { HeroImage } from "@/components/hero-image";
 import { SectionHeader } from "@/components/section-header";
+import { Link } from "@/i18n/navigation";
 import { cleanTitle, formatDuration } from "@/lib/format";
 import type { Video } from "@/lib/types";
 
@@ -15,19 +16,22 @@ export function SplitFeature({
   title,
   href,
   videos,
-  tag = "Featured",
+  tag,
 }: {
   kicker?: string;
   title: string;
   href?: string;
   videos: Video[];
-  /** Small uppercase tag inside the big card (e.g. "Featured kirtan"). */
+  /** Small uppercase tag inside the big card (e.g. "Featured kirtan").
+   * Defaults to the translated "Featured". */
   tag?: string;
 }) {
+  const t = useTranslations("splitFeature");
   if (videos.length < 4) return null;
   const [feature, ...rest] = videos;
   const minis = rest.slice(0, 3);
   const featureTitle = cleanTitle(feature.title);
+  const displayTag = tag ?? t("featuredTag");
 
   return (
     <section className="home-section cv">
@@ -40,7 +44,7 @@ export function SplitFeature({
               with hqdefault fallback keeps the artwork crisp. */}
           <HeroImage videoId={feature.youtube_video_id} alt="" className="bg" />
           <div className="f-body">
-            <span className="f-tag">{tag}</span>
+            <span className="f-tag">{displayTag}</span>
             <h3 title={featureTitle}>{featureTitle}</h3>
             {feature.channel?.title && <p className="meta">{feature.channel.title}</p>}
           </div>
