@@ -514,3 +514,41 @@ export async function searchVideos(query: string, limit = 24): Promise<Video[]> 
     return (data ?? []) as unknown as Video[];
   }, []);
 }
+
+/** A public shared collection (db/schema.sql `shared_collections`) by its
+ * slug, resolved to full Video rows in the order they were saved - for the
+ * public /c/[id] page. Two bounded queries (ids, then the public videos
+ * join), same "resolve at read time" approach as getSavedVideos in
+ * lib/saved.ts: a collection referencing a since-pruned video simply
+ * renders what's left. Anyone can call this (public RLS on
+ * shared_collections' SELECT policy) - it needs no session. */
+export async function getSharedCollection(
+  id: string
+): Promise<{ title: string; videos: Video[] } | null> {
+  return safely(async () => {
+    const { data: collection, error } = await supabase!
+      .from("shared_collections")
+      .select("title, video_ids")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    if (!collection) return null;
+
+    const ids = (collection.video_ids as string[]) ?? [];
+    if (ids.length === 0) return { title: collection.title as string, videos: [] };
+
+    const { data: videos, error: videosError } = await supabase!
+      .from("videos")
+      .select(VIDEO_COLUMNS)
+      .in("youtube_video_id", ids);
+    if (videosError) throw videosError;
+
+    const byId = new Map(
+      (videos ?? []).map((video) => [video.youtube_video_id, video as unknown as Video])
+    );
+    return {
+      title: collection.title as string,
+      videos: ids.map((videoId) => byId.get(videoId)).filter(Boolean) as Video[],
+    };
+  }, null);
+}
