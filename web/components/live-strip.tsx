@@ -19,7 +19,7 @@ export function LiveStrip({ videos }: { videos: Video[] }) {
   if (videos.length === 0) return null;
 
   return (
-    <section className="home-section">
+    <section id="live" className="home-section">
       <div className="section-head">
         <h2>
           <span className="kicker live-kicker">Streaming now</span>
