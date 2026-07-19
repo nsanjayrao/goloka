@@ -367,6 +367,25 @@
     color: var(--flame);
     margin-bottom: 22px;
   }
+  /* The eyebrow doubles as a doorway (DESIGN.md #5.4): the period name plus
+     a dimmer invitation that brightens to flame with the whole link on
+     hover/focus. One line only - the hint drops below ~480px, leaving the
+     tappable period name. */
+  .eyebrow-hint {
+    color: var(--muted);
+    text-transform: none;
+    letter-spacing: 0.02em;
+    transition: color 0.25s;
+  }
+  .eyebrow:hover .eyebrow-hint,
+  .eyebrow:focus-visible .eyebrow-hint {
+    color: var(--flame);
+  }
+  @media (max-width: 480px) {
+    .eyebrow-hint {
+      display: none;
+    }
+  }
   .eyebrow::before {
     content: "";
     width: 34px;
