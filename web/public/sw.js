@@ -14,7 +14,13 @@
 //    land on the offline page. A failed navigation is now retried as a
 //    fresh same-URL request (redirect: follow) before concluding
 //    "offline".
-const CACHE_NAME = "goloka-v2";
+//
+// v3 (2026-07-19): adds the "push" and "notificationclick" handlers for
+// opt-in, anonymous web push (lib/push.ts, worker/sync.py's send_push) -
+// festival reminders and live-darshan alerts. Nothing about the offline
+// handling above changed; the cache name only bumps because any
+// byte-different sw.js is what makes the browser install the update.
+const CACHE_NAME = "goloka-v3";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
@@ -51,6 +57,53 @@ self.addEventListener("fetch", (event) => {
           return (await caches.match(OFFLINE_URL)) ?? Response.error();
         }
       }
+    })()
+  );
+});
+
+// Web push (v3): worker/sync.py's send_push() posts a JSON payload
+// {title, body, url, tag} through pywebpush - never anything identifying
+// (see db/schema.sql's push_subscriptions comment). `tag` lets a duplicate
+// send (e.g. a re-run) replace rather than stack a second notification.
+// A malformed/empty payload still shows a generic notification rather than
+// silently doing nothing, which the Push API's own spec effectively
+// requires (browsers may revoke a subscription that goes quiet on push).
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = {};
+  }
+  const title = payload.title || "Goloka";
+  const options = {
+    body: payload.body || "",
+    icon: "/icons/icon-192.png",
+    badge: "/icons/icon-192.png",
+    tag: payload.tag,
+    data: { url: payload.url || "/" },
+  };
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Focuses an already-open Goloka tab on the target page rather than
+// stacking a new one, falling back to opening a fresh tab/window.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/";
+  event.waitUntil(
+    (async () => {
+      const allClients = await clients.matchAll({ type: "window", includeUncontrolled: true });
+      for (const client of allClients) {
+        try {
+          if (new URL(client.url).pathname === url && "focus" in client) {
+            return client.focus();
+          }
+        } catch {
+          // malformed client.url - fall through to openWindow below.
+        }
+      }
+      return clients.openWindow(url);
     })()
   );
 });

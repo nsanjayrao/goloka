@@ -187,3 +187,55 @@ as $$
 $$;
 
 grant execute on function search_videos_ranked(text, int) to anon, authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Web push (opt-in notifications, 2026-07-19): "Today is Yogini Ekadashi"
+-- and "ISKCON Vrindavan is live". Zero third-party push service (raw Web
+-- Push via VAPID - see web/lib/push.ts) and zero identity: a subscription
+-- row is just the browser's push endpoint + the two keys the Push API
+-- hands back, with no user id, email, or auth.uid() anywhere near it.
+-- `endpoint` (the push service URL the browser was issued) is the natural
+-- primary key - it's already unique per browser+origin+push-service.
+-- ---------------------------------------------------------------------------
+create table if not exists push_subscriptions (
+  endpoint text primary key,
+  p256dh text not null,
+  auth text not null,
+  -- Which notification kinds this browser wants. The <@ (jsonb "is
+  -- contained in") check enforces the only two valid topics without a
+  -- separate lookup table - anything outside this pair is rejected at
+  -- insert time rather than silently stored and silently never sent.
+  topics jsonb not null default '["festivals"]'::jsonb
+    check (topics <@ '["festivals","live"]'::jsonb),
+  created_at timestamptz not null default now(),
+  last_success_at timestamptz
+);
+
+-- Lets the worker query "who wants festival pushes" / "who wants live
+-- pushes" with an index instead of a full scan as subscribers grow.
+create index if not exists push_subscriptions_topics_idx
+  on push_subscriptions using gin (topics jsonb_path_ops);
+
+-- RLS reasoning (this table is intentionally NOT public-readable, unlike
+-- channels/videos above):
+-- - INSERT: anon may insert freely. There is no auth.uid() to scope
+--   by - subscribing is anonymous by design - so the browser's own
+--   pushManager.subscribe() call is the only gate that matters upstream.
+-- - DELETE: anon may delete by endpoint. The browser only ever knows its
+--   OWN endpoint (it's an opaque URL from the Push API, never listed or
+--   guessable), so "delete the row whose endpoint I possess" IS
+--   self-service unsubscribe - the same trust model as a bearer token.
+-- - SELECT: no anon policy at all, on purpose. p256dh/auth are the keys
+--   that let anyone push-spam that browser, so subscriptions are
+--   write-only from the client; only the service key (the sync worker,
+--   which bypasses RLS entirely) ever reads this table, to fan out a
+--   notification and prune dead endpoints on 404/410.
+alter table push_subscriptions enable row level security;
+
+drop policy if exists "anon insert own subscription" on push_subscriptions;
+create policy "anon insert own subscription" on push_subscriptions
+  for insert to anon with check (true);
+
+drop policy if exists "anon delete own subscription" on push_subscriptions;
+create policy "anon delete own subscription" on push_subscriptions
+  for delete to anon using (true);

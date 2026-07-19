@@ -27,3 +27,24 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+
+      # Ekadashi push (2026-07-19): reuses this same 15-min cron rather than
+      # a separate daily workflow (one less schedule to maintain). The shell
+      # check below is a cheap gate that skips invoking python on ~92 of the
+      # day's 96 ticks; sync.py's own notify_festivals() re-checks the IST
+      # hour before sending anything, and the notification's `tag` is what
+      # actually caps it at one VISIBLE push even if this fires more than
+      # once inside the matched hour (see notify_festivals()'s docstring).
+      - name: Festival notifications (~6:30am IST, once daily)
+        run: |
+          hour=$(date -u +%H)
+          if [ "$hour" = "01" ]; then
+            python worker/sync.py --notify-festivals
+          else
+            echo "Not the festival-notification hour (UTC hour=$hour) - skipping."
+          fi
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
