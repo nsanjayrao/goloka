@@ -13,7 +13,13 @@ Usage:
                               #   and re-run classification (no channel fetch)
     python sync.py --live     # fast pass: refresh is_live/live_viewer_count
                               #   for channels flagged "live" in channels.json
-                              #   (runs every 15 min via live.yml - no LLM)
+                              #   (runs every 15 min via live.yml - no LLM);
+                              #   also pushes a "live now" notification the
+                              #   moment a NEW stream starts (capped at 1/run)
+    python sync.py --notify-festivals
+                              # sends "<Ekadashi> today" to festival
+                              # subscribers when today (IST) is one - see
+                              # notify_festivals() for the once-daily gating
 """
 
 import json
@@ -22,10 +28,12 @@ import random
 import re
 import sys
 import time
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
 from dotenv import load_dotenv
+from pywebpush import WebPushException, webpush
 from supabase import create_client
 
 # Channel/video titles routinely contain Devanagari, Bengali, Tamil, etc.
@@ -43,8 +51,22 @@ SUPABASE_URL = os.environ.get("SUPABASE_URL", "")
 SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 NVIDIA_API_KEY = os.environ.get("NVIDIA_API_KEY", "")
+# Web push (2026-07-19): signs the messages send_push() posts via pywebpush.
+# The PRIVATE half only ever lives here (worker/.env, GitHub Actions
+# secrets) - never in web/ or any committed file. The public half is
+# hardcoded in web/lib/push.ts (it's not a secret; the browser needs it to
+# subscribe). No key configured -> send_push() skips quietly (push simply
+# isn't set up yet), same "degrade, don't crash" posture as GROQ/NVIDIA.
+VAPID_PRIVATE_KEY = os.environ.get("VAPID_PRIVATE_KEY", "")
+VAPID_SUBJECT = os.environ.get("VAPID_SUBJECT", "mailto:nandisanjay.ns@gmail.com")
 
 YT_API = "https://www.googleapis.com/youtube/v3"
+# Goloka's own site - kept in sync with web/lib/site.ts BY HAND (the Python
+# worker and the Next.js frontend share no config). Used only by
+# notify_festivals() to read back the site's own /ekadashi.ics, which is
+# generated from web/lib/vaishnava-calendar.ts - one source of truth for
+# ekadashi dates, never a second hand-copied table in this file.
+SITE_URL = "https://goloka-three.vercel.app"
 GROQ_URL = "https://api.groq.com/openai/v1/chat/completions"
 GROQ_MODEL = "llama-3.1-8b-instant"
 NVIDIA_URL = "https://integrate.api.nvidia.com/v1/chat/completions"
@@ -715,6 +737,160 @@ def enrich(db) -> None:
     print(f"Enrich done. {total} row(s) refreshed.")
 
 
+def _subscribers(db, topic: str) -> list[dict]:
+    """Rows whose `topics` jsonb array contains `topic` - served by
+    db/schema.sql's GIN index. `.contains()` wants the value JSON-encoded
+    for a jsonb column, the same call shape web/lib/data.ts uses for the
+    `tags` column."""
+    rows = (
+        db.table("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .contains("topics", json.dumps([topic]))
+        .execute()
+    )
+    return rows.data or []
+
+
+def send_push(db, subscriptions: list[dict], payload: dict) -> None:
+    """Sends one Web Push message - {title, body, url, tag}, read by
+    web/public/sw.js's "push" handler - to each subscription row.
+
+    Prunes any row the push service reports as gone (404/410, the standard
+    "this subscription no longer exists" response, e.g. the visitor
+    uninstalled/cleared site data) so push_subscriptions never silently
+    accumulates dead rows. One bad subscription never aborts the rest of
+    the batch. No VAPID_PRIVATE_KEY configured means push isn't set up yet
+    (a fresh checkout, or CI without the secret) - skip quietly rather than
+    fail the whole sync run."""
+    if not VAPID_PRIVATE_KEY:
+        print("    VAPID_PRIVATE_KEY not set - skipping push send")
+        return
+    data = json.dumps(payload)
+    sent = pruned = 0
+    for sub in subscriptions:
+        try:
+            webpush(
+                subscription_info={
+                    "endpoint": sub["endpoint"],
+                    "keys": {"p256dh": sub["p256dh"], "auth": sub["auth"]},
+                },
+                data=data,
+                vapid_private_key=VAPID_PRIVATE_KEY,
+                vapid_claims={"sub": VAPID_SUBJECT},
+                timeout=10,
+            )
+            sent += 1
+            db.table("push_subscriptions").update(
+                {"last_success_at": datetime.now(timezone.utc).isoformat()}
+            ).eq("endpoint", sub["endpoint"]).execute()
+        except WebPushException as exc:
+            status = exc.response.status_code if exc.response is not None else None
+            if status in (404, 410):
+                db.table("push_subscriptions").delete().eq("endpoint", sub["endpoint"]).execute()
+                pruned += 1
+            else:
+                print(f"    push to one subscriber failed ({status}): {exc}")
+        except Exception as exc:  # one bad subscription shouldn't kill the batch
+            print(f"    push to one subscriber failed: {exc}")
+    print(f"    push: sent {sent}, pruned {pruned} of {len(subscriptions)} subscriber(s)")
+
+
+# IST has no DST and no zoneinfo dependency needed for it - a fixed +5:30
+# offset is exact and permanent. Mirrors web/lib/vaishnava-calendar.ts's
+# toISTDateString: shift the instant by the offset, then read its (now UTC)
+# wall-clock fields back as if they were IST's own - same trick, same
+# reason (no timezone database needed for a fixed offset).
+IST_OFFSET = timedelta(hours=5, minutes=30)
+
+
+def _ist_now() -> datetime:
+    return datetime.now(timezone.utc) + IST_OFFSET
+
+
+def _todays_ekadashi_from_ics(today_ist: datetime) -> tuple[str, str] | None:
+    """(name, "YYYY-MM-DD") for today (Mayapur/IST calendar date) if it's an
+    ekadashi, else None. Reads the site's OWN /ekadashi.ics rather than
+    re-deriving or hand-copying the date table into Python -
+    web/lib/vaishnava-calendar.ts (via web/app/ekadashi.ics/route.ts) stays
+    the one source of truth. Trivial line parse, as the calendar's own
+    generator produces short, unfolded VEVENT lines for these fields."""
+    today = today_ist.strftime("%Y%m%d")
+    try:
+        resp = requests.get(f"{SITE_URL}/ekadashi.ics", timeout=15)
+        resp.raise_for_status()
+    except requests.exceptions.RequestException as exc:
+        print(f"    could not fetch ekadashi.ics: {exc}")
+        return None
+
+    date = name = None
+    for raw_line in resp.text.splitlines():
+        line = raw_line.strip()
+        if line == "BEGIN:VEVENT":
+            date = name = None
+        elif line.startswith("DTSTART"):
+            date = line.split(":")[-1].strip()
+        elif line.startswith("SUMMARY:"):
+            # Minimal unescape of the RFC 5545 TEXT escaping the route
+            # applies (web/app/ekadashi.ics/route.ts's escapeText) -
+            # ekadashi names never contain the characters that need it, but
+            # this keeps the parse honest rather than assuming so.
+            name = (
+                line[len("SUMMARY:"):]
+                .strip()
+                .replace("\\,", ",")
+                .replace("\\;", ";")
+                .replace("\\\\", "\\")
+            )
+        elif line == "END:VEVENT":
+            if date == today and name:
+                return name, f"{date[0:4]}-{date[4:6]}-{date[6:8]}"
+    return None
+
+
+def notify_festivals(db) -> None:
+    """--notify-festivals: sends one "<Ekadashi name> today" push to
+    "festivals" subscribers when today (Mayapur/IST) is an ekadashi.
+
+    live.yml calls this every 15 min but only actually invokes python
+    during the UTC-01 hour (a cheap shell-level gate); this function then
+    re-checks the IST hour itself before doing anything; that's the correct
+    ~6:30am IST window even though UTC-hour-01 is a slightly wider net, and
+    it also protects a manual `workflow_dispatch` run from sending at the
+    wrong time of day. The notification's `tag` (ekadashi-<date>) is what
+    actually caps it at one VISIBLE notification per day: the browser
+    replaces same-tag notifications rather than stacking them, so it's fine
+    if this fires on more than one of the hour's four ticks.
+
+    Festival WINDOW starts (Ratha-yatra, Janmashtami, ...) are out of scope
+    for v1 - see the engineering report for why."""
+    ist_hour = _ist_now().hour
+    if ist_hour != 6:
+        print(f"    not the festival-notification hour (IST hour={ist_hour}) - skipping.")
+        return
+
+    found = _todays_ekadashi_from_ics(_ist_now())
+    if not found:
+        print("    today is not an ekadashi - nothing to send.")
+        return
+    name, date = found
+
+    subs = _subscribers(db, "festivals")
+    if not subs:
+        print(f"    today is {name} but there are no festival subscribers yet.")
+        return
+
+    send_push(
+        db,
+        subs,
+        {
+            "title": f"{name} today",
+            "body": "A day for the holy name - fasting, kirtan and katha",
+            "url": "/topic/ekadashi",
+            "tag": f"ekadashi-{date}",
+        },
+    )
+
+
 def live_check(db) -> None:
     """Fast live-darshan pass (--live, every 15 min via live.yml): refreshes
     is_live/live_viewer_count for channels flagged "live": true in
@@ -764,13 +940,17 @@ def live_check(db) -> None:
 
     added = updated = 0
     if live_now:
-        pk_rows = (db.table("channels").select("id, youtube_channel_id")
+        pk_rows = (db.table("channels").select("id, youtube_channel_id, title")
                    .in_("youtube_channel_id", sorted({channel_of[v] for v in live_now}))
                    .execute()).data or []
         pk_of = {r["youtube_channel_id"]: r["id"] for r in pk_rows}
-        existing = (db.table("videos").select("youtube_video_id")
+        channel_title_of = {r["youtube_channel_id"]: r["title"] for r in pk_rows}
+        existing = (db.table("videos").select("youtube_video_id, is_live")
                     .in_("youtube_video_id", list(live_now)).execute()).data or []
         existing_ids = {r["youtube_video_id"] for r in existing}
+        # Rows already live before THIS pass - anything in live_now but not
+        # here (new row, or an existing row that was False) just started.
+        was_live_ids = {r["youtube_video_id"] for r in existing if r.get("is_live")}
 
         for vid, viewers in live_now.items():
             if vid in existing_ids:
@@ -796,6 +976,23 @@ def live_check(db) -> None:
                 }, on_conflict="youtube_video_id").execute()
                 added += 1
 
+        # A stream that just started (wasn't live before this pass) is worth
+        # a push - capped at ONE per run so a burst of simultaneous starts
+        # (e.g. several temples' morning ārati) doesn't spam a subscriber.
+        newly_live = [vid for vid in live_now if vid not in was_live_ids]
+        if newly_live:
+            vid = newly_live[0]
+            channel_title = channel_title_of.get(channel_of[vid], "ISKCON")
+            video_title = candidates[vid]["title"]
+            subs = _subscribers(db, "live")
+            if subs:
+                send_push(db, subs, {
+                    "title": "Live from the dhāma",
+                    "body": f"{channel_title}: {video_title}",
+                    "url": f"/watch/{vid}",
+                    "tag": f"live-{vid}",
+                })
+
     # Streams that ended since the last pass lose the badge.
     stale = (db.table("videos").select("youtube_video_id")
              .eq("is_live", True).execute()).data or []
@@ -811,15 +1008,24 @@ def live_check(db) -> None:
 
 
 def main() -> None:
-    missing = [k for k, v in {
-        "YOUTUBE_API_KEY": YOUTUBE_API_KEY,
+    # --notify-festivals never touches YouTube (it only reads the site's own
+    # /ekadashi.ics and push_subscriptions), so it's the one mode that
+    # doesn't need YOUTUBE_API_KEY - required for every other mode below.
+    required = {
         "SUPABASE_URL": SUPABASE_URL,
         "SUPABASE_SERVICE_KEY": SUPABASE_SERVICE_KEY,
-    }.items() if not v]
+    }
+    if "--notify-festivals" not in sys.argv:
+        required["YOUTUBE_API_KEY"] = YOUTUBE_API_KEY
+    missing = [k for k, v in required.items() if not v]
     if missing:
         sys.exit(f"Missing environment variables: {', '.join(missing)} (see .env.example)")
 
     db = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
+
+    if "--notify-festivals" in sys.argv:
+        notify_festivals(db)
+        return
 
     if "--enrich" in sys.argv:
         enrich(db)

@@ -25,6 +25,10 @@ jobs:
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+          # Not read by plain `sync.py` today (only --live/--notify-festivals
+          # send pushes) - present so this workflow doesn't need editing
+          # again if a future mode here starts sending one.
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
 
       # This runs unattended every 12h with no other observer, so a silent
       # failure can go unnoticed for days. Rather than add a new external
