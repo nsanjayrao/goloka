@@ -7,6 +7,7 @@ import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
 import { EmptyState } from "@/components/empty-state";
 import { FadeUp } from "@/components/fade-up";
 import { Hero, type HeroFeature } from "@/components/hero";
+import { LanguageShelf } from "@/components/language-shelf";
 import { LiveStrip } from "@/components/live-strip";
 import { QuoteBlock } from "@/components/quote-block";
 import { SplitFeature } from "@/components/split-feature";
@@ -45,9 +46,10 @@ function toHeroFeature(video: Video): HeroFeature {
 // Home is a server component: fetch on the server, send finished HTML.
 // Section order follows the prototype (goloka-final.html): hero → live
 // strip → new arrivals row → topic split → quote → topic rows → category
-// cards → most watched. Continue Watching (browser-only personalization)
-// and the festival shelf (owner decision 2026-07-05) are kept from the
-// previous design and slotted where they don't break the rhythm.
+// cards → most watched. Continue Watching, the language picker/shelf, and
+// the festival shelf (browser-only personalization, owner decision
+// 2026-07-05 for the festival shelf) are kept from the previous design and
+// slotted where they don't break the rhythm.
 export default async function HomePage() {
   const homeTopics = TOPIC_LIST.filter((topic) => topic.showOnHomepage);
   const activeFestival = getActiveFestivalTopic();
@@ -104,6 +106,10 @@ export default async function HomePage() {
 
       {/* Client-side personalization: renders null for first-time visitors. */}
       <ContinueWatchingShelf />
+
+      {/* Client-side personalization: the picker always renders, the shelf
+          above it only once a language preference is set and has videos. */}
+      <LanguageShelf />
 
       <FadeUp>
         <CategoryRow
