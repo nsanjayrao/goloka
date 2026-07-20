@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { Container } from "@/components/container";
+import { FadeUp } from "@/components/fade-up";
 import { Thumbnail } from "@/components/thumbnail";
 import { Link } from "@/i18n/navigation";
 import { getVideoByYoutubeId } from "@/lib/data";
@@ -17,7 +18,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: "Begin Here",
     description:
-      "New to Kṛṣṇa consciousness? Ten short videos, in order, from who Kṛṣṇa is to your first kirtan and beyond.",
+      "New to Kṛṣṇa consciousness? You don't need to believe or know anything yet. A gentle welcome, and ten short videos to walk at your own pace, whenever you're ready.",
     alternates: localizedAlternates(locale, "/start"),
   };
 }
@@ -29,6 +30,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export const revalidate = 1800;
 
 const CARD_SIZES = "(min-width: 640px) 240px, 40vw";
+
+// Shared eyebrow style for the three kickers on this page (DESIGN.md
+// typography: 12-13px uppercase, .22-.24em tracking, muted).
+const KICKER = "text-[12px] uppercase tracking-[0.22em] text-text-muted";
 
 // A step's video is fetched fresh from the catalog rather than trusted from
 // the hand-written registry - titles/channels/thumbnails can change (or a
@@ -48,7 +53,7 @@ function StepVideo({ video, unavailableText }: { video: Video | null; unavailabl
   return (
     <Link
       href={`/watch/${video.youtube_video_id}`}
-      className="group mt-4 flex items-center gap-3 rounded-card border border-border bg-bg/40 p-2 transition-colors hover:border-hairline sm:gap-4"
+      className="group mt-5 flex items-center gap-3 rounded-card border border-border bg-bg/40 p-2 transition-colors hover:border-hairline sm:gap-4"
     >
       <div className="relative aspect-video w-28 shrink-0 overflow-hidden rounded-md sm:w-40">
         {video.thumbnail_url ? (
@@ -84,50 +89,86 @@ export default async function StartPage({ params }: Props) {
   );
 
   return (
-    <Container className="page-top pb-10">
-      <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("h1")}</h1>
-      <p className="mt-2 max-w-2xl text-text-muted">{t("intro")}</p>
+    <Container className="page-top pb-16">
+      {/* The welcome: a stranger is met before they even know to ask. */}
+      <FadeUp>
+        <div className="max-w-2xl">
+          <p className={KICKER}>{t("eyebrow")}</p>
+          <h1 className="mt-3 font-heading text-3xl text-text sm:text-4xl">{t("h1")}</h1>
+          <div className="mt-6 space-y-4 text-[15px] leading-relaxed text-text-muted sm:text-base">
+            <p>{t("welcomeP1")}</p>
+            <p>{t("welcomeP2")}</p>
+            <p>{t("welcomeP3")}</p>
+          </div>
+        </div>
+      </FadeUp>
 
-      <ol className="mt-10 flex flex-col gap-6">
-        {NEWCOMER_PATH.map((step: NewcomerStep, index: number) => (
-          <li
-            key={step.step}
-            className="flex gap-4 rounded-section border border-border bg-gradient-to-br from-surface to-bg p-6 sm:gap-6"
-          >
-            <span
-              className="shrink-0 font-heading text-3xl text-accent sm:text-4xl"
-              aria-hidden="true"
-            >
-              {String(step.step).padStart(2, "0")}
-            </span>
-            <div className="min-w-0 flex-1">
-              <h2 className="font-heading text-[20px] leading-snug text-text sm:text-[22px]">
-                {step.title}
-              </h2>
-              <p className="mt-2 text-[14px] leading-relaxed text-text-muted">{step.why}</p>
-              <StepVideo video={videos[index]} unavailableText={t("videoUnavailable")} />
-            </div>
-          </li>
-        ))}
-      </ol>
+      {/* The path: ten questions, walked slowly - a flowing journey rather
+          than a boxed grid, divided only by thin hairlines and open space. */}
+      <FadeUp>
+        <div className="mt-14 sm:mt-16">
+          <p className={KICKER}>{t("pathKicker")}</p>
+          <h2 className="mt-2 font-heading text-2xl text-text sm:text-[28px]">{t("pathTitle")}</h2>
 
-      <div className="mt-12 max-w-2xl border-t border-border pt-8">
-        <h2 className="font-heading text-2xl text-text">{t("whereNextTitle")}</h2>
-        <p className="mt-2 text-text-muted">
-          {t.rich("whereNextBody", {
-            books: (chunks) => (
-              <Link href="/books" className="text-accent-strong underline-offset-4 hover:underline">
-                {chunks}
-              </Link>
-            ),
-            temples: (chunks) => (
-              <Link href="/temples" className="text-accent-strong underline-offset-4 hover:underline">
-                {chunks}
-              </Link>
-            ),
-          })}
-        </p>
-      </div>
+          <ol className="mt-4 flex flex-col">
+            {NEWCOMER_PATH.map((step: NewcomerStep, index: number) => (
+              <li
+                key={step.step}
+                className="flex gap-5 border-t border-border/70 py-9 first:border-t-0 first:pt-6 sm:gap-7"
+              >
+                <span
+                  className="shrink-0 font-heading text-4xl text-accent sm:text-5xl"
+                  aria-hidden="true"
+                >
+                  {String(step.step).padStart(2, "0")}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <h3 className="font-heading text-[20px] leading-snug text-text sm:text-[22px]">
+                    {step.title}
+                  </h3>
+                  <p className="mt-2 text-[14px] leading-relaxed text-text-muted">{step.why}</p>
+                  <StepVideo video={videos[index]} unavailableText={t("videoUnavailable")} />
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </FadeUp>
+
+      {/* The blessing: unhurried, no hard sell, three doors left open. */}
+      <FadeUp>
+        <div className="mt-16 max-w-2xl border-t border-border pt-10 sm:mt-20">
+          <p className={KICKER}>{t("outroKicker")}</p>
+          <h2 className="mt-2 font-heading text-2xl text-text">{t("outroTitle")}</h2>
+          <p className="mt-4 leading-relaxed text-text-muted">
+            {t.rich("outroBody", {
+              chant: (chunks) => (
+                <Link href="/chant" className="text-accent-strong underline-offset-4 hover:underline">
+                  {chunks}
+                </Link>
+              ),
+              books: (chunks) => (
+                <Link href="/books" className="text-accent-strong underline-offset-4 hover:underline">
+                  {chunks}
+                </Link>
+              ),
+              temples: (chunks) => (
+                <Link href="/temples" className="text-accent-strong underline-offset-4 hover:underline">
+                  {chunks}
+                </Link>
+              ),
+            })}
+          </p>
+
+          <div className="mt-8 text-center">
+            <p className="text-text-muted">{t("outroClose")}</p>
+            {/* The mahā-mantra's own words are never translated (they stay
+                the same sacred sound in every locale) - same rule the
+                footer follows for the full mantra. */}
+            <p className="mt-4 font-heading text-lg tracking-[0.2em] text-accent">Hare Kṛṣṇa</p>
+          </div>
+        </div>
+      </FadeUp>
     </Container>
   );
 }
