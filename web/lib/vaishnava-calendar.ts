@@ -86,8 +86,10 @@ const IST_OFFSET_MS = 5.5 * 60 * 60 * 1000;
 /** The calendar date (YYYY-MM-DD) `now` falls on on the IST wall clock -
  * `Date.getTime()` is timezone-agnostic (epoch millis), so shifting by the
  * IST offset and reading the UTC fields back out gives IST's own date
- * without needing a timezone library. */
-function toISTDateString(now: Date): string {
+ * without needing a timezone library. Exported so the sibling
+ * vaishnava-observances.ts (ācārya appearance/disappearance days) reuses
+ * the same IST-rollover math rather than reimplementing it. */
+export function toISTDateString(now: Date): string {
   const ist = new Date(now.getTime() + IST_OFFSET_MS);
   const year = ist.getUTCFullYear();
   const month = String(ist.getUTCMonth() + 1).padStart(2, "0");

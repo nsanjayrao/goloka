@@ -62,6 +62,12 @@
     "inDays": "{days, plural, one {en # día} other {en # días}}",
     "addToCalendar": "Añadir al calendario ↓"
   },
+  "vaishnavaToday": {
+    "kicker": "Calendario vaisnava",
+    "honor": "Hoy honramos a {name}",
+    "remember": "Hoy recordamos a {name}",
+    "hearMore": "Escuchar más →"
+  },
   "aarti": {
     "mangalaHint": "únete al darshan de la mañana",
     "shringaraHint": "recibe el darshan",
@@ -254,6 +260,16 @@
       "soundAria": "Reproducir un tono suave al completar una ronda",
       "tapAria": "Cantar — cuenta {count} de 108",
       "roundCompleteAnnounce": "Una ronda completada"
+    },
+    "calendar": {
+      "h1": "El calendario vaisnava",
+      "intro": "El año sagrado de un vistazo — ekādaśīs, y los días de aparición y desaparición de los ācāryas gauḍīya vaiṣṇavas, fechados con precisión para Māyāpur.",
+      "todayLabel": "Hoy",
+      "appearance": "Aparición",
+      "disappearance": "Desaparición",
+      "festival": "Festival",
+      "ekadashi": "Ekādaśī",
+      "hearMore": "Escuchar más →"
     }
   },
   "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas.",
