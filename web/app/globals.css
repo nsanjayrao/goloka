@@ -1365,6 +1365,95 @@
     z-index: -1;
     pointer-events: none;
   }
+
+  /* ---------- /chant: a still space to chant, not a habit tracker ---------- */
+  /* The mahā-mantra, set large and slow. Devanagari falls back through the
+     SAME --display stack (Tiro Devanagari Hindi), so no separate font rule
+     is needed - only size/rhythm differ from the roman line. */
+  .chant-mantra {
+    font-size: clamp(22px, 3.6vw, 36px);
+    line-height: 1.5;
+    font-weight: 400;
+    text-wrap: balance;
+  }
+  .chant-mantra span {
+    display: block;
+  }
+  .chant-devanagari {
+    font-size: clamp(18px, 2.8vw, 28px);
+    line-height: 1.6;
+    opacity: 0.82;
+  }
+  .chant-devanagari span {
+    display: block;
+  }
+
+  /* The mala: 108 quiet marks in a ring, never a loud progress bar. Each
+     bead's angle is set inline (computed geometry, not a token) - color and
+     the fill transition stay here, as classes, so no bead ever carries a
+     hardcoded color. --ring-size drives both the container's box and every
+     bead's radius via calc(), so the ring stays one fluid size at any
+     viewport without a resize listener. */
+  .chant-ring {
+    --ring-size: clamp(220px, 62vw, 340px);
+    position: relative;
+    width: var(--ring-size);
+    height: var(--ring-size);
+    margin: 0 auto;
+  }
+  .chant-bead {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 6px;
+    height: 6px;
+    margin: -3px;
+    border-radius: 50%;
+    background: var(--hairline);
+    transition: background-color 0.4s ease, box-shadow 0.4s ease, transform 0.4s ease;
+  }
+  .chant-bead.is-filled {
+    background: var(--marigold);
+    box-shadow: 0 0 6px rgba(245, 201, 123, 0.55);
+  }
+
+  /* The chanting area itself: large, calm, a bowl of light rather than a
+     button that shouts "click me". */
+  .chant-tap {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: calc(var(--ring-size) * 0.56);
+    height: calc(var(--ring-size) * 0.56);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 1px solid var(--hairline);
+    background: radial-gradient(circle at 50% 42%, var(--shyama-2) 0%, var(--shyama) 78%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: transform 0.25s var(--ease-spring), box-shadow 0.4s ease, border-color 0.4s ease;
+  }
+  .chant-tap:hover,
+  .chant-tap:focus-visible {
+    border-color: var(--marigold);
+    box-shadow: 0 0 26px rgba(232, 163, 61, 0.16);
+  }
+  .chant-tap:active {
+    transform: translate(-50%, -50%) scale(0.97);
+  }
+  /* The one-shot acknowledgment at the 108th bead - a single soft bloom,
+     never a burst of confetti. Same rgba channels as --flame elsewhere in
+     this file (e.g. the calendar-strip pulse), so no new color is
+     introduced. Fully inert under prefers-reduced-motion (global rule);
+     keyframes defined below, unlayered, alongside the rest (drift,
+     lamp-light, breathe, flicker, ...). */
+  .chant-tap.is-blooming {
+    animation: chant-bloom 1.5s ease-out 1;
+  }
 }
 
 /* Keyframes live outside @layer so they always register. */
@@ -1473,6 +1562,17 @@
 @keyframes pulse {
   50% {
     opacity: 0.3;
+  }
+}
+@keyframes chant-bloom {
+  0% {
+    box-shadow: 0 0 0 rgba(245, 201, 123, 0);
+  }
+  35% {
+    box-shadow: 0 0 48px rgba(245, 201, 123, 0.5);
+  }
+  100% {
+    box-shadow: 0 0 0 rgba(245, 201, 123, 0);
   }
 }
 

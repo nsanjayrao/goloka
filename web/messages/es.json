@@ -234,6 +234,17 @@
     },
     "shareTarget": {
       "title": "Compartido con Goloka"
+    },
+    "chant": {
+      "roundsToday": "Rondas hoy: {count}",
+      "reset": "Reiniciar",
+      "resetConfirm": "¿Reiniciar?",
+      "resetAria": "Reiniciar el conteo de hoy a cero",
+      "resetConfirmAria": "Toca de nuevo para confirmar el reinicio del conteo de hoy",
+      "sound": "Sonido",
+      "soundAria": "Reproducir un tono suave al completar una ronda",
+      "tapAria": "Cantar — cuenta {count} de 108",
+      "roundCompleteAnnounce": "Una ronda completada"
     }
   },
   "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas."
