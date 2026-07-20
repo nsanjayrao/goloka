@@ -241,6 +241,17 @@
     },
     "shareTarget": {
       "title": "Shared with Goloka"
+    },
+    "chant": {
+      "roundsToday": "Rounds today: {count}",
+      "reset": "Reset",
+      "resetConfirm": "Reset?",
+      "resetAria": "Reset today's count to zero",
+      "resetConfirmAria": "Tap again to confirm resetting today's count",
+      "sound": "Sound",
+      "soundAria": "Play a soft tone when a round completes",
+      "tapAria": "Chant — bead {count} of 108",
+      "roundCompleteAnnounce": "One round complete"
     }
   },
   "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es are machine-translated from this file."
