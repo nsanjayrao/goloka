@@ -62,6 +62,12 @@
     "inDays": "In {days, plural, one {# day} other {# days}}",
     "addToCalendar": "Add to calendar ↓"
   },
+  "vaishnavaToday": {
+    "kicker": "Vaiṣṇava calendar",
+    "honor": "Today we honor {name}",
+    "remember": "Today we remember {name}",
+    "hearMore": "Hear more →"
+  },
   "aarti": {
     "mangalaHint": "join the morning darshan",
     "shringaraHint": "take darshan",
@@ -254,6 +260,16 @@
       "soundAria": "Play a soft tone when a round completes",
       "tapAria": "Chant — bead {count} of 108",
       "roundCompleteAnnounce": "One round complete"
+    },
+    "calendar": {
+      "h1": "The Vaiṣṇava Calendar",
+      "intro": "The sacred year at a glance — ekādaśīs, and the appearance and disappearance days of the Gauḍīya Vaiṣṇava ācāryas, precisely dated for Māyāpur.",
+      "todayLabel": "Today",
+      "appearance": "Appearance",
+      "disappearance": "Disappearance",
+      "festival": "Festival",
+      "ekadashi": "Ekādaśī",
+      "hearMore": "Hear more →"
     }
   },
   "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es are machine-translated from this file.",
