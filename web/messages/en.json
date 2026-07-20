@@ -217,11 +217,18 @@
       "intro": "ISKCON teachers and speakers whose talks, kirtans and classes are indexed on Goloka."
     },
     "start": {
+      "eyebrow": "An Invitation",
       "h1": "Begin Here",
-      "intro": "New to all this? Welcome. You don't need to know any Sanskrit, own anything, or believe anything yet - just watch these ten short videos in order. Each one answers a single question and points gently to the next.",
+      "welcomeP1": "You don't need to believe anything to be here. You don't need to know a word of Sanskrit, or have read a single page of scripture, or have ever set foot inside a temple. None of that was ever the door - you're already standing inside it.",
+      "welcomeP2": "Think of this simply as an invitation: to sit for a few quiet minutes and meet someone named Kṛṣṇa, through the eyes of people who love him very much. There is nothing to sign, nothing to join, no test waiting at the end. Watch if you'd like. Pause whenever you'd like. Come back whenever you'd like - or don't, and know you were welcome all the same.",
+      "welcomeP3": "Below are ten small questions, each answered gently by a short video, one leading softly to the next. You don't have to take them in order, and you don't have to take them all. If all you ever watch is the first one, you will still have been received here exactly as you are. Let's begin gently.",
+      "pathKicker": "Walk At Your Own Pace",
+      "pathTitle": "The Path",
       "videoUnavailable": "This video isn't available right now - check back soon.",
-      "whereNextTitle": "Where to go next",
-      "whereNextBody": "When you're ready to go deeper, the <books>Sacred Library</books> has Śrīla Prabhupāda's books - the Bhagavad-gītā is the natural next read. Or find a <temples>temple</temples> near you and go see one of these evenings in person."
+      "outroKicker": "Whenever You're Ready",
+      "outroTitle": "Where This Can Lead",
+      "outroBody": "The mahā-mantra itself is only a breath away - visit <chant>the chant</chant> and say the holy names for yourself. Or go deeper into the <books>Sacred Library</books>, where the Bhagavad-gītā waits as a natural next read. Or find a <temples>temple</temples> near you, and see one of these evenings with your own eyes.",
+      "outroClose": "And whenever you're ready - simply begin."
     },
     "temples": {
       "h1": "Temples",

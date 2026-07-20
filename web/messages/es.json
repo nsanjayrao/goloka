@@ -217,11 +217,18 @@
       "intro": "Maestros y oradores de ISKCON cuyas conferencias, kīrtanes y clases están indexados en Goloka."
     },
     "start": {
+      "eyebrow": "Una invitación",
       "h1": "Comenzar aquí",
-      "intro": "¿Todo esto es nuevo para ti? Bienvenido. No necesitas saber sánscrito, poseer nada, ni creer nada todavía - solo mira estos diez videos cortos en orden. Cada uno responde una sola pregunta y señala suavemente hacia el siguiente.",
+      "welcomeP1": "No necesitas creer en nada para estar aquí. No necesitas saber una sola palabra de sánscrito, haber leído una sola página de escritura, ni haber pisado jamás un templo. Nada de eso fue nunca la puerta - ya estás dentro.",
+      "welcomeP2": "Piensa en esto simplemente como una invitación: sentarte unos minutos tranquilos y conocer a alguien llamado Kṛṣṇa, a través de los ojos de quienes lo aman profundamente. No hay nada que firmar, nada a lo que unirse, ningún examen al final. Mira si quieres. Pausa cuando quieras. Vuelve cuando quieras - o no vuelvas, y sabe que fuiste bienvenido de todas formas.",
+      "welcomeP3": "Abajo hay diez pequeñas preguntas, cada una respondida con dulzura por un video corto, que lleva suavemente a la siguiente. No tienes que verlas en orden, ni tienes que verlas todas. Si solo ves la primera, aun así habrás sido recibido aquí tal como eres. Empecemos con calma.",
+      "pathKicker": "A tu propio ritmo",
+      "pathTitle": "El camino",
       "videoUnavailable": "Este video no está disponible en este momento - vuelve pronto.",
-      "whereNextTitle": "A dónde ir después",
-      "whereNextBody": "Cuando estés listo para profundizar, la <books>Biblioteca sagrada</books> tiene los libros de Śrīla Prabhupāda - el Bhagavad-gītā es la siguiente lectura natural. O encuentra un <temples>templo</temples> cerca de ti y ve a presenciar una de estas veladas en persona."
+      "outroKicker": "Cuando estés listo",
+      "outroTitle": "A dónde puede llevar esto",
+      "outroBody": "El mahā-mantra mismo está a solo un suspiro de distancia - visita <chant>el canto</chant> y pronuncia tú mismo el santo nombre. O profundiza en la <books>Biblioteca sagrada</books>, donde el Bhagavad-gītā espera como la siguiente lectura natural. O encuentra un <temples>templo</temples> cerca de ti y presencia una de estas veladas con tus propios ojos.",
+      "outroClose": "Y cuando estés listo - simplemente comienza."
     },
     "temples": {
       "h1": "Templos",
