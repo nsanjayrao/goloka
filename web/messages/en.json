@@ -7,7 +7,8 @@
     "library": "Library",
     "search": "Search",
     "searchAria": "Search Goloka",
-    "chant": "Chant"
+    "chant": "Chant",
+    "calendar": "Calendar"
   },
   "tabs": {
     "home": "Home",
@@ -29,7 +30,8 @@
     "suggestChannel": "Suggest a channel",
     "disclaimer": "Goloka is an index, not a host — every video plays through the official YouTube player and links back to its source channel. All content belongs to its creators.",
     "languageLabel": "Language",
-    "chant": "Chant"
+    "chant": "Chant",
+    "calendar": "Calendar"
   },
   "sectionHeader": {
     "viewAll": "View all →"

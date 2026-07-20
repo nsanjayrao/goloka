@@ -10,6 +10,7 @@ import { FadeUp } from "@/components/fade-up";
 import { Hero, type HeroFeature } from "@/components/hero";
 import { HomeDoorways } from "@/components/home-doorways";
 import { LanguageShelf } from "@/components/language-shelf";
+import { VaishnavaToday } from "@/components/vaishnava-today";
 import { LiveStrip } from "@/components/live-strip";
 import { QuoteBlock } from "@/components/quote-block";
 import { SplitFeature } from "@/components/split-feature";
@@ -125,6 +126,14 @@ export default async function HomePage({ params }: Props) {
 
       <FadeUp>
         <CalendarStrip />
+      </FadeUp>
+
+      {/* Honoring the parampara (Rādhā mood): on an ācārya's appearance or
+          disappearance day, or a festival, a quiet card bows the app's head
+          and offers that soul's words to hear. Renders null on ordinary
+          days, so it never leaves a gap. */}
+      <FadeUp>
+        <VaishnavaToday />
       </FadeUp>
 
       {/* Two gentle doorways (Rādhā mood): the newcomer's welcome and the

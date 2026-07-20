@@ -7,7 +7,8 @@
     "library": "Biblioteca",
     "search": "Buscar",
     "searchAria": "Buscar en Goloka",
-    "chant": "Cantar"
+    "chant": "Cantar",
+    "calendar": "Calendario"
   },
   "tabs": {
     "home": "Inicio",
@@ -29,7 +30,8 @@
     "suggestChannel": "Sugerir un canal",
     "disclaimer": "Goloka es un índice, no un alojamiento — cada video se reproduce mediante el reproductor oficial de YouTube y enlaza de vuelta a su canal de origen. Todo el contenido pertenece a sus creadores.",
     "languageLabel": "Idioma",
-    "chant": "Cantar"
+    "chant": "Cantar",
+    "calendar": "Calendario"
   },
   "sectionHeader": {
     "viewAll": "Ver todo →"

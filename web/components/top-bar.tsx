@@ -36,6 +36,9 @@ export function TopBar() {
         <Link className="nav-link" href="/chant">
           {t("chant")}
         </Link>
+        <Link className="nav-link" href="/calendar">
+          {t("calendar")}
+        </Link>
         <Link className="nav-link" href="/browse">
           {t("browse")}
         </Link>
