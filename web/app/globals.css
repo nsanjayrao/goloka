@@ -1358,6 +1358,43 @@
     padding-top: clamp(88px, 12vh, 120px);
   }
 
+  /* Home doorways (Rādhā mood): two gentle invitations - begin here / chant
+     the holy name. A slim two-up band in the shared --pad gutter, quiet
+     hairline cards that warm on hover, stacking on small screens. */
+  .doorways {
+    margin-top: clamp(30px, 5vh, 54px);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .doorway {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 18px 22px;
+    border: 1px solid var(--hairline);
+    border-radius: 16px;
+    background: linear-gradient(160deg, var(--shyama) 0%, var(--midnight) 100%);
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .doorway:hover {
+    border-color: var(--marigold);
+    transform: translateY(-2px);
+  }
+  .doorway-label {
+    font-family: var(--display);
+    font-size: 19px;
+    color: var(--chandan);
+  }
+  .doorway-hint {
+    font-size: 13px;
+    color: var(--muted);
+    transition: color 0.25s;
+  }
+  .doorway:hover .doorway-hint {
+    color: var(--flame);
+  }
+
   /* Diya embers canvas fills the hero behind the content. */
   .embers {
     position: absolute;

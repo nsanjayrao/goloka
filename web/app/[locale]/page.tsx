@@ -8,6 +8,7 @@ import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
 import { EmptyState } from "@/components/empty-state";
 import { FadeUp } from "@/components/fade-up";
 import { Hero, type HeroFeature } from "@/components/hero";
+import { HomeDoorways } from "@/components/home-doorways";
 import { LanguageShelf } from "@/components/language-shelf";
 import { LiveStrip } from "@/components/live-strip";
 import { QuoteBlock } from "@/components/quote-block";
@@ -124,6 +125,12 @@ export default async function HomePage({ params }: Props) {
 
       <FadeUp>
         <CalendarStrip />
+      </FadeUp>
+
+      {/* Two gentle doorways (Rādhā mood): the newcomer's welcome and the
+          holy-name space, offered quietly before the content rows begin. */}
+      <FadeUp>
+        <HomeDoorways />
       </FadeUp>
 
       {/* Client-side personalization: renders null for first-time visitors. */}

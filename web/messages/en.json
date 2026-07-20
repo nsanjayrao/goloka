@@ -6,7 +6,8 @@
     "temples": "Temples",
     "library": "Library",
     "search": "Search",
-    "searchAria": "Search Goloka"
+    "searchAria": "Search Goloka",
+    "chant": "Chant"
   },
   "tabs": {
     "home": "Home",
@@ -27,7 +28,8 @@
     "about": "About",
     "suggestChannel": "Suggest a channel",
     "disclaimer": "Goloka is an index, not a host — every video plays through the official YouTube player and links back to its source channel. All content belongs to its creators.",
-    "languageLabel": "Language"
+    "languageLabel": "Language",
+    "chant": "Chant"
   },
   "sectionHeader": {
     "viewAll": "View all →"
@@ -254,5 +256,11 @@
       "roundCompleteAnnounce": "One round complete"
     }
   },
-  "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es are machine-translated from this file."
+  "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es are machine-translated from this file.",
+  "homeDoorways": {
+    "newLabel": "New to Kṛṣṇa?",
+    "newHint": "Begin here — gently",
+    "chantLabel": "Chant the holy name",
+    "chantHint": "A still place to call out to Him"
+  }
 }

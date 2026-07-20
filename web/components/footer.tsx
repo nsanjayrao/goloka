@@ -35,6 +35,7 @@ export function Footer() {
         <nav className="foot-links" aria-label={tLandmarks("footer")}>
           <Link href="/">{t("home")}</Link>
           <Link href="/start">{t("beginHere")}</Link>
+          <Link href="/chant">{t("chant")}</Link>
           <Link href="/browse">{t("browse")}</Link>
           <Link href="/search">{t("search")}</Link>
           <Link href="/leaders">{t("leaders")}</Link>

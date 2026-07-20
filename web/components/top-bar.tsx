@@ -33,6 +33,9 @@ export function TopBar() {
         Goloka
       </Link>
       <nav className="site-nav" aria-label={tLandmarks("main")}>
+        <Link className="nav-link" href="/chant">
+          {t("chant")}
+        </Link>
         <Link className="nav-link" href="/browse">
           {t("browse")}
         </Link>

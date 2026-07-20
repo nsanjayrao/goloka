@@ -6,7 +6,8 @@
     "temples": "Templos",
     "library": "Biblioteca",
     "search": "Buscar",
-    "searchAria": "Buscar en Goloka"
+    "searchAria": "Buscar en Goloka",
+    "chant": "Cantar"
   },
   "tabs": {
     "home": "Inicio",
@@ -27,7 +28,8 @@
     "about": "Acerca de",
     "suggestChannel": "Sugerir un canal",
     "disclaimer": "Goloka es un índice, no un alojamiento — cada video se reproduce mediante el reproductor oficial de YouTube y enlaza de vuelta a su canal de origen. Todo el contenido pertenece a sus creadores.",
-    "languageLabel": "Idioma"
+    "languageLabel": "Idioma",
+    "chant": "Cantar"
   },
   "sectionHeader": {
     "viewAll": "Ver todo →"
@@ -254,5 +256,11 @@
       "roundCompleteAnnounce": "Una ronda completada"
     }
   },
-  "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas."
+  "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas.",
+  "homeDoorways": {
+    "newLabel": "¿Nuevo en Kṛṣṇa?",
+    "newHint": "Empieza aquí — con calma",
+    "chantLabel": "Canta el santo nombre",
+    "chantHint": "Un lugar sereno para invocarlo"
+  }
 }
