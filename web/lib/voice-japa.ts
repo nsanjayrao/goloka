@@ -104,29 +104,60 @@ export async function startVoiceJapa(callbacks: VoiceJapaCallbacks): Promise<Voi
     return NOOP_HANDLE;
   }
 
+  // Create AND resume the AudioContext RIGHT NOW, before anything is
+  // awaited - this function is called straight from the "Chant aloud" tap,
+  // and on phones (iOS/Safari most strictly) an AudioContext may only be
+  // started from within that user gesture. The getUserMedia await below
+  // would otherwise "spend" the gesture, leaving the context stuck
+  // "suspended" (permanently silent) on a phone - which is exactly why the
+  // mic appeared not to work there. Creating + resuming it here, before the
+  // await, captures the gesture. (It's closed again on the mic-denied path
+  // just below so nothing leaks if permission is refused.)
+  const AudioCtx = getAudioContextCtor()!;
+  const audioContext = new AudioCtx();
+  void audioContext.resume().catch(() => {});
+
   callbacks.onStatusChange?.("requesting-mic");
   let stream: MediaStream;
   try {
-    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    // Ask the browser to clean the mic signal before we ever see it, so
+    // the rhythm counter listens to the devotee, not the room:
+    // - echoCancellation subtracts whatever THIS device is playing through
+    //   its own speakers - which fixes the reported case of a video playing
+    //   on the same laptop being counted as mantras (the browser has the
+    //   speaker signal as a reference and removes it; the devotee's live
+    //   voice, not in that reference, remains).
+    // - noiseSuppression damps steady ambient (a fan, hum, a distant TV).
+    // - autoGainControl OFF on purpose: with it on, the browser boosts
+    //   quiet sounds up to normal levels, which would raise faraway
+    //   ambient to "voice" loudness and cause false counts. Off keeps quiet
+    //   things quiet, so only close, deliberate chanting clears the floor.
+    // These are advisory booleans (not {exact}), so a browser/mic that
+    // can't honor one simply ignores it rather than failing the request.
+    // Honest limit: echoCancellation only cancels THIS device's own audio -
+    // a separate TV, or a person talking loudly right beside the mic, can
+    // still be misheard as chanting. Japa in a reasonably quiet spot, close
+    // to the device, counts best.
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: false },
+    });
   } catch (error) {
+    // Permission refused / no mic: release the AudioContext we opened
+    // above so nothing lingers, then report cleanly.
+    void audioContext.close().catch(() => {});
     callbacks.onError?.("mic-denied", error);
     return NOOP_HANDLE;
   }
 
-  const AudioCtx = getAudioContextCtor()!;
-  const audioContext = new AudioCtx();
-  // Some browsers create a new AudioContext in a "suspended" state until a
-  // user gesture resumes it. The mic permission prompt this function just
-  // awaited IS that gesture in every browser tested, but resuming
-  // explicitly costs nothing and protects against the rare case where the
-  // await broke that association.
+  // Resume once more now that we're past the await - some phone browsers
+  // suspend the context again while a permission prompt is on screen. If it
+  // still can't resume, polling just reads near-silence rather than
+  // crashing (a harmless degrade).
   if (audioContext.state === "suspended") {
     try {
       await audioContext.resume();
     } catch {
-      // Proceed regardless - polling will simply read near-silence until
-      // the context resumes on its own (e.g. on the next user interaction),
-      // which is a harmless degrade, not a crash.
+      /* proceed regardless */
     }
   }
 
@@ -146,7 +177,12 @@ export async function startVoiceJapa(callbacks: VoiceJapaCallbacks): Promise<Voi
   function pollFrame() {
     if (!active) return;
     const rms = readRms(analyser, timeDomainBuffer);
-    const result = pushAudioFrame(rhythmState, { timeMs: audioContext.currentTime * 1000, rms });
+    // performance.now() for the frame clock, not audioContext.currentTime:
+    // currentTime sits frozen at 0 while a context is suspended (the exact
+    // phone failure above), which would give the rhythm counter garbage
+    // timestamps even after the mic works. performance.now() always
+    // advances, independent of audio state.
+    const result = pushAudioFrame(rhythmState, { timeMs: performance.now(), rms });
     rhythmState = result.state;
     if (result.mantraCompleted) callbacks.onMantraCompleted?.(1);
   }
