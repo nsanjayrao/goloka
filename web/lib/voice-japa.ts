@@ -182,8 +182,29 @@ async function getTranscriber(onProgress: (fraction: number) => void): Promise<T
       // isn't one, in a browser) - the model is the only thing fetched.
       env.allowLocalModels = false;
 
+      // Force SINGLE-THREADED WASM. onnxruntime-web's multi-threaded backend
+      // needs SharedArrayBuffer, which the browser only exposes on a
+      // cross-origin-isolated page (COOP: same-origin + COEP: require-corp
+      // response headers). We deliberately do NOT set those site-wide -
+      // COEP would break the YouTube-nocookie embeds, the i.ytimg.com
+      // thumbnails, and the HF model fetch itself. Without isolation the
+      // threaded runtime fails to start AFTER the weights finish
+      // downloading - which surfaced as "the holy name counter couldn't
+      // load" on the deployed site. Single-threaded needs no
+      // SharedArrayBuffer and initializes everywhere; whisper-tiny is small
+      // enough that one thread keeps pace with unhurried japa.
+      if (env.backends?.onnx?.wasm) {
+        env.backends.onnx.wasm.numThreads = 1;
+      }
+
       const seenTotals = new Map<string, number>();
       return (await pipeline("automatic-speech-recognition", MODEL_ID, {
+        // Pin the execution backend to WASM (do not auto-try WebGPU): WASM
+        // runs on every browser a devotee might use, and getting it working
+        // reliably matters more than the speed WebGPU would add on the
+        // subset of devices that support it. (A WebGPU fast-path can come
+        // later, once this is trusted.)
+        device: "wasm",
         dtype: "q8", // quantized - smallest, fastest download and inference
         progress_callback: (progress: { status?: string; file?: string; loaded?: number; total?: number }) => {
           if (progress?.status !== "progress" || typeof progress.loaded !== "number") return;
