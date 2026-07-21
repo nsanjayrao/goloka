@@ -266,16 +266,13 @@
       "voiceAria": "Turn on hands-free chanting — listens on this device only, never recorded or sent anywhere",
       "voiceListening": "Listening — chant softly, eyes closed",
       "voiceRequestingMic": "Requesting microphone…",
-      "voicePreparingProgress": "Preparing the holy name counter… {percent}%",
       "voiceNudgeMinus": "−1 bead",
       "voiceNudgeMinusAria": "Correct the count: remove one bead",
       "voiceNudgePlus": "+1 bead",
       "voiceNudgePlusAria": "Correct the count: add one bead",
       "voicePrivacy": "Listens only on your device and never records or sends your voice. It's a gentle aid and may occasionally miscount — nudge a bead above if it slips.",
       "voiceMicDenied": "Microphone access wasn't granted — tap to count instead, eyes closed.",
-      "voiceUnsupported": "Hands-free chanting isn't available in this browser — tap to count instead.",
-      "voiceModelFailed": "The holy name counter couldn't load — tap to count instead.",
-      "voiceSlowConnectionWarning": "Your connection looks slow — the one-time download and listening may lag a little."
+      "voiceUnsupported": "Hands-free chanting isn't available in this browser — tap to count instead."
     },
     "calendar": {
       "h1": "The Vaiṣṇava Calendar",

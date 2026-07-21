@@ -5,13 +5,12 @@
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
-import { useDataSaver } from "@/lib/data-saver";
 import { incrementRound, resetToday, useRoundsToday } from "@/lib/rounds";
 // Type-only import - erased at compile time, so referencing these types
-// here does NOT pull the voice pipeline (or Transformers.js) into this
-// component's bundle. The actual module is loaded with a dynamic import()
-// inside handleVoiceToggle, only once a devotee opts in - see that
-// function and lib/voice-japa.ts's file banner.
+// here does NOT pull the voice pipeline into this component's bundle. The
+// actual module is loaded with a dynamic import() inside handleVoiceToggle,
+// only once a devotee opts in - see that function and lib/voice-japa.ts's
+// file banner.
 import type { VoiceJapaErrorReason, VoiceJapaHandle, VoiceJapaStatus } from "@/lib/voice-japa";
 
 const BEADS_PER_ROUND = 108;
@@ -103,26 +102,19 @@ const MANTRA_ROMAN = [
 const MANTRA_DEVANAGARI = ["हरे कृष्ण हरे कृष्ण, कृष्ण कृष्ण हरे हरे", "हरे राम हरे राम, राम राम हरे हरे"];
 
 // "off"/"error" are UI-local states this component adds on top of what
-// lib/voice-japa.ts itself reports (requesting-mic/loading-model/
-// listening) - the pipeline module has no concept of "not started yet" or
-// "gave up", since it either is running or has handed control back via a
-// callback.
+// lib/voice-japa.ts itself reports (requesting-mic/listening) - the
+// pipeline module has no concept of "not started yet" or "gave up", since
+// it either is running or has handed control back via a callback.
 type VoiceUiStatus = "off" | "error" | VoiceJapaStatus;
-// transcribe-failed is deliberately excluded - a single bad recording
-// window doesn't end the session (see handleVoiceToggle's onError), so it
-// never becomes a fatal reason shown in the UI.
-type FatalVoiceError = Exclude<VoiceJapaErrorReason, "transcribe-failed">;
 
-const VOICE_ERROR_MESSAGE_KEY: Record<FatalVoiceError, "voiceMicDenied" | "voiceUnsupported" | "voiceModelFailed"> = {
+const VOICE_ERROR_MESSAGE_KEY: Record<VoiceJapaErrorReason, "voiceMicDenied" | "voiceUnsupported"> = {
   "mic-denied": "voiceMicDenied",
   unsupported: "voiceUnsupported",
-  "model-load-failed": "voiceModelFailed",
 };
 
 export function ChantSpace() {
   const t = useTranslations("pages.chant");
   const roundsToday = useRoundsToday();
-  const dataSaverOn = useDataSaver();
 
   // In-progress beads within the CURRENT round only - intentionally not
   // persisted (lib/rounds.ts keeps completed rounds, nothing mid-round). A
@@ -135,17 +127,16 @@ export function ChantSpace() {
   const soundOn = useSyncExternalStore(subscribeSound, getSoundSnapshot, getSoundServerSnapshot) === "1";
 
   const [voiceStatus, setVoiceStatus] = useState<VoiceUiStatus>("off");
-  const [voiceError, setVoiceError] = useState<FatalVoiceError | null>(null);
-  const [modelProgress, setModelProgress] = useState(0);
+  const [voiceError, setVoiceError] = useState<VoiceJapaErrorReason | null>(null);
 
   const bloomTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const ringTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const resetArmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const voiceHandleRef = useRef<VoiceJapaHandle | null>(null);
-  // Bumped on every toggle-on/toggle-off/unmount so a startVoiceJapa()
-  // call that's still requesting the mic or downloading the model when the
-  // devotee cancels doesn't come alive afterwards and silently start
-  // listening again - see handleVoiceToggle.
+  // Bumped on every toggle-on/toggle-off/unmount so a startVoiceJapa() call
+  // that's still requesting the mic when the devotee cancels doesn't come
+  // alive afterwards and silently start listening again - see
+  // handleVoiceToggle.
   const voiceGenerationRef = useRef(0);
 
   useEffect(() => {
@@ -234,12 +225,15 @@ export function ChantSpace() {
   }
 
   /** Turns hands-free chanting on or off. Every failure mode (denied
-   * permission, an unsupported browser, a model that fails to load) is
-   * reported through voiceError and simply leaves tap-to-count working -
-   * never a broken page. See lib/voice-japa.ts's file banner for the vow
-   * this is built on: the mic is only ever read locally, nothing is
-   * recorded or sent anywhere, and the model library is dynamically
-   * imported here so it never loads for anyone who leaves this off. */
+   * permission, an unsupported browser) is reported through voiceError and
+   * simply leaves tap-to-count working - never a broken page. See
+   * lib/voice-japa.ts's file banner for the vow this is built on: the mic
+   * is only ever read locally, one loudness number at a time, and nothing
+   * is ever recorded, stored, or sent anywhere - and nothing is downloaded,
+   * so the toggle goes straight from "off" to "listening" the moment
+   * permission is granted. The pipeline module is dynamically imported here
+   * purely to keep it out of every page that never touches voice mode, not
+   * because it has anything heavy to load. */
   async function handleVoiceToggle() {
     if (voiceStatus !== "off" && voiceStatus !== "error") {
       voiceGenerationRef.current += 1;
@@ -252,7 +246,6 @@ export function ChantSpace() {
 
     const generation = ++voiceGenerationRef.current;
     setVoiceError(null);
-    setModelProgress(0);
 
     const { startVoiceJapa } = await import("@/lib/voice-japa");
     const handle = await startVoiceJapa({
@@ -260,18 +253,11 @@ export function ChantSpace() {
         if (voiceGenerationRef.current !== generation) return;
         setVoiceStatus(status);
       },
-      onModelProgress: (fraction) => {
-        if (voiceGenerationRef.current !== generation) return;
-        setModelProgress(fraction);
-      },
       onMantraCompleted: (n) => {
         if (voiceGenerationRef.current !== generation) return;
         advanceBeadsRef.current(n);
       },
       onError: (reason) => {
-        // A single failed recording window doesn't end the session (see
-        // voice-japa.ts) - only report the fatal, session-ending reasons.
-        if (reason === "transcribe-failed") return;
         if (voiceGenerationRef.current !== generation) return;
         setVoiceStatus("error");
         setVoiceError(reason);
@@ -281,8 +267,8 @@ export function ChantSpace() {
 
     if (voiceGenerationRef.current !== generation) {
       // Cancelled (toggled off, or the page unmounted) while the mic
-      // permission prompt or the model download was still in flight -
-      // stop it immediately rather than let a stale session come alive.
+      // permission prompt was still in flight - stop it immediately rather
+      // than let a stale session come alive.
       handle.stop();
       return;
     }
@@ -420,24 +406,8 @@ export function ChantSpace() {
 
         {voiceStatus === "requesting-mic" && <p className="text-[12px] text-text-muted">{t("voiceRequestingMic")}</p>}
 
-        {voiceStatus === "loading-model" && (
-          <div className="flex w-full max-w-[220px] flex-col items-center gap-1.5">
-            <p className="text-[12px] text-text-muted">{t("voicePreparingProgress", { percent: Math.round(modelProgress * 100) })}</p>
-            <div className="h-[3px] w-full overflow-hidden rounded-full bg-shyama-2">
-              <div
-                className="h-full rounded-full bg-marigold transition-[width] duration-300"
-                style={{ width: `${Math.round(modelProgress * 100)}%` }}
-              />
-            </div>
-          </div>
-        )}
-
         {voiceStatus === "error" && voiceError && (
           <p className="max-w-xs text-[12px] text-lotus">{t(VOICE_ERROR_MESSAGE_KEY[voiceError])}</p>
-        )}
-
-        {(voiceStatus === "off" || voiceStatus === "error") && dataSaverOn && (
-          <p className="max-w-xs text-[11px] text-text-muted">{t("voiceSlowConnectionWarning")}</p>
         )}
 
         <p className="max-w-xs text-[11px] italic leading-relaxed text-text-muted">{t("voicePrivacy")}</p>
