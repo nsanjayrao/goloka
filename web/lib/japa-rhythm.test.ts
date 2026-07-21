@@ -5,9 +5,14 @@ import {
   BREATH_GAP_MS,
   countMantrasInFrames,
   createJapaRhythmState,
+  createKaraokeWord,
   DEBOUNCE_MS,
+  karaokeBoundary,
+  karaokeOnset,
+  karaokeTap,
   MICRO_GAP_MS,
   MIN_PHRASE_MS,
+  ONSET_REARM_MS,
   pushAudioFrame,
 } from "./japa-rhythm";
 
@@ -44,15 +49,19 @@ function framesFromSegments(segments: { durationMs: number; rms: number }[]): Au
 /** Runs frames through pushAudioFrame one at a time (rather than the
  * countMantrasInFrames convenience) so a test can also inspect the final
  * state, not just the count. */
-function run(frames: AudioFrame[]) {
+function run(frames: AudioFrame[], options?: { minPhraseMs?: number }) {
   let state = createJapaRhythmState();
   let mantraEvents = 0;
+  let onsetEvents = 0;
+  let boundaryEvents = 0;
   for (const frame of frames) {
-    const result = pushAudioFrame(state, frame);
+    const result = pushAudioFrame(state, frame, options);
     state = result.state;
     if (result.mantraCompleted) mantraEvents += 1;
+    if (result.mantraBoundary) boundaryEvents += 1;
+    if (result.onset) onsetEvents += 1;
   }
-  return { state, mantraEvents };
+  return { state, mantraEvents, onsetEvents, boundaryEvents };
 }
 
 describe("constants: the documented design invariants hold", () => {
@@ -243,5 +252,139 @@ describe("MIN_PHRASE_MS boundary", () => {
 describe("empty input", () => {
   it("no frames at all counts 0", () => {
     expect(countMantrasInFrames([])).toBe(0);
+  });
+});
+
+describe("per-mantra minimum phrase length (options.minPhraseMs)", () => {
+  it("a short 1500ms phrase counts 0 at the default mahā-mantra floor", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(1500, CHANT), segment(500, QUIET)]);
+    expect(countMantrasInFrames(frames)).toBe(0);
+  });
+
+  it("the SAME short phrase counts 1 under a shorter mantra's floor (e.g. Rādhe Rādhe, 1200ms)", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(1500, CHANT), segment(500, QUIET)]);
+    // pushAudioFrame threads minPhraseMs through; countMantrasInFrames uses
+    // the default, so we drive frames directly with the override here.
+    expect(run(frames, { minPhraseMs: 1200 }).mantraEvents).toBe(1);
+  });
+
+  it("omitting the option is identical to passing the default MIN_PHRASE_MS", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(3000, CHANT), segment(600, QUIET)]);
+    expect(run(frames).mantraEvents).toBe(run(frames, { minPhraseMs: MIN_PHRASE_MS }).mantraEvents);
+  });
+});
+
+describe("vocal onsets: one per voiced burst, for karaoke word-stepping", () => {
+  it("ONSET_REARM_MS equals the onset debounce (documented coupling)", () => {
+    expect(ONSET_REARM_MS).toBe(DEBOUNCE_MS);
+  });
+
+  it("a single clean voiced burst fires exactly one onset", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(3000, CHANT), segment(600, QUIET)]);
+    expect(run(frames).onsetEvents).toBe(1);
+  });
+
+  it("four bursts separated by real gaps fire four onsets (words can step four times)", () => {
+    const frames = framesFromSegments([
+      segment(200, QUIET),
+      segment(600, CHANT),
+      segment(200, QUIET), // gap comfortably over ONSET_REARM_MS - re-arms the next onset
+      segment(600, CHANT),
+      segment(200, QUIET),
+      segment(600, CHANT),
+      segment(200, QUIET),
+      segment(600, CHANT),
+      segment(500, QUIET),
+    ]);
+    expect(run(frames).onsetEvents).toBe(4);
+  });
+
+  it("a single sub-debounce dip inside one word does NOT fire a spurious extra onset", () => {
+    const frames = framesFromSegments([
+      segment(200, QUIET),
+      segment(1000, CHANT),
+      segment(FRAME_MS, QUIET), // one-frame dip, under ONSET_REARM_MS
+      segment(1000, CHANT),
+      segment(500, QUIET),
+    ]);
+    expect(run(frames).onsetEvents).toBe(1);
+  });
+});
+
+describe("mantra boundary equals the completion event (karaoke resync point)", () => {
+  it("boundary events track mantra completions one-for-one", () => {
+    const frames = framesFromSegments([
+      segment(200, QUIET),
+      segment(3000, CHANT),
+      segment(500, QUIET),
+      segment(3000, CHANT),
+      segment(600, QUIET),
+    ]);
+    const { mantraEvents, boundaryEvents } = run(frames);
+    expect(mantraEvents).toBe(2);
+    expect(boundaryEvents).toBe(2);
+  });
+
+  it("a discarded (too-short) phrase produces no boundary - nothing to resync to", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(300, CHANT), segment(500, QUIET)]);
+    expect(run(frames).boundaryEvents).toBe(0);
+  });
+});
+
+describe("karaoke word-index stepping (pure)", () => {
+  const WORDS = 16; // the mahā-mantra
+
+  it("starts primed on the first word", () => {
+    const k = createKaraokeWord();
+    expect(k).toEqual({ index: 0, primed: true });
+  });
+
+  it("the first onset lights word 0 (not word 1) - the first word actually glows", () => {
+    const k = karaokeOnset(createKaraokeWord(), WORDS);
+    expect(k.index).toBe(0);
+    expect(k.primed).toBe(false);
+  });
+
+  it("subsequent onsets step 0 → 1 → 2 …", () => {
+    let k = karaokeOnset(createKaraokeWord(), WORDS); // 0
+    k = karaokeOnset(k, WORDS); // 1
+    k = karaokeOnset(k, WORDS); // 2
+    expect(k.index).toBe(2);
+  });
+
+  it("clamps at the last word when bursts outnumber words (voice)", () => {
+    let k = createKaraokeWord();
+    for (let i = 0; i < WORDS + 5; i++) k = karaokeOnset(k, WORDS);
+    expect(k.index).toBe(WORDS - 1);
+  });
+
+  it("a mantra boundary re-primes to the first word (drift never accumulates)", () => {
+    let k = createKaraokeWord();
+    k = karaokeOnset(k, WORDS); // 0
+    k = karaokeOnset(k, WORDS); // 1
+    k = karaokeBoundary();
+    expect(k).toEqual({ index: 0, primed: true });
+    // and the next onset again lights word 0, not word 1
+    expect(karaokeOnset(k, WORDS).index).toBe(0);
+  });
+
+  it("tap stepping wraps at the end so the words keep flowing", () => {
+    let k = createKaraokeWord();
+    const seen: number[] = [];
+    for (let i = 0; i < WORDS + 2; i++) {
+      k = karaokeTap(k, WORDS);
+      seen.push(k.index);
+    }
+    // first tap lights word 0, then 1..15, then wraps to 0, 1
+    expect(seen[0]).toBe(0);
+    expect(seen[WORDS - 1]).toBe(WORDS - 1);
+    expect(seen[WORDS]).toBe(0);
+    expect(seen[WORDS + 1]).toBe(1);
+  });
+
+  it("guards a zero-length word list (never divides by zero, never advances)", () => {
+    const k = createKaraokeWord();
+    expect(karaokeOnset(k, 0)).toBe(k);
+    expect(karaokeTap(k, 0)).toBe(k);
   });
 });

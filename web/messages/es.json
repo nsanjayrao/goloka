@@ -272,7 +272,9 @@
       "voiceNudgePlusAria": "Corregir el conteo: añadir una cuenta",
       "voicePrivacy": "Escucha solo en tu dispositivo y nunca graba ni envía tu voz. Es una ayuda amable y puede equivocarse en el conteo alguna vez — si eso ocurre, corrige la cuenta arriba.",
       "voiceMicDenied": "No se concedió acceso al micrófono — toca para contar, con los ojos cerrados.",
-      "voiceUnsupported": "El canto manos libres no está disponible en este navegador — toca para contar."
+      "voiceUnsupported": "El canto manos libres no está disponible en este navegador — toca para contar.",
+      "voiceIosSafariHint": "En el iPhone, cantar con la voz funciona mejor en Safari.",
+      "mantraLabel": "Mantra"
     },
     "calendar": {
       "h1": "El calendario vaisnava",

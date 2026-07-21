@@ -68,6 +68,17 @@ const VOICE_MARGIN = 0.006;
  * second minimum-duration gate. */
 export const DEBOUNCE_MS = 60;
 
+/** How long silence must persist before a NEW vocal onset can fire (see
+ * pushAudioFrame's onset detection). A vocal onset is a silence→voice
+ * transition; the karaoke word-lighting in components/chant-space.tsx steps
+ * the lit word once per onset. Set equal to DEBOUNCE_MS so a burst has to
+ * both go quiet for a beat AND then clear the same debounce again to count
+ * as a fresh onset - a single sub-frame dip inside one continuous word never
+ * fires a spurious extra onset. This is deliberately rhythm-level, NOT
+ * per-syllable: it follows the chanter's pacing, it does not transcribe
+ * words (there is no speech model - see the file banner). */
+export const ONSET_REARM_MS = DEBOUNCE_MS;
+
 /** The size of gap the mahā-mantra's OWN internal pauses ("Hare Hare …
  * Kṛṣṇa Kṛṣṇa") can plausibly reach - documented here as the concrete case
  * BREATH_GAP_MS (below) must sit safely above. Because this counter treats
@@ -120,6 +131,12 @@ export type JapaRhythmState = {
    * (so those don't pay the debounce cost again), and resets to false the
    * moment the phrase closes (counted or discarded). */
   phraseConfirmed: boolean;
+  /** True while inside a single CONFIRMED voiced burst - unlike
+   * phraseConfirmed (phrase-level, spans a whole mantra's internal gaps),
+   * this flips back to false after any silence of ONSET_REARM_MS, so each
+   * fresh burst re-arms one vocal onset. Drives the karaoke word-stepping,
+   * not the mantra count. */
+  inVoicedBurst: boolean;
   /** Accumulated voiced duration of the current, still-open phrase. */
   phraseVoicedMs: number;
   /** Running total of mantras counted so far - convenience for callers that
@@ -135,6 +152,7 @@ export function createJapaRhythmState(): JapaRhythmState {
     activeStreakMs: 0,
     silenceMs: 0,
     phraseConfirmed: false,
+    inVoicedBurst: false,
     phraseVoicedMs: 0,
     mantrasCompleted: 0,
   };
@@ -148,18 +166,40 @@ function smoothingAlpha(dtMs: number, tauMs: number): number {
   return 1 - Math.exp(-dtMs / tauMs);
 }
 
+/** Per-frame options. `minPhraseMs` overrides MIN_PHRASE_MS for the
+ * currently-selected mantra (see lib/mantras.ts) - a short mantra like
+ * "Rādhe Rādhe" needs a lower floor than the sixteen-word mahā-mantra, or a
+ * brisk chanter would be undercounted. Defaults to MIN_PHRASE_MS (the
+ * mahā-mantra's value) when omitted, so existing callers and tests are
+ * unaffected. */
+export type PushAudioFrameOptions = {
+  minPhraseMs?: number;
+};
+
 /** Feeds one polled audio frame into the rolling rhythm state. Returns the
- * next state to carry forward AND whether THIS frame is the one that
- * completed a mahā-mantra (a real-time counter, unlike lib/mantra-count.ts's
- * predecessor, never reports more than one mantra per call - a phrase can
- * only close once). Pure and mutates nothing, so the browser-facing
- * pipeline (lib/voice-japa.ts) can hold the state in a variable across
- * `setInterval` ticks and this function stays fully unit-testable without a
- * mic, an AudioContext, or any browser API at all. */
+ * next state to carry forward plus three per-frame events:
+ *  - `mantraCompleted` - THIS frame closed a voiced phrase long enough to
+ *    credit one mantra. This is also the mantra BOUNDARY (the breath that
+ *    completes a mantra); callers reset the karaoke word-lighting on it so
+ *    every mantra re-syncs to its first word and drift never accumulates.
+ *    `mantraBoundary` is returned as an explicit alias for that use.
+ *  - `onset` - THIS frame is a confirmed silence→voice transition (a fresh
+ *    voiced burst). The UI steps the lit karaoke word once per onset. This
+ *    is rhythm-paced, NOT per-syllable transcription (there is no speech
+ *    model - see the file banner); it follows the chanter's pacing and is
+ *    resynced at every mantra boundary.
+ * A real-time counter (unlike lib/mantra-count.ts's predecessor) never
+ * reports more than one mantra per call - a phrase can only close once. Pure
+ * and mutates nothing, so the browser-facing pipeline (lib/voice-japa.ts)
+ * can hold the state in a variable across `setInterval` ticks and this
+ * function stays fully unit-testable without a mic, an AudioContext, or any
+ * browser API at all. */
 export function pushAudioFrame(
   prev: JapaRhythmState,
-  frame: AudioFrame
-): { state: JapaRhythmState; mantraCompleted: boolean } {
+  frame: AudioFrame,
+  options?: PushAudioFrameOptions
+): { state: JapaRhythmState; mantraCompleted: boolean; mantraBoundary: boolean; onset: boolean } {
+  const minPhraseMs = options?.minPhraseMs ?? MIN_PHRASE_MS;
   const isFirstFrame = prev.firstFrameMs === null;
   const dt = prev.lastFrameMs === null ? 0 : Math.max(0, frame.timeMs - prev.lastFrameMs);
   const firstFrameMs = isFirstFrame ? frame.timeMs : prev.firstFrameMs!;
@@ -200,13 +240,30 @@ export function pushAudioFrame(
     if (phraseConfirmed) phraseVoicedMs += dt;
   }
 
+  // Vocal-onset detection (for karaoke word-lighting only - never touches
+  // the mantra count). An onset is a confirmed silence→voice transition:
+  // once a burst clears DEBOUNCE_MS it fires exactly one onset, and no
+  // further onset can fire until silence of ONSET_REARM_MS re-arms it. This
+  // is intentionally rhythm-level, not per-syllable - it steps the lit word
+  // in time with the chanter's own pacing and is resynced every mantra.
+  let inVoicedBurst = prev.inVoicedBurst;
+  let onset = false;
+  if (rawActive) {
+    if (!inVoicedBurst && activeStreakMs >= DEBOUNCE_MS) {
+      inVoicedBurst = true;
+      onset = true;
+    }
+  } else if (silenceMs >= ONSET_REARM_MS) {
+    inVoicedBurst = false;
+  }
+
   // 4. The breath decision - evaluated exactly once, on the frame where
   // accumulated silence crosses BREATH_GAP_MS (phraseVoicedMs is reset to 0
   // as soon as this fires, so it can never fire twice for the same phrase).
   let mantraCompleted = false;
   let mantrasCompleted = prev.mantrasCompleted;
   if (!rawActive && phraseConfirmed && silenceMs >= BREATH_GAP_MS) {
-    if (phraseVoicedMs >= MIN_PHRASE_MS) {
+    if (phraseVoicedMs >= minPhraseMs) {
       mantraCompleted = true;
       mantrasCompleted += 1;
     }
@@ -224,10 +281,16 @@ export function pushAudioFrame(
       activeStreakMs,
       silenceMs,
       phraseConfirmed,
+      inVoicedBurst,
       phraseVoicedMs,
       mantrasCompleted,
     },
     mantraCompleted,
+    // The breath that completes a mantra IS the mantra boundary - returned
+    // under its own name so the karaoke reset in chant-space.tsx reads
+    // clearly, without re-deriving it from the count.
+    mantraBoundary: mantraCompleted,
+    onset,
   };
 }
 
@@ -239,4 +302,49 @@ export function countMantrasInFrames(frames: AudioFrame[]): number {
     state = pushAudioFrame(state, frame).state;
   }
   return state.mantrasCompleted;
+}
+
+// ---------- Karaoke word-lighting (pure index stepping) ----------
+// The lit-word cursor for components/chant-space.tsx, kept here as pure
+// functions so the stepping is unit-tested the same way the counter is.
+// `index` is the 0-based word currently lit in the selected mantra's
+// `words` (see lib/mantras.ts); `primed` means "a fresh mantra is about to
+// begin - the next onset/tap should light the FIRST word rather than step
+// past it", which is what makes the first word of every repetition actually
+// glow while it is being chanted (instead of being skipped).
+
+export type KaraokeWord = {
+  index: number;
+  primed: boolean;
+};
+
+/** The starting cursor: first word, primed so the very first onset lights
+ * word 0 rather than advancing to word 1. */
+export function createKaraokeWord(): KaraokeWord {
+  return { index: 0, primed: true };
+}
+
+/** Advance on a vocal onset (voice mode). Clamps at the last word - if a
+ * devotee's bursts outnumber the mantra's words, the last word simply holds
+ * lit until the mantra boundary resets everything. */
+export function karaokeOnset(prev: KaraokeWord, wordCount: number): KaraokeWord {
+  if (wordCount <= 0) return prev;
+  if (prev.primed) return { index: 0, primed: false };
+  return { index: Math.min(prev.index + 1, wordCount - 1), primed: false };
+}
+
+/** Advance on a tap (tap mode). Wraps back to the first word at the end so
+ * the words keep flowing over successive taps, re-syncing every wordCount
+ * taps - a tasteful, drift-free echo of the voiced karaoke without pretending
+ * a tap maps to a specific syllable. */
+export function karaokeTap(prev: KaraokeWord, wordCount: number): KaraokeWord {
+  if (wordCount <= 0) return prev;
+  if (prev.primed) return { index: 0, primed: false };
+  return { index: (prev.index + 1) % wordCount, primed: false };
+}
+
+/** Reset at a mantra boundary: back to the first word, primed for the next
+ * repetition, so drift never accumulates across mantras. */
+export function karaokeBoundary(): KaraokeWord {
+  return createKaraokeWord();
 }
