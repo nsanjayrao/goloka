@@ -36,6 +36,7 @@ export function Footer() {
           <Link href="/">{t("home")}</Link>
           <Link href="/start">{t("beginHere")}</Link>
           <Link href="/chant">{t("chant")}</Link>
+          <Link href="/sadhana">{t("sadhana")}</Link>
           <Link href="/calendar">{t("calendar")}</Link>
           <Link href="/browse">{t("browse")}</Link>
           <Link href="/search">{t("search")}</Link>

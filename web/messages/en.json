@@ -31,6 +31,7 @@
     "disclaimer": "Goloka is an index, not a host — every video plays through the official YouTube player and links back to its source channel. All content belongs to its creators.",
     "languageLabel": "Language",
     "chant": "Chant",
+    "sadhana": "My Sādhana",
     "calendar": "Calendar"
   },
   "sectionHeader": {
@@ -192,6 +193,22 @@
     "titleInputAria": "Title for this shared link",
     "shareCollection": "Share this collection"
   },
+  "sadhana": {
+    "title": "My Sādhana",
+    "signInPrompt": "Sign in to keep a quiet record of the rounds you chant — held only for you, on every device.",
+    "continueWithGoogle": "Continue with Google",
+    "privacyNote": "This record is yours alone — never shared, never compared, never sent anywhere but your own account. Deleting your account deletes it completely.",
+    "intro": "A quiet record of the holy name in your days — yours alone, held gently, never a measure of your worth.",
+    "today": "Today",
+    "thisMonth": "This month",
+    "thisYear": "This year",
+    "thisYearHeading": "This year, month by month",
+    "emptyMonth": "No rounds recorded this month yet — whenever you chant while signed in, they will rest here quietly.",
+    "roundsCount": "{count, plural, one {# round} other {# rounds}}",
+    "dayRounds": "{day}: {count, plural, one {# round} other {# rounds}}",
+    "dayNone": "{day}: no rounds",
+    "footNote": "This is the only record Goloka keeps of your chanting, kept only because you signed in, and yours to delete with your account at any time. Chanting while signed out stays on your device alone, as it always has."
+  },
   "pages": {
     "about": {
       "h1": "About Goloka",
@@ -201,8 +218,8 @@
       "belongsTitle": "All content belongs to its creators",
       "belongsBody": "Every video links back to its source channel. Goloka doesn't re-host, re-edit, or monetize anyone's content — it's simply a directory pointing to work that already belongs to the temples and speakers who made it.",
       "privacyTitle": "Privacy, honestly",
-      "privacyBody1": "Goloka never tracks what you watch. \"Continue Watching\" lives only in your own browser and is never sent anywhere — clearing your browser data clears it completely, signed in or not.",
-      "privacyBody2": "Signing in is optional and exists for exactly one thing: keeping your favourites and watch-later list with you across devices. That's all an account stores — two lists of video links. No viewing history, no analytics profile, nothing sold or shared. Delete your account and everything it held is deleted with it.",
+      "privacyBody1": "Goloka never tracks what you watch. \"Continue Watching\" lives only in your own browser and is never sent anywhere — clearing your browser data clears it completely, signed in or not. Chanting while signed out is the same: your rounds stay on your device alone and reset each day, kept nowhere else.",
+      "privacyBody2": "Signing in is optional and exists for two quiet things: keeping your favourites and watch-later list with you across devices, and — if you chant while signed in — keeping your own record of the rounds you complete, by day, month and year. That's all an account holds: two lists of video links, and your own japa record. It is yours alone, never shared or compared with anyone. No viewing history, no analytics profile, nothing sold or shared. Delete your account and everything it held — lists and japa record alike — is deleted with it.",
       "independentTitle": "An independent project",
       "independentBody": "Goloka is an independent, non-commercial project — not an official ISKCON website, and not affiliated with any single temple. It runs entirely on free-tier infrastructure, with no ads and nothing for sale.",
       "helpTitle": "Help improve it",
