@@ -43,10 +43,24 @@ export type VoiceJapaErrorReason =
 
 export type VoiceJapaCallbacks = {
   onStatusChange?: (status: VoiceJapaStatus) => void;
-  /** Fires once per detected mahā-mantra completion. The caller advances one
-   * bead per call, the same as a tap. */
+  /** Fires once per detected mantra completion. The caller advances one bead
+   * per call, the same as a tap. This is also the mantra boundary (see
+   * lib/japa-rhythm.ts) - the caller resets the karaoke word-lighting here. */
   onMantraCompleted?: (n: number) => void;
+  /** Fires once per confirmed vocal onset (a silence→voice transition) for
+   * the karaoke word-lighting only - it never affects the count. Rhythm-
+   * paced, not per-syllable (there is no speech model - see the file
+   * banner). */
+  onVocalOnset?: () => void;
   onError?: (reason: VoiceJapaErrorReason, error?: unknown) => void;
+};
+
+/** Options for a listening session. `getMinPhraseMs` lets the caller supply
+ * the currently-selected mantra's rhythm floor fresh on every frame (see
+ * lib/mantras.ts), so switching mantra mid-session takes effect immediately
+ * without restarting the mic. Omitted → lib/japa-rhythm.ts's default. */
+export type VoiceJapaOptions = {
+  getMinPhraseMs?: () => number;
 };
 
 export type VoiceJapaHandle = {
@@ -98,7 +112,10 @@ function readRms(analyser: AnalyserNode, buffer: Float32Array<ArrayBuffer>): num
  * `callbacks.onError` and resolve to a harmless no-op handle, so a caller
  * can always safely treat the return value as "the thing to call .stop()
  * on" without a try/catch. */
-export async function startVoiceJapa(callbacks: VoiceJapaCallbacks): Promise<VoiceJapaHandle> {
+export async function startVoiceJapa(
+  callbacks: VoiceJapaCallbacks,
+  options?: VoiceJapaOptions
+): Promise<VoiceJapaHandle> {
   if (!isVoiceJapaSupported()) {
     callbacks.onError?.("unsupported");
     return NOOP_HANDLE;
@@ -179,11 +196,19 @@ export async function startVoiceJapa(callbacks: VoiceJapaCallbacks): Promise<Voi
     const rms = readRms(analyser, timeDomainBuffer);
     // performance.now() for the frame clock, not audioContext.currentTime:
     // currentTime sits frozen at 0 while a context is suspended (the exact
-    // phone failure above), which would give the rhythm counter garbage
-    // timestamps even after the mic works. performance.now() always
-    // advances, independent of audio state.
-    const result = pushAudioFrame(rhythmState, { timeMs: performance.now(), rms });
+    // phone failure the AudioContext-before-await fix addresses), which
+    // would give the rhythm counter garbage timestamps even after the mic
+    // works. performance.now() always advances, independent of audio state.
+    // The third arg feeds the currently-selected mantra's rhythm floor
+    // (lib/mantras.ts) fresh each frame, so switching mantra mid-session
+    // takes effect without restarting the mic.
+    const result = pushAudioFrame(
+      rhythmState,
+      { timeMs: performance.now(), rms },
+      { minPhraseMs: options?.getMinPhraseMs?.() }
+    );
     rhythmState = result.state;
+    if (result.onset) callbacks.onVocalOnset?.();
     if (result.mantraCompleted) callbacks.onMantraCompleted?.(1);
   }
 

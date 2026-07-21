@@ -1511,6 +1511,81 @@
   .chant-bowl.is-listening {
     animation: chant-listening-breathe 5.5s ease-in-out infinite;
   }
+
+  /* ---- Karaoke word-lighting: the mantra as the lit centerpiece ---- */
+  /* The mantra, word by word. One word is lit at a time (flame + a gentle
+     glow), the rest sit muted. The lit word is driven by the chanter's own
+     RHYTHM - a vocal onset in voice mode, a tap in tap mode (see
+     components/chant-space.tsx and lib/japa-rhythm.ts) - NOT by per-syllable
+     transcription: there is no speech model, so it follows the pace of the
+     voice and re-syncs to the first word at every mantra boundary. */
+  .chant-verse {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    font-size: clamp(24px, 4.4vw, 44px);
+    line-height: 1.45;
+    font-weight: 400;
+  }
+  .chant-verse-line {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0 0.42em;
+    text-wrap: balance;
+  }
+  .chant-word {
+    color: var(--muted);
+    transition: color 0.5s ease, text-shadow 0.5s ease;
+  }
+  /* The lit word: flame colour + a soft static glow, with a slow breathing
+     pulse layered on top. The pulse (and only the pulse) is disabled under
+     prefers-reduced-motion below; the colour change and a calm static glow
+     remain, so the current word is always legible as "the one being said". */
+  .chant-word.is-lit {
+    color: var(--flame);
+    text-shadow: 0 0 14px rgba(245, 201, 123, 0.5);
+    animation: chant-word-glow 2.6s ease-in-out infinite;
+  }
+
+  /* The mantra selector: a quiet segmented switch, never a loud dropdown.
+     Two pills in a hairline capsule; the chosen one lifts to a raised
+     surface. Names inside stay fixed liturgical text (set in the component),
+     only the surrounding "Mantra" label is translated. */
+  .mantra-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 3px;
+    border: 1px solid var(--hairline);
+    border-radius: 999px;
+    background: var(--shyama);
+  }
+  .mantra-switch-option {
+    border: none;
+    border-radius: 999px;
+    padding: 6px 16px;
+    background: transparent;
+    font-family: var(--display);
+    font-size: 14px;
+    line-height: 1;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.3s ease, background-color 0.3s ease;
+  }
+  .mantra-switch-option:hover {
+    color: var(--chandan);
+  }
+  .mantra-switch-option[aria-pressed="true"] {
+    color: var(--chandan);
+    background: var(--shyama-2);
+  }
+  .mantra-switch-option:focus-visible {
+    outline: none;
+    color: var(--flame);
+    box-shadow: 0 0 0 2px var(--flame);
+  }
 }
 
 /* Keyframes live outside @layer so they always register. */
@@ -1644,6 +1719,19 @@
     box-shadow: 0 0 30px rgba(232, 163, 61, 0.22);
   }
 }
+/* The lit karaoke word's gentle breath - same flame rgba channels as the
+   bloom/listening glows above, just on text-shadow. Purely the pulse; the
+   static glow lives on .chant-word.is-lit itself, so disabling this under
+   reduced-motion leaves colour + a calm glow intact. */
+@keyframes chant-word-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 12px rgba(245, 201, 123, 0.4);
+  }
+  50% {
+    text-shadow: 0 0 20px rgba(245, 201, 123, 0.62);
+  }
+}
 
 /* Legacy snap utilities — still used by grids/shelves that predate the
    .row system (continue-watching, browse shelves) until they're ported. */
@@ -1694,5 +1782,12 @@
   .reveal .card {
     opacity: 1 !important;
     transform: none !important;
+  }
+  /* Karaoke lit word: keep the colour change (so the current word still
+     reads as lit), drop the glow entirely - "still change colour, but no
+     pulsing glow". The global rule above already kills the pulse animation;
+     this removes the residual static glow too. */
+  .chant-word.is-lit {
+    text-shadow: none !important;
   }
 }

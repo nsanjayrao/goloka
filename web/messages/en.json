@@ -272,7 +272,9 @@
       "voiceNudgePlusAria": "Correct the count: add one bead",
       "voicePrivacy": "Listens only on your device and never records or sends your voice. It's a gentle aid and may occasionally miscount — nudge a bead above if it slips.",
       "voiceMicDenied": "Microphone access wasn't granted — tap to count instead, eyes closed.",
-      "voiceUnsupported": "Hands-free chanting isn't available in this browser — tap to count instead."
+      "voiceUnsupported": "Hands-free chanting isn't available in this browser — tap to count instead.",
+      "voiceIosSafariHint": "On iPhone, chanting by voice works best in Safari.",
+      "mantraLabel": "Mantra"
     },
     "calendar": {
       "h1": "The Vaiṣṇava Calendar",
