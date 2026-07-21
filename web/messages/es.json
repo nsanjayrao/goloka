@@ -31,6 +31,7 @@
     "disclaimer": "Goloka es un índice, no un alojamiento — cada video se reproduce mediante el reproductor oficial de YouTube y enlaza de vuelta a su canal de origen. Todo el contenido pertenece a sus creadores.",
     "languageLabel": "Idioma",
     "chant": "Cantar",
+    "sadhana": "Mi sādhana",
     "calendar": "Calendario"
   },
   "sectionHeader": {
@@ -192,6 +193,22 @@
     "titleInputAria": "Título para este enlace compartido",
     "shareCollection": "Compartir esta colección"
   },
+  "sadhana": {
+    "title": "Mi sādhana",
+    "signInPrompt": "Inicia sesión para llevar un registro sereno de las rondas que cantas — guardado solo para ti, en todos tus dispositivos.",
+    "continueWithGoogle": "Continuar con Google",
+    "privacyNote": "Este registro es solo tuyo — nunca se comparte, nunca se compara, nunca se envía a ningún sitio salvo tu propia cuenta. Elimina tu cuenta y se borra por completo.",
+    "intro": "Un registro sereno del santo nombre en tus días — solo tuyo, sostenido con delicadeza, nunca una medida de tu valor.",
+    "today": "Hoy",
+    "thisMonth": "Este mes",
+    "thisYear": "Este año",
+    "thisYearHeading": "Este año, mes a mes",
+    "emptyMonth": "Aún no hay rondas registradas este mes — cada vez que cantes con la sesión iniciada, reposarán aquí en silencio.",
+    "roundsCount": "{count, plural, one {# ronda} other {# rondas}}",
+    "dayRounds": "{day}: {count, plural, one {# ronda} other {# rondas}}",
+    "dayNone": "{day}: sin rondas",
+    "footNote": "Este es el único registro que Goloka guarda de tu canto, guardado solo porque iniciaste sesión, y tuyo para eliminar junto con tu cuenta en cualquier momento. Cantar con la sesión cerrada permanece solo en tu dispositivo, como siempre ha sido."
+  },
   "pages": {
     "about": {
       "h1": "Acerca de Goloka",
@@ -201,8 +218,8 @@
       "belongsTitle": "Todo el contenido pertenece a sus creadores",
       "belongsBody": "Cada video enlaza de vuelta a su canal de origen. Goloka no realoja, reedita ni monetiza el contenido de nadie — es simplemente un directorio que señala hacia el trabajo que ya pertenece a los templos y oradores que lo crearon.",
       "privacyTitle": "Privacidad, con honestidad",
-      "privacyBody1": "Goloka nunca rastrea lo que ves. \"Continuar viendo\" vive solo en tu propio navegador y nunca se envía a ningún sitio — borrar los datos de tu navegador lo elimina por completo, hayas iniciado sesión o no.",
-      "privacyBody2": "Iniciar sesión es opcional y existe para una sola cosa: mantener tu lista de favoritos y de ver más tarde contigo en todos tus dispositivos. Eso es todo lo que guarda una cuenta — dos listas de enlaces de video. Sin historial de visualización, sin perfil de análisis, nada se vende ni se comparte. Elimina tu cuenta y todo lo que contenía se elimina con ella.",
+      "privacyBody1": "Goloka nunca rastrea lo que ves. \"Continuar viendo\" vive solo en tu propio navegador y nunca se envía a ningún sitio — borrar los datos de tu navegador lo elimina por completo, hayas iniciado sesión o no. Cantar con la sesión cerrada es igual: tus rondas permanecen solo en tu dispositivo y se reinician cada día, sin guardarse en ningún otro lugar.",
+      "privacyBody2": "Iniciar sesión es opcional y existe para dos cosas serenas: mantener tu lista de favoritos y de ver más tarde contigo en todos tus dispositivos y — si cantas con la sesión iniciada — mantener tu propio registro de las rondas que completas, por día, mes y año. Eso es todo lo que guarda una cuenta: dos listas de enlaces de video y tu propio registro de japa. Es solo tuyo, nunca se comparte ni se compara con nadie. Sin historial de visualización, sin perfil de análisis, nada se vende ni se comparte. Elimina tu cuenta y todo lo que contenía — tanto las listas como el registro de japa — se elimina con ella.",
       "independentTitle": "Un proyecto independiente",
       "independentBody": "Goloka es un proyecto independiente y sin fines de lucro — no es un sitio web oficial de ISKCON, ni está afiliado a un templo en particular. Funciona enteramente sobre infraestructura de nivel gratuito, sin publicidad y sin nada a la venta.",
       "helpTitle": "Ayuda a mejorarlo",

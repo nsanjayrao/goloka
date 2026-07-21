@@ -276,3 +276,94 @@ create policy "anon insert own subscription" on push_subscriptions
 drop policy if exists "anon delete own subscription" on push_subscriptions;
 create policy "anon delete own subscription" on push_subscriptions
   for delete to anon using (true);
+
+-- ---------------------------------------------------------------------------
+-- Sādhana dashboard (2026-07-21): a signed-in devotee's own record of japa
+-- rounds chanted, by day - the cloud counterpart to the on-device "rounds
+-- today" counter in web/lib/rounds.ts. Signed OUT, rounds stay
+-- localStorage-only exactly as before (rounds.ts is untouched by this
+-- change); signed IN, each completed round also upserts here, at the
+-- devotee's own choice - that is the whole point of signing in for
+-- chanting. This table is the ONLY place a devotee's own sādhana is kept,
+-- kept only because they chose to sign in, and deleted the instant their
+-- account is - nothing here outlives that choice.
+-- ---------------------------------------------------------------------------
+create table if not exists japa_rounds (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  -- The LOCAL calendar day the rounds were chanted (not a timestamptz) -
+  -- like rounds.ts's todayKey(), a devotee's "today" is their own clock,
+  -- never some server's UTC day.
+  day date not null,
+  rounds integer not null default 0 check (rounds >= 0),
+  -- Which mantra was chanted (the chant redesign adds mantra choice - see
+  -- CLAUDE.md team workflow). Primary-key columns can never be NULL in
+  -- Postgres (unlike a plain UNIQUE constraint, where every NULL sorts as
+  -- distinct and would let duplicate "no mantra" rows pile up for the same
+  -- day), so the default mantra is the sentinel 'maha_mantra' rather than
+  -- NULL. web/lib/japa-tracking.ts always passes an explicit mantra id
+  -- defaulting to this same sentinel, so one calendar day of default japa
+  -- always upserts into exactly one row.
+  mantra text not null default 'maha_mantra',
+  updated_at timestamptz not null default now(),
+  primary key (user_id, day, mantra)
+);
+create index if not exists japa_rounds_user_day_idx
+  on japa_rounds (user_id, day);
+
+-- RLS: a devotee's chanting record is theirs alone - no public read, ever
+-- (unlike channels/videos above). Only the signed-in owner may see or
+-- change their own rows; the anon role sees nothing.
+alter table japa_rounds enable row level security;
+drop policy if exists "select own japa rounds" on japa_rounds;
+create policy "select own japa rounds" on japa_rounds
+  for select using (auth.uid() = user_id);
+drop policy if exists "insert own japa rounds" on japa_rounds;
+create policy "insert own japa rounds" on japa_rounds
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "update own japa rounds" on japa_rounds;
+create policy "update own japa rounds" on japa_rounds
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "delete own japa rounds" on japa_rounds;
+create policy "delete own japa rounds" on japa_rounds
+  for delete using (auth.uid() = user_id);
+
+-- Records one completed round as an atomic upsert-increment of today's row,
+-- avoiding the read-then-write race a plain client-side upsert would have
+-- (two rounds finished in quick succession could otherwise both read
+-- "rounds=5" and both write "rounds=6", silently losing one). `security
+-- invoker` (the default) means it runs as the calling (authenticated) role,
+-- so the RLS policies above still gate it - a devotee can only ever
+-- increment their OWN row, never anyone else's, regardless of what
+-- p_day/p_mantra is passed.
+create or replace function increment_japa_round(p_day date, p_mantra text default 'maha_mantra')
+returns void
+language sql
+security invoker
+as $$
+  insert into japa_rounds (user_id, day, mantra, rounds, updated_at)
+  values (auth.uid(), p_day, coalesce(p_mantra, 'maha_mantra'), 1, now())
+  on conflict (user_id, day, mantra)
+  do update set rounds = japa_rounds.rounds + 1, updated_at = now();
+$$;
+
+grant execute on function increment_japa_round(date, text) to authenticated;
+
+-- The signed-in devotee's own total rounds for one calendar year, summed in
+-- Postgres rather than pulled row-by-row to the client - the dashboard's
+-- "this year" figure needs only the sum, and a devotee who chants daily for
+-- a full year would otherwise mean shipping ~365+ rows just to add them up.
+-- `security invoker` + RLS again means this can only ever see the caller's
+-- own rows.
+create or replace function japa_year_total(p_year int)
+returns integer
+language sql
+security invoker
+as $$
+  select coalesce(sum(rounds), 0)::int
+  from japa_rounds
+  where user_id = auth.uid()
+    and day >= make_date(p_year, 1, 1)
+    and day <= make_date(p_year, 12, 31);
+$$;
+
+grant execute on function japa_year_total(int) to authenticated;
