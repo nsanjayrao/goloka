@@ -1455,14 +1455,26 @@
   }
 
   /* The chanting area itself: large, calm, a bowl of light rather than a
-     button that shouts "click me". */
+     button that shouts "click me". .chant-tap is the HIT TARGET - it fills
+     the entire ring (not just the visible bowl) so an eyes-closed tap
+     never needs aiming; it carries no visible styling of its own.
+     .chant-bowl is the drawn "bowl of light" at its original size, purely
+     decorative (pointer-events: none - the outer button already handles
+     the tap) so the look is unchanged even though the clickable area grew. */
   .chant-tap {
     position: absolute;
-    top: 50%;
-    left: 50%;
+    inset: 0;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chant-bowl {
     width: calc(var(--ring-size) * 0.56);
     height: calc(var(--ring-size) * 0.56);
-    transform: translate(-50%, -50%);
     border-radius: 50%;
     border: 1px solid var(--hairline);
     background: radial-gradient(circle at 50% 42%, var(--shyama-2) 0%, var(--shyama) 78%);
@@ -1471,16 +1483,16 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
-    cursor: pointer;
+    pointer-events: none;
     transition: transform 0.25s var(--ease-spring), box-shadow 0.4s ease, border-color 0.4s ease;
   }
-  .chant-tap:hover,
-  .chant-tap:focus-visible {
+  .chant-tap:hover .chant-bowl,
+  .chant-tap:focus-visible .chant-bowl {
     border-color: var(--marigold);
     box-shadow: 0 0 26px rgba(232, 163, 61, 0.16);
   }
-  .chant-tap:active {
-    transform: translate(-50%, -50%) scale(0.97);
+  .chant-tap:active .chant-bowl {
+    transform: scale(0.97);
   }
   /* The one-shot acknowledgment at the 108th bead - a single soft bloom,
      never a burst of confetti. Same rgba channels as --flame elsewhere in
@@ -1488,8 +1500,16 @@
      introduced. Fully inert under prefers-reduced-motion (global rule);
      keyframes defined below, unlayered, alongside the rest (drift,
      lamp-light, breathe, flicker, ...). */
-  .chant-tap.is-blooming {
+  .chant-bowl.is-blooming {
     animation: chant-bloom 1.5s ease-out 1;
+  }
+  /* Voice mode's only visual tell, and a deliberately quiet one - no
+     waveform, no VU meter, just the same bowl breathing very slightly
+     slower and softer than the page's own lamp (6.5s). A devotee whose
+     eyes are closed shouldn't need to see this at all; it's here for the
+     rare over-the-shoulder glance, not as a thing to watch. */
+  .chant-bowl.is-listening {
+    animation: chant-listening-breathe 5.5s ease-in-out infinite;
   }
 }
 
@@ -1610,6 +1630,18 @@
   }
   100% {
     box-shadow: 0 0 0 rgba(245, 201, 123, 0);
+  }
+}
+/* Voice mode's quiet "listening" tell (see .chant-bowl.is-listening) - same
+   marigold rgba channels as chant-bloom/the tap's hover glow above, just
+   slower and much dimmer, since this plays continuously rather than once. */
+@keyframes chant-listening-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 16px rgba(232, 163, 61, 0.1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(232, 163, 61, 0.22);
   }
 }
 

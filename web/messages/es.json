@@ -261,7 +261,21 @@
       "sound": "Sonido",
       "soundAria": "Reproducir un tono suave al completar una ronda",
       "tapAria": "Cantar — cuenta {count} de 108",
-      "roundCompleteAnnounce": "Una ronda completada"
+      "roundCompleteAnnounce": "Una ronda completada",
+      "voiceLabel": "Cantar en voz alta",
+      "voiceAria": "Activar el canto manos libres — escucha solo en este dispositivo, nunca se graba ni se envía a ningún lugar",
+      "voiceListening": "Escuchando — canta suavemente, con los ojos cerrados",
+      "voiceRequestingMic": "Solicitando el micrófono…",
+      "voicePreparingProgress": "Preparando el contador del santo nombre… {percent}%",
+      "voiceNudgeMinus": "−1 cuenta",
+      "voiceNudgeMinusAria": "Corregir el conteo: quitar una cuenta",
+      "voiceNudgePlus": "+1 cuenta",
+      "voiceNudgePlusAria": "Corregir el conteo: añadir una cuenta",
+      "voicePrivacy": "Escucha solo en tu dispositivo y nunca graba ni envía tu voz. Es una ayuda amable y puede equivocarse en el conteo alguna vez — si eso ocurre, corrige la cuenta arriba.",
+      "voiceMicDenied": "No se concedió acceso al micrófono — toca para contar, con los ojos cerrados.",
+      "voiceUnsupported": "El canto manos libres no está disponible en este navegador — toca para contar.",
+      "voiceModelFailed": "No se pudo cargar el contador del santo nombre — toca para contar.",
+      "voiceSlowConnectionWarning": "Tu conexión parece lenta — la descarga única y la escucha pueden ir un poco más despacio."
     },
     "calendar": {
       "h1": "El calendario vaisnava",
