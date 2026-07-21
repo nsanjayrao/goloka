@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 
-import { ChantSpace } from "@/components/chant-space";
+import { ChantWithTracking } from "@/components/chant-with-tracking";
 import { Container } from "@/components/container";
 import { localizedAlternates } from "@/lib/site";
 
@@ -33,7 +33,10 @@ export default async function ChantPage({ params }: Props) {
           feels like sitting before a lamp rather than a UI screen. */}
       <div className="lamp dim" aria-hidden="true" />
       <Container className="page-top pb-16">
-        <ChantSpace />
+        {/* ChantWithTracking is a thin client wrapper: when signed in, it
+            records each completed round to the devotee's /sadhana journal;
+            signed out, the chant space behaves exactly as before. */}
+        <ChantWithTracking />
       </Container>
     </div>
   );
