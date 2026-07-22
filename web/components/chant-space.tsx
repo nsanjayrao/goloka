@@ -7,10 +7,13 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 
 import {
+  createKaraokeFlow,
   createKaraokeWord,
-  karaokeBoundary,
-  karaokeOnset,
+  karaokeFlowArm,
+  karaokeFlowBoundary,
+  karaokeFlowIndex,
   karaokeTap,
+  type KaraokeFlow,
   type KaraokeWord,
 } from "@/lib/japa-rhythm";
 import { MANTRAS, setSelectedMantraId, useSelectedMantra, type Mantra } from "@/lib/mantras";
@@ -26,6 +29,13 @@ const BEADS_PER_ROUND = 108;
 const BLOOM_MS = 1500;
 const RING_RESET_MS = 850;
 const RESET_CONFIRM_WINDOW_MS = 3000;
+
+// How often the karaoke clock recomputes which word is lit while listening.
+// ~60ms is smooth to the eye (several ticks per word even at a brisk pace)
+// without being a busy loop; it's a plain setInterval, not rAF, for the same
+// reason the voice pipeline polls on a timer - eyes-closed chanting is
+// exactly when the tab may not be painting (see lib/voice-japa.ts).
+const KARAOKE_TICK_MS = 60;
 
 const SOUND_KEY = "goloka:chant-sound";
 
@@ -160,14 +170,21 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
   const [resetArmed, setResetArmed] = useState(false);
   const soundOn = useSyncExternalStore(subscribeSound, getSoundSnapshot, getSoundServerSnapshot) === "1";
 
-  // The karaoke cursor: which word of the selected mantra is lit. Pure
-  // stepping lives in lib/japa-rhythm.ts (unit-tested); this only holds the
-  // current value and re-syncs it on each rhythm event. HONEST NOTE: this is
-  // onset-/tap-paced, NOT per-syllable transcription - there is no speech
-  // model (we removed it deliberately). It follows the chanter's rhythm and
-  // resets to the first word at every mantra boundary, so drift never
-  // accumulates.
+  // The karaoke cursor: which word of the selected mantra is lit. The timing
+  // logic is pure and unit-tested in lib/japa-rhythm.ts; this state only
+  // holds the word to glow. HONEST NOTE: this is NOT per-syllable
+  // transcription - there is no speech model (we removed it deliberately). In
+  // VOICE mode the highlight glides through the words on a clock paced to the
+  // chanter's own measured tempo (flowRef, below); in TAP mode it steps one
+  // word per tap. Either way it resets to the first word at every mantra
+  // boundary, so drift never accumulates.
   const [karaoke, setKaraoke] = useState<KaraokeWord>(createKaraokeWord);
+  // The voice-mode tempo flow (lib/japa-rhythm.ts): remembers when the
+  // current mantra's voice began and how long this devotee's mantras run, so
+  // the clock effect below can light the right word at any instant. A ref,
+  // not state - it's read/written by the long-lived voice callbacks and the
+  // clock tick many times a second; only the resulting lit WORD is state.
+  const flowRef = useRef<KaraokeFlow>(createKaraokeFlow(selectedMantra.karaokeMs));
 
   const [voiceStatus, setVoiceStatus] = useState<VoiceUiStatus>("off");
   const [voiceError, setVoiceError] = useState<VoiceJapaErrorReason | null>(null);
@@ -262,6 +279,29 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
     selectedMantraRef.current = selectedMantra;
   });
 
+  // The karaoke clock (voice mode only). While listening, it asks the pure
+  // flow (lib/japa-rhythm.ts) which word should be lit "now" a few times a
+  // second and updates the glow - THIS is what paces the highlight to the
+  // devotee's chanting instead of waiting for gaps between words. When not
+  // listening it does nothing; tap mode moves the word directly in handleTap.
+  useEffect(() => {
+    if (voiceStatus !== "listening") return;
+    // Seed a fresh flow whenever listening starts, or the mantra is switched
+    // mid-session: forget the old pace and rest on the first word.
+    flowRef.current = createKaraokeFlow(selectedMantra.karaokeMs);
+    const intervalId = setInterval(() => {
+      const now = performance.now();
+      const wordCount = selectedMantraRef.current.words.length;
+      // Silence simply rests on the first word: only a real voiced onset arms
+      // the flow, so nothing glides until the devotee actually chants.
+      const index = karaokeFlowIndex(flowRef.current, now, wordCount);
+      // Re-render only when the lit word actually changes (most ticks it
+      // doesn't) - a plain identity check keeps this from thrashing React.
+      setKaraoke((k) => (k.index === index && !k.primed ? k : { index, primed: false }));
+    }, KARAOKE_TICK_MS);
+    return () => clearInterval(intervalId);
+  }, [voiceStatus, selectedMantra]);
+
   function handleReset() {
     if (!resetArmed) {
       setResetArmed(true);
@@ -321,16 +361,24 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
         },
         onVocalOnset: () => {
           if (voiceGenerationRef.current !== generation) return;
-          // Step the lit word once per voiced burst (onset-paced - see the
-          // karaoke note above).
-          setKaraoke((k) => karaokeOnset(k, selectedMantraRef.current.words.length));
+          // The first voiced sound after a boundary STARTS this mantra's
+          // word-flow (the clock effect below then glides the highlight
+          // through the words at the learned tempo). Later onsets within the
+          // same mantra are ignored by karaokeFlowArm - the clock, not the
+          // onsets, moves the words. This is what fixed the old lag: flowing
+          // chant has few onsets, so onset-per-word skipped and stalled.
+          flowRef.current = karaokeFlowArm(flowRef.current, performance.now());
         },
         onMantraCompleted: (n) => {
           if (voiceGenerationRef.current !== generation) return;
           advanceBeadsRef.current(n);
-          // The breath that completes a mantra is the boundary: re-sync the
-          // karaoke to the first word so drift never accumulates.
-          setKaraoke(karaokeBoundary());
+          // The breath that completes a mantra is the boundary: learn this
+          // devotee's actual pace from how long the mantra took, and rest the
+          // highlight back on the first word for the next repetition. The
+          // immediate reset here just avoids a one-tick flash of a late word
+          // lingering before the clock catches up.
+          flowRef.current = karaokeFlowBoundary(flowRef.current, performance.now());
+          setKaraoke(createKaraokeWord());
         },
         onError: (reason) => {
           if (voiceGenerationRef.current !== generation) return;

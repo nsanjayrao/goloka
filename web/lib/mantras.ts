@@ -27,6 +27,12 @@ export type Mantra = {
   devanagari?: string;
   /** The rhythm counter's minimum voiced-phrase duration for THIS mantra. */
   minMantraMs: number;
+  /** A typical time to chant this whole mantra once, in ms - the SEED tempo
+   * for the karaoke word-flow before it has measured the devotee's own pace
+   * (lib/japa-rhythm.ts's KaraokeFlow learns and overrides this within a
+   * mantra or two). Unlike minMantraMs (a hard floor for COUNTING), this is
+   * just a comfortable starting pace for the word-lighting. */
+  karaokeMs: number;
   /** 0-indexed word positions AFTER which a visual line break falls, for
    * mantras whose traditional layout is more than one line (e.g. the
    * mahā-mantra's two lines of eight words). Purely presentational -
@@ -65,6 +71,10 @@ export const MAHAMANTRA: Mantra = {
   // that value, now expressed per-mantra so a second, shorter mantra
   // doesn't have to share its floor.
   minMantraMs: 2500,
+  // ~5.5s for the full sixteen words is an unhurried, even pace (~340ms a
+  // word) - a natural seed; the flow adapts to the devotee's real tempo
+  // after the first mantra.
+  karaokeMs: 5500,
   lineBreakAfter: [7],
   commaAfter: [3, 11],
 };
@@ -85,6 +95,9 @@ export const RADHA_MANTRA: Mantra = {
   // above a stray word, comfortably under a real recitation" reasoning as
   // MIN_PHRASE_MS itself.
   minMantraMs: 1500,
+  // ~2.2s for "Śrī Rādhā Śrī Rādhā" (~550ms a word) - Her name called
+  // gently, twice; adapts to the devotee's pace after the first repetition.
+  karaokeMs: 2200,
 };
 
 export const MANTRAS: Mantra[] = [MAHAMANTRA, RADHA_MANTRA];

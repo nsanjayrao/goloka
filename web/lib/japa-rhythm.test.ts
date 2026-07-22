@@ -5,10 +5,12 @@ import {
   BREATH_GAP_MS,
   countMantrasInFrames,
   createJapaRhythmState,
+  createKaraokeFlow,
   createKaraokeWord,
   DEBOUNCE_MS,
-  karaokeBoundary,
-  karaokeOnset,
+  karaokeFlowArm,
+  karaokeFlowBoundary,
+  karaokeFlowIndex,
   karaokeTap,
   MICRO_GAP_MS,
   MIN_PHRASE_MS,
@@ -339,35 +341,6 @@ describe("karaoke word-index stepping (pure)", () => {
     expect(k).toEqual({ index: 0, primed: true });
   });
 
-  it("the first onset lights word 0 (not word 1) - the first word actually glows", () => {
-    const k = karaokeOnset(createKaraokeWord(), WORDS);
-    expect(k.index).toBe(0);
-    expect(k.primed).toBe(false);
-  });
-
-  it("subsequent onsets step 0 → 1 → 2 …", () => {
-    let k = karaokeOnset(createKaraokeWord(), WORDS); // 0
-    k = karaokeOnset(k, WORDS); // 1
-    k = karaokeOnset(k, WORDS); // 2
-    expect(k.index).toBe(2);
-  });
-
-  it("clamps at the last word when bursts outnumber words (voice)", () => {
-    let k = createKaraokeWord();
-    for (let i = 0; i < WORDS + 5; i++) k = karaokeOnset(k, WORDS);
-    expect(k.index).toBe(WORDS - 1);
-  });
-
-  it("a mantra boundary re-primes to the first word (drift never accumulates)", () => {
-    let k = createKaraokeWord();
-    k = karaokeOnset(k, WORDS); // 0
-    k = karaokeOnset(k, WORDS); // 1
-    k = karaokeBoundary();
-    expect(k).toEqual({ index: 0, primed: true });
-    // and the next onset again lights word 0, not word 1
-    expect(karaokeOnset(k, WORDS).index).toBe(0);
-  });
-
   it("tap stepping wraps at the end so the words keep flowing", () => {
     let k = createKaraokeWord();
     const seen: number[] = [];
@@ -384,7 +357,79 @@ describe("karaoke word-index stepping (pure)", () => {
 
   it("guards a zero-length word list (never divides by zero, never advances)", () => {
     const k = createKaraokeWord();
-    expect(karaokeOnset(k, 0)).toBe(k);
     expect(karaokeTap(k, 0)).toBe(k);
+  });
+});
+
+describe("karaoke tempo flow (voice mode)", () => {
+  const WORDS = 16; // the mahā-mantra
+  const SEED = 5500; // its seed tempo, ms for the whole mantra
+
+  it("rests on the first word until the mantra's voice begins", () => {
+    const flow = createKaraokeFlow(SEED);
+    expect(flow.startedMs).toBeNull();
+    // however long we wait, an unarmed flow stays on word 0
+    expect(karaokeFlowIndex(flow, 1000, WORDS)).toBe(0);
+    expect(karaokeFlowIndex(flow, 9000, WORDS)).toBe(0);
+  });
+
+  it("glides through the words in order at the seeded pace", () => {
+    const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    const perWord = SEED / WORDS; // ~344ms
+    // sample the middle of each word's slot
+    expect(karaokeFlowIndex(flow, 1000 + perWord * 0.5, WORDS)).toBe(0);
+    expect(karaokeFlowIndex(flow, 1000 + perWord * 1.5, WORDS)).toBe(1);
+    expect(karaokeFlowIndex(flow, 1000 + perWord * 7.5, WORDS)).toBe(7);
+  });
+
+  it("holds the last word if the chanter runs long (never overruns the list)", () => {
+    const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    expect(karaokeFlowIndex(flow, 1000 + SEED * 3, WORDS)).toBe(WORDS - 1);
+  });
+
+  it("arming is idempotent within a mantra - later onsets don't restart it", () => {
+    const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    const again = karaokeFlowArm(armed, 3000);
+    expect(again).toBe(armed);
+    expect(again.startedMs).toBe(1000);
+  });
+
+  it("a boundary learns the devotee's real pace and rests on the first word", () => {
+    const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    // this devotee took 9500ms - slower than the 5500ms seed
+    const after = karaokeFlowBoundary(armed, 10500);
+    expect(after.startedMs).toBeNull();
+    // smoothed halfway toward the measurement, not jumped to it
+    expect(after.mantraMs).toBeCloseTo((5500 + 9500) / 2, 5);
+  });
+
+  it("ignores implausible measurements so a miscount can't poison the tempo", () => {
+    const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    // a 300ms "mantra" (a cough counted as a phrase) is below the floor
+    expect(karaokeFlowBoundary(armed, 1300).mantraMs).toBe(SEED);
+    // a 60s span (a long distracted pause) is above the ceiling
+    expect(karaokeFlowBoundary(armed, 61000).mantraMs).toBe(SEED);
+  });
+
+  it("a boundary with no voiced start keeps the tempo unchanged", () => {
+    const resting = createKaraokeFlow(SEED);
+    expect(karaokeFlowBoundary(resting, 5000).mantraMs).toBe(SEED);
+  });
+
+  it("converges toward a steady pace over successive mantras", () => {
+    let flow = createKaraokeFlow(SEED);
+    let t = 0;
+    for (let i = 0; i < 5; i++) {
+      flow = karaokeFlowArm(flow, t);
+      t += 8000; // this devotee consistently takes 8s
+      flow = karaokeFlowBoundary(flow, t);
+    }
+    expect(flow.mantraMs).toBeGreaterThan(7800);
+    expect(flow.mantraMs).toBeLessThanOrEqual(8000);
+  });
+
+  it("guards a zero-length word list", () => {
+    const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    expect(karaokeFlowIndex(flow, 5000, 0)).toBe(0);
   });
 });

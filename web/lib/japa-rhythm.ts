@@ -304,33 +304,35 @@ export function countMantrasInFrames(frames: AudioFrame[]): number {
   return state.mantrasCompleted;
 }
 
-// ---------- Karaoke word-lighting (pure index stepping) ----------
+// ---------- Karaoke word-lighting ----------
 // The lit-word cursor for components/chant-space.tsx, kept here as pure
-// functions so the stepping is unit-tested the same way the counter is.
-// `index` is the 0-based word currently lit in the selected mantra's
-// `words` (see lib/mantras.ts); `primed` means "a fresh mantra is about to
-// begin - the next onset/tap should light the FIRST word rather than step
-// past it", which is what makes the first word of every repetition actually
-// glow while it is being chanted (instead of being skipped).
+// functions so it is unit-tested the same way the counter is. `index` is the
+// 0-based word currently lit in the selected mantra's `words` (see
+// lib/mantras.ts); `primed` means "a fresh mantra is about to begin - the
+// next tap should light the FIRST word rather than step past it", which is
+// what makes the first word of every repetition actually glow while it is
+// being chanted (instead of being skipped).
+//
+// TWO modes light words differently:
+//   - Tap mode steps one word per tap (karaokeTap) - a tap is a discrete
+//     event, so one-word-per-tap is the honest mapping.
+//   - Voice mode FLOWS the highlight on a clock paced to the chanter's own
+//     tempo (the KaraokeFlow helpers below), NOT one step per detected voiced
+//     burst. Continuous chanting runs its words together with almost no
+//     silences, so burst-stepping lagged badly and skipped the run-on words;
+//     a tempo clock instead glides through every word in turn over the
+//     mantra's measured duration, and re-syncs to the first word at each
+//     boundary so drift never accumulates.
 
 export type KaraokeWord = {
   index: number;
   primed: boolean;
 };
 
-/** The starting cursor: first word, primed so the very first onset lights
+/** The starting cursor: first word, primed so the very first tap lights
  * word 0 rather than advancing to word 1. */
 export function createKaraokeWord(): KaraokeWord {
   return { index: 0, primed: true };
-}
-
-/** Advance on a vocal onset (voice mode). Clamps at the last word - if a
- * devotee's bursts outnumber the mantra's words, the last word simply holds
- * lit until the mantra boundary resets everything. */
-export function karaokeOnset(prev: KaraokeWord, wordCount: number): KaraokeWord {
-  if (wordCount <= 0) return prev;
-  if (prev.primed) return { index: 0, primed: false };
-  return { index: Math.min(prev.index + 1, wordCount - 1), primed: false };
 }
 
 /** Advance on a tap (tap mode). Wraps back to the first word at the end so
@@ -343,8 +345,91 @@ export function karaokeTap(prev: KaraokeWord, wordCount: number): KaraokeWord {
   return { index: (prev.index + 1) % wordCount, primed: false };
 }
 
-/** Reset at a mantra boundary: back to the first word, primed for the next
- * repetition, so drift never accumulates across mantras. */
-export function karaokeBoundary(): KaraokeWord {
-  return createKaraokeWord();
+// (A mantra boundary simply resets to createKaraokeWord() - the callers do
+// that directly, so there is no separate boundary helper for the cursor.)
+
+// ---------- Karaoke tempo flow (voice mode) ----------
+// A tiny state machine that paces the lit word to the chanter's own tempo.
+// The component (components/chant-space.tsx) ticks a clock a few times a
+// second and asks karaokeFlowIndex which word should be lit "now"; these
+// functions carry only the timing state, no React. Everything is in the
+// performance.now() millisecond clock the voice pipeline already uses.
+
+// Bounds a measured mantra duration must fall within to be learned from, so
+// a miscount (a cough taken as a whole mantra, or a long distracted pause)
+// can't poison the tempo. A real spoken mantra sits comfortably inside this.
+const KARAOKE_MIN_MANTRA_MS = 1200;
+const KARAOKE_MAX_MANTRA_MS = 20000;
+// How strongly each freshly measured mantra pulls the running estimate
+// (0 = never adapt, 1 = jump to the latest). Half-and-half tracks a
+// devotee settling into (or shifting) their pace within a mantra or two,
+// while still smoothing over one odd measurement.
+const KARAOKE_TEMPO_SMOOTHING = 0.5;
+
+export type KaraokeFlow = {
+  /** When the current mantra's voice began (performance.now clock), or null
+   * while resting on the first word between mantras - i.e. waiting for the
+   * next repetition to start. */
+  startedMs: number | null;
+  /** The learned duration of one full mantra, in ms - smoothed from the span
+   * between a mantra's voiced start and its completion boundary, seeded from
+   * the mantra's own typical length (lib/mantras.ts). */
+  mantraMs: number;
+};
+
+/** A fresh flow, resting on the first word, seeded with a bootstrap tempo
+ * (the mantra's typical full duration) until the first real mantra is
+ * measured. Nothing moves until a voiced onset arms it - silence keeps the
+ * highlight resting on the first word, however long it lasts. */
+export function createKaraokeFlow(bootstrapMantraMs: number): KaraokeFlow {
+  return {
+    startedMs: null,
+    mantraMs: clampMantraMs(bootstrapMantraMs),
+  };
+}
+
+/** Arm the flow: mark that the current mantra's voice has begun, so the
+ * highlight starts gliding from the first word. Idempotent within a mantra -
+ * only the first call after a boundary (when startedMs is null) takes
+ * effect; later onsets in the same mantra are ignored, since the clock, not
+ * the onsets, drives the words. */
+export function karaokeFlowArm(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
+  if (flow.startedMs !== null) return flow;
+  return { ...flow, startedMs: nowMs };
+}
+
+/** Learn from a completed mantra and rest for the next one: measure how long
+ * this mantra actually took (its voiced start → this boundary), fold that
+ * into the running tempo estimate if it is plausible, and return to resting
+ * on the first word. */
+export function karaokeFlowBoundary(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
+  let mantraMs = flow.mantraMs;
+  if (flow.startedMs !== null) {
+    const measured = nowMs - flow.startedMs;
+    if (measured >= KARAOKE_MIN_MANTRA_MS && measured <= KARAOKE_MAX_MANTRA_MS) {
+      mantraMs = clampMantraMs(
+        flow.mantraMs * (1 - KARAOKE_TEMPO_SMOOTHING) + measured * KARAOKE_TEMPO_SMOOTHING
+      );
+    }
+  }
+  return { startedMs: null, mantraMs };
+}
+
+/** Which word should be lit right now. Resting (no mantra underway) → the
+ * first word. Underway → glide through the words in order, one every
+ * mantraMs/wordCount, clamped to the last word so it simply holds there if
+ * the chanter runs long, until the next boundary resets everything. Pure:
+ * the same inputs always give the same word, so the driving clock can tick
+ * as often or seldom as it likes. */
+export function karaokeFlowIndex(flow: KaraokeFlow, nowMs: number, wordCount: number): number {
+  if (wordCount <= 0) return 0;
+  if (flow.startedMs === null) return 0;
+  const perWordMs = flow.mantraMs / wordCount;
+  const elapsed = nowMs - flow.startedMs;
+  const step = Math.floor(elapsed / perWordMs);
+  return Math.max(0, Math.min(step, wordCount - 1));
+}
+
+function clampMantraMs(ms: number): number {
+  return Math.max(KARAOKE_MIN_MANTRA_MS, Math.min(ms, KARAOKE_MAX_MANTRA_MS));
 }
