@@ -80,7 +80,12 @@
   },
   "filterChips": {
     "newest": "নতুন",
-    "mostWatched": "সর্বাধিক দেখা"
+    "mostWatched": "সর্বাধিক দেখা",
+    "refine": "আরও বাছাই",
+    "teacher": "গুরুজন",
+    "duration": "সময়কাল",
+    "language": "ভাষা",
+    "clearAll": "সব সরান"
   },
   "categoryCards": {
     "kicker": "আপনার পথ খুঁজুন",

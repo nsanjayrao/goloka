@@ -80,7 +80,12 @@
   },
   "filterChips": {
     "newest": "नवीनतम",
-    "mostWatched": "सर्वाधिक देखा गया"
+    "mostWatched": "सर्वाधिक देखा गया",
+    "refine": "और छाँटें",
+    "teacher": "गुरुजन",
+    "duration": "अवधि",
+    "language": "भाषा",
+    "clearAll": "सभी हटाएँ"
   },
   "categoryCards": {
     "kicker": "अपना मार्ग खोजें",

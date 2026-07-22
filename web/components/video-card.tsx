@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl";
 
 import { Thumbnail } from "@/components/thumbnail";
 import { Link } from "@/i18n/navigation";
-import { cleanTitle, formatDuration, formatRelativeDate, formatViews } from "@/lib/format";
+import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
 import { languageCode } from "@/lib/language-codes";
 import type { Video } from "@/lib/types";
 
@@ -31,13 +31,15 @@ export function VideoCard({
   // noise. Only non-English audio is the signal a devotee needs at a
   // glance, so the chip renders for that case alone.
   const lang = video.language && video.language !== "English" ? languageCode(video.language) : null;
-  // channel · relative date · view count - the CSS puts the · separators
-  // between spans, so missing pieces never leave a dangling dot.
-  const metaBits = [
-    video.channel?.title,
-    formatRelativeDate(video.published_at),
-    formatViews(video.view_count),
-  ].filter(Boolean) as string[];
+  // channel · relative date - the CSS puts the · separator between spans,
+  // so a missing piece never leaves a dangling dot. Raw view counts were
+  // removed from this line (Design Manifesto, "The Courtyard", 2026-07-22):
+  // a number badge turns liturgical footage into a metric. Popularity
+  // still exists as a SORT ("Most watched" in FilterChips, view_count in
+  // lib/data.ts) - only the per-card numeral is gone.
+  const metaBits = [video.channel?.title, formatRelativeDate(video.published_at)].filter(
+    Boolean
+  ) as string[];
 
   return (
     <Link href={`/watch/${video.youtube_video_id}`} className="card">

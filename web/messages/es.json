@@ -80,7 +80,12 @@
   },
   "filterChips": {
     "newest": "Más recientes",
-    "mostWatched": "Más vistos"
+    "mostWatched": "Más vistos",
+    "refine": "Refinar",
+    "teacher": "Maestro",
+    "duration": "Duración",
+    "language": "Idioma",
+    "clearAll": "Borrar todo"
   },
   "categoryCards": {
     "kicker": "Encuentra tu camino",

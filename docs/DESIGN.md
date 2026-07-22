@@ -123,6 +123,17 @@ with .22-.24em tracking.
 11. **Film grain** — fixed overlay, opacity .045, `steps(8)` shift; and
     the glassy header: transparent gradient at top, blur + gold hairline
     after 40px scroll.
+12. **The Courtyard** (2026-07-22, Design Manifesto) — every `VideoCard`
+    meta line reads channel · relative date only; raw view counts were
+    removed everywhere a card renders (a number badge turns liturgical
+    footage into a metric — popularity survives only as the "Most
+    watched" SORT order, never a per-card numeral; `lib/format.ts`'s
+    `formatViews` was deleted with its last caller). `FilterChips` keeps
+    sort plus any ALREADY-active teacher/duration/language narrowing
+    visible as removable tags; the full lists of teachers, durations,
+    and languages live behind one quiet "Refine" `<details>` disclosure
+    (no client JS, keyboard/screen-reader-native for free) — never a
+    flattened wall of pills ahead of the first video.
 
 ## 6. App shell & pages
 

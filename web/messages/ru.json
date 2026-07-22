@@ -80,7 +80,12 @@
   },
   "filterChips": {
     "newest": "Новые",
-    "mostWatched": "Самые популярные"
+    "mostWatched": "Самые популярные",
+    "refine": "Уточнить",
+    "teacher": "Учитель",
+    "duration": "Длительность",
+    "language": "Язык",
+    "clearAll": "Сбросить всё"
   },
   "categoryCards": {
     "kicker": "Найдите свой путь",

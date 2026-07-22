@@ -7,6 +7,7 @@ import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
 import { FilterChips } from "@/components/filter-chips";
 import { VideoGrid } from "@/components/video-grid";
+import { Link } from "@/i18n/navigation";
 import {
   CATEGORY_PAGE_SIZE,
   getChannelsInCategory,
@@ -47,6 +48,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   const { locale, category: rawCategory } = await params;
   setRequestLocale(locale);
   const tEmpty = await getTranslations("emptyState");
+  const tFilters = await getTranslations("filterChips");
   const category = safeDecodeURIComponent(rawCategory);
   if (category === null) notFound(); // malformed percent-encoding -> 404, not 500
   const query = await searchParams;
@@ -107,8 +109,16 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       )}
 
       {hasActiveFilters && (
-        <p className="mt-4 text-sm text-text-muted">
-          Showing {filteredCount} of {categoryCount} video{categoryCount === 1 ? "" : "s"}
+        <p className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-text-muted">
+          <span>
+            Showing {filteredCount} of {categoryCount} video{categoryCount === 1 ? "" : "s"}
+          </span>
+          <Link
+            href={`/browse/${encodeURIComponent(category)}`}
+            className="text-text-muted underline-offset-4 transition-colors hover:text-flame hover:underline"
+          >
+            {tFilters("clearAll")}
+          </Link>
         </p>
       )}
 

@@ -62,14 +62,6 @@ export function cleanTitle(rawTitle: string): string {
   return title || rawTitle;
 }
 
-const viewsFormatter = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 });
-
-/** view_count (int) -> "1.2M views" / "3.4K views" / "" when unknown. */
-export function formatViews(count: number | null): string {
-  if (count == null || Number.isNaN(count) || count < 0) return "";
-  return `${viewsFormatter.format(count)} views`;
-}
-
 const RELATIVE_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
   ["year", 60 * 60 * 24 * 365],
   ["month", 60 * 60 * 24 * 30],

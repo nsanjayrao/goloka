@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cleanTitle, formatDuration, formatRelativeDate, formatViews } from "./format";
+import { cleanTitle, formatDuration, formatRelativeDate } from "./format";
 
 describe("formatDuration", () => {
   it("formats under an hour as M:SS", () => {
@@ -13,18 +13,6 @@ describe("formatDuration", () => {
     expect(formatDuration(null)).toBe("");
     expect(formatDuration(NaN)).toBe("");
     expect(formatDuration(-5)).toBe("");
-  });
-});
-
-describe("formatViews", () => {
-  it("compacts large counts and appends 'views'", () => {
-    expect(formatViews(1200)).toBe("1.2K views");
-    expect(formatViews(2500000)).toBe("2.5M views");
-  });
-  it("returns empty string for null/NaN/negative", () => {
-    expect(formatViews(null)).toBe("");
-    expect(formatViews(NaN)).toBe("");
-    expect(formatViews(-1)).toBe("");
   });
 });
 
