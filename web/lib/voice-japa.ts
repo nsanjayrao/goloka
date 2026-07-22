@@ -44,9 +44,14 @@ export type VoiceJapaErrorReason =
 export type VoiceJapaCallbacks = {
   onStatusChange?: (status: VoiceJapaStatus) => void;
   /** Fires once per detected mantra completion. The caller advances one bead
-   * per call, the same as a tap. This is also the mantra boundary (see
-   * lib/japa-rhythm.ts) - the caller resets the karaoke word-lighting here. */
+   * per call, the same as a tap, and re-syncs the karaoke word-lighting. */
   onMantraCompleted?: (n: number) => void;
+  /** Fires when a breath closes a phrase, whether or not it counted - always
+   * AFTER onMantraCompleted when the same breath did both, so a caller that
+   * learns the chanter's tempo on completion still sees the mantra's timing
+   * before this rests it. For the karaoke word-lighting only; it never
+   * affects the count. */
+  onMantraBoundary?: () => void;
   /** Fires once per confirmed vocal onset (a silence→voice transition) for
    * the karaoke word-lighting only - it never affects the count. Rhythm-
    * paced, not per-syllable (there is no speech model - see the file
@@ -209,7 +214,11 @@ export async function startVoiceJapa(
     );
     rhythmState = result.state;
     if (result.onset) callbacks.onVocalOnset?.();
+    // Completion first, then the boundary - see onMantraBoundary's note: the
+    // tempo is learned from the mantra that just closed, so it has to be read
+    // before the boundary rests the flow.
     if (result.mantraCompleted) callbacks.onMantraCompleted?.(1);
+    if (result.mantraBoundary) callbacks.onMantraBoundary?.();
   }
 
   callbacks.onStatusChange?.("listening");

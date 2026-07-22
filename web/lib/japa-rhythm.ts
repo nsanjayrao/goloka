@@ -179,10 +179,12 @@ export type PushAudioFrameOptions = {
 /** Feeds one polled audio frame into the rolling rhythm state. Returns the
  * next state to carry forward plus three per-frame events:
  *  - `mantraCompleted` - THIS frame closed a voiced phrase long enough to
- *    credit one mantra. This is also the mantra BOUNDARY (the breath that
- *    completes a mantra); callers reset the karaoke word-lighting on it so
- *    every mantra re-syncs to its first word and drift never accumulates.
- *    `mantraBoundary` is returned as an explicit alias for that use.
+ *    credit one mantra. Callers advance one bead and re-sync the karaoke to
+ *    the first word, so drift never accumulates.
+ *  - `mantraBoundary` - THIS frame closed a phrase by a breath, whether or
+ *    not it counted. Broader than mantraCompleted on purpose: it is what
+ *    tells the karaoke the chanter has fallen silent, so the word-flow rests
+ *    instead of looping on into an empty room.
  *  - `onset` - THIS frame is a confirmed silence→voice transition (a fresh
  *    voiced burst). The UI steps the lit karaoke word once per onset. This
  *    is rhythm-paced, NOT per-syllable transcription (there is no speech
@@ -261,8 +263,12 @@ export function pushAudioFrame(
   // accumulated silence crosses BREATH_GAP_MS (phraseVoicedMs is reset to 0
   // as soon as this fires, so it can never fire twice for the same phrase).
   let mantraCompleted = false;
+  let mantraBoundary = false;
   let mantrasCompleted = prev.mantrasCompleted;
   if (!rawActive && phraseConfirmed && silenceMs >= BREATH_GAP_MS) {
+    // The breath closed a phrase - a boundary for the KARAOKE regardless of
+    // whether it earned a bead (see mantraBoundary's note in the return).
+    mantraBoundary = true;
     if (phraseVoicedMs >= minPhraseMs) {
       mantraCompleted = true;
       mantrasCompleted += 1;
@@ -286,10 +292,13 @@ export function pushAudioFrame(
       mantrasCompleted,
     },
     mantraCompleted,
-    // The breath that completes a mantra IS the mantra boundary - returned
-    // under its own name so the karaoke reset in chant-space.tsx reads
-    // clearly, without re-deriving it from the count.
-    mantraBoundary: mantraCompleted,
+    // Any breath that CLOSED a phrase this frame - counted or discarded as
+    // too short. Deliberately broader than mantraCompleted: the karaoke
+    // word-flow loops while voice continues, so it needs to know the chanter
+    // has stopped even when the phrase never earned a bead (half a mantra,
+    // then silence). Counting stays as conservative as ever - only
+    // mantraCompleted moves a bead.
+    mantraBoundary,
     onset,
   };
 }
@@ -398,14 +407,27 @@ export function karaokeFlowArm(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
   return { ...flow, startedMs: nowMs };
 }
 
+/** Rest the flow on the first word without learning anything - used when a
+ * breath closes a phrase that never counted (half a mantra, then silence).
+ * Keeps the learned tempo; only stops the glide. */
+export function karaokeFlowRest(flow: KaraokeFlow): KaraokeFlow {
+  if (flow.startedMs === null) return flow;
+  return { ...flow, startedMs: null };
+}
+
 /** Learn from a completed mantra and rest for the next one: measure how long
- * this mantra actually took (its voiced start → this boundary), fold that
- * into the running tempo estimate if it is plausible, and return to resting
- * on the first word. */
+ * this mantra actually took, fold that into the running tempo estimate if it
+ * is plausible, and return to resting on the first word.
+ *
+ * The measurement subtracts BREATH_GAP_MS, because a boundary is only
+ * declared once silence has ALREADY persisted that long - so the raw span
+ * from voiced start to boundary overstates the chanting by exactly that
+ * gap. Counting it would make the glide lag a little further behind every
+ * mantra. */
 export function karaokeFlowBoundary(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
   let mantraMs = flow.mantraMs;
   if (flow.startedMs !== null) {
-    const measured = nowMs - flow.startedMs;
+    const measured = nowMs - flow.startedMs - BREATH_GAP_MS;
     if (measured >= KARAOKE_MIN_MANTRA_MS && measured <= KARAOKE_MAX_MANTRA_MS) {
       mantraMs = clampMantraMs(
         flow.mantraMs * (1 - KARAOKE_TEMPO_SMOOTHING) + measured * KARAOKE_TEMPO_SMOOTHING
@@ -417,17 +439,20 @@ export function karaokeFlowBoundary(flow: KaraokeFlow, nowMs: number): KaraokeFl
 
 /** Which word should be lit right now. Resting (no mantra underway) → the
  * first word. Underway → glide through the words in order, one every
- * mantraMs/wordCount, clamped to the last word so it simply holds there if
- * the chanter runs long, until the next boundary resets everything. Pure:
- * the same inputs always give the same word, so the driving clock can tick
- * as often or seldom as it likes. */
+ * mantraMs/wordCount, WRAPPING back to the first word at the end so a
+ * devotee who runs one mantra straight into the next (with no breath clear
+ * enough for the counter to see) keeps flowing instead of stalling lit on
+ * the last word. Every real boundary still re-syncs to word 0, so drift
+ * never accumulates across mantras. Pure: the same inputs always give the
+ * same word, so the driving clock can tick as often or seldom as it likes. */
 export function karaokeFlowIndex(flow: KaraokeFlow, nowMs: number, wordCount: number): number {
   if (wordCount <= 0) return 0;
   if (flow.startedMs === null) return 0;
   const perWordMs = flow.mantraMs / wordCount;
   const elapsed = nowMs - flow.startedMs;
+  if (elapsed <= 0) return 0;
   const step = Math.floor(elapsed / perWordMs);
-  return Math.max(0, Math.min(step, wordCount - 1));
+  return step % wordCount;
 }
 
 function clampMantraMs(ms: number): number {

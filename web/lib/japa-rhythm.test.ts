@@ -11,6 +11,7 @@ import {
   karaokeFlowArm,
   karaokeFlowBoundary,
   karaokeFlowIndex,
+  karaokeFlowRest,
   karaokeTap,
   MICRO_GAP_MS,
   MIN_PHRASE_MS,
@@ -313,8 +314,8 @@ describe("vocal onsets: one per voiced burst, for karaoke word-stepping", () => 
   });
 });
 
-describe("mantra boundary equals the completion event (karaoke resync point)", () => {
-  it("boundary events track mantra completions one-for-one", () => {
+describe("mantra boundary: any breath that closes a phrase (karaoke resync point)", () => {
+  it("a counted mantra fires both a completion and a boundary", () => {
     const frames = framesFromSegments([
       segment(200, QUIET),
       segment(3000, CHANT),
@@ -327,8 +328,24 @@ describe("mantra boundary equals the completion event (karaoke resync point)", (
     expect(boundaryEvents).toBe(2);
   });
 
-  it("a discarded (too-short) phrase produces no boundary - nothing to resync to", () => {
+  it("a discarded (too-short) phrase still fires a boundary, but never a count", () => {
+    // Half a mantra then silence: no bead is earned, but the karaoke has to
+    // learn the devotee stopped, or its looping word-flow would cycle on in
+    // an empty room. Counting stays conservative; only the karaoke widens.
     const frames = framesFromSegments([segment(200, QUIET), segment(300, CHANT), segment(500, QUIET)]);
+    const { mantraEvents, boundaryEvents } = run(frames);
+    expect(mantraEvents).toBe(0);
+    expect(boundaryEvents).toBe(1);
+  });
+
+  it("silence alone never fires a boundary - there was no phrase to close", () => {
+    expect(run(framesFromSegments([segment(3000, QUIET)])).boundaryEvents).toBe(0);
+  });
+
+  it("continuous chanting with no breath fires no boundary at all", () => {
+    // The case that used to strand the highlight lit on the last word - the
+    // flow now loops instead of waiting for a boundary that never comes.
+    const frames = framesFromSegments([segment(200, QUIET), segment(8000, CHANT)]);
     expect(run(frames).boundaryEvents).toBe(0);
   });
 });
@@ -382,9 +399,40 @@ describe("karaoke tempo flow (voice mode)", () => {
     expect(karaokeFlowIndex(flow, 1000 + perWord * 7.5, WORDS)).toBe(7);
   });
 
-  it("holds the last word if the chanter runs long (never overruns the list)", () => {
+  it("wraps to the first word instead of stalling lit on the last one", () => {
+    // THE FIX: a devotee running one mantra into the next with no clear
+    // breath used to leave the highlight parked on the final golden word
+    // until a boundary finally landed. Now it simply flows on.
     const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
-    expect(karaokeFlowIndex(flow, 1000 + SEED * 3, WORDS)).toBe(WORDS - 1);
+    const perWord = SEED / WORDS;
+    expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS - 0.5), WORDS)).toBe(WORDS - 1);
+    expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS + 0.5), WORDS)).toBe(0);
+    expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS + 1.5), WORDS)).toBe(1);
+    // and still lands on a real word many mantras later, never past the end
+    const late = karaokeFlowIndex(flow, 1000 + SEED * 9.37, WORDS);
+    expect(late).toBeGreaterThanOrEqual(0);
+    expect(late).toBeLessThan(WORDS);
+  });
+
+  it("never reads a word before the flow was armed (clock going backwards)", () => {
+    const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    expect(karaokeFlowIndex(flow, 900, WORDS)).toBe(0);
+  });
+
+  it("a rest stops the glide without forgetting the learned tempo", () => {
+    let flow = karaokeFlowArm(createKaraokeFlow(SEED), 0);
+    flow = karaokeFlowBoundary(flow, 8000 + BREATH_GAP_MS); // learn ~6750
+    const learned = flow.mantraMs;
+    flow = karaokeFlowArm(flow, 20000);
+    const rested = karaokeFlowRest(flow);
+    expect(rested.startedMs).toBeNull();
+    expect(rested.mantraMs).toBe(learned);
+    expect(karaokeFlowIndex(rested, 99000, WORDS)).toBe(0);
+  });
+
+  it("resting an already-resting flow changes nothing", () => {
+    const resting = createKaraokeFlow(SEED);
+    expect(karaokeFlowRest(resting)).toBe(resting);
   });
 
   it("arming is idempotent within a mantra - later onsets don't restart it", () => {
@@ -396,11 +444,14 @@ describe("karaoke tempo flow (voice mode)", () => {
 
   it("a boundary learns the devotee's real pace and rests on the first word", () => {
     const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
-    // this devotee took 9500ms - slower than the 5500ms seed
+    // 9500ms from voiced start to boundary - but a boundary is only declared
+    // once silence has already run BREATH_GAP_MS, so the real chanting was
+    // 9500 - 400. Counting that gap would make the glide lag further behind
+    // every single mantra.
     const after = karaokeFlowBoundary(armed, 10500);
     expect(after.startedMs).toBeNull();
     // smoothed halfway toward the measurement, not jumped to it
-    expect(after.mantraMs).toBeCloseTo((5500 + 9500) / 2, 5);
+    expect(after.mantraMs).toBeCloseTo((SEED + (9500 - BREATH_GAP_MS)) / 2, 5);
   });
 
   it("ignores implausible measurements so a miscount can't poison the tempo", () => {
@@ -421,11 +472,12 @@ describe("karaoke tempo flow (voice mode)", () => {
     let t = 0;
     for (let i = 0; i < 5; i++) {
       flow = karaokeFlowArm(flow, t);
-      t += 8000; // this devotee consistently takes 8s
+      t += 8000; // voiced start → boundary, of which 400ms is the breath
       flow = karaokeFlowBoundary(flow, t);
     }
-    expect(flow.mantraMs).toBeGreaterThan(7800);
-    expect(flow.mantraMs).toBeLessThanOrEqual(8000);
+    const real = 8000 - BREATH_GAP_MS;
+    expect(flow.mantraMs).toBeGreaterThan(real * 0.97);
+    expect(flow.mantraMs).toBeLessThanOrEqual(real);
   });
 
   it("guards a zero-length word list", () => {

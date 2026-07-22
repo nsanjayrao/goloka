@@ -12,6 +12,7 @@ import {
   karaokeFlowArm,
   karaokeFlowBoundary,
   karaokeFlowIndex,
+  karaokeFlowRest,
   karaokeTap,
   type KaraokeFlow,
   type KaraokeWord,
@@ -378,6 +379,17 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
           // immediate reset here just avoids a one-tick flash of a late word
           // lingering before the clock catches up.
           flowRef.current = karaokeFlowBoundary(flowRef.current, performance.now());
+          setKaraoke(createKaraokeWord());
+        },
+        onMantraBoundary: () => {
+          if (voiceGenerationRef.current !== generation) return;
+          // Any breath that closed a phrase - INCLUDING one too short to earn
+          // a bead. Since the word-flow now loops while voice continues, this
+          // is what tells it the devotee has actually stopped, so the words
+          // rest on the first word instead of cycling on into a silent room.
+          // A counted mantra already rested the flow a moment earlier (see
+          // onMantraCompleted); resting again is a no-op.
+          flowRef.current = karaokeFlowRest(flowRef.current);
           setKaraoke(createKaraokeWord());
         },
         onError: (reason) => {
