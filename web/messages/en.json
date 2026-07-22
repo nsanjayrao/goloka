@@ -159,9 +159,9 @@
     "description": "Anonymous and opt-in — no account, no tracking, unsubscribe anytime.",
     "blocked": "Notifications are blocked for this site in your browser settings — allow them there first.",
     "unsupported": "Notifications aren't available on this browser — try Chrome or Firefox, or add Goloka to your home screen first.",
-    "festivalsLabel": "🔔 Festival reminders",
+    "festivalsLabel": "Festival reminders",
     "festivalsHint": "One quiet ping on ekādaśī mornings.",
-    "liveLabel": "🔴 Live darshan alerts",
+    "liveLabel": "Live darshan alerts",
     "liveHint": "The moment a temple goes live."
   },
   "search": {

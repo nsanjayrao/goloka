@@ -159,9 +159,9 @@
     "description": "Anónimas y opcionales — sin cuenta, sin seguimiento, cancela cuando quieras.",
     "blocked": "Las notificaciones de este sitio están bloqueadas en la configuración de tu navegador — permítelas allí primero.",
     "unsupported": "Las notificaciones no están disponibles en este navegador — prueba con Chrome o Firefox, o añade Goloka a tu pantalla de inicio primero.",
-    "festivalsLabel": "🔔 Recordatorios de festivales",
+    "festivalsLabel": "Recordatorios de festivales",
     "festivalsHint": "Un aviso discreto en las mañanas de ekādaśī.",
-    "liveLabel": "🔴 Alertas de darshan en vivo",
+    "liveLabel": "Alertas de darshan en vivo",
     "liveHint": "En el momento en que un templo transmite en vivo."
   },
   "search": {

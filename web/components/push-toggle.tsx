@@ -77,7 +77,23 @@ export function PushToggle() {
           return (
             <div key={topic} className="flex items-center justify-between gap-4">
               <div>
-                <div className="text-[15px] text-text">{label}</div>
+                <div className="flex items-center gap-2 text-[15px] text-text">
+                  {/* A small drawn marker, never emoji (DESIGN.md #5.8) - the
+                      live dot reuses the exact pulse the "Live from the
+                      dhāma" kicker uses elsewhere, so both read as the same
+                      "this is happening now" signal; festivals get a calm,
+                      static dot - a reminder isn't urgent the way live is. */}
+                  <span
+                    aria-hidden="true"
+                    className={cn(
+                      "size-2 shrink-0 rounded-full",
+                      topic === "live"
+                        ? "animate-[pulse_1.6s_infinite] bg-[#e05b5b] shadow-[0_0_10px_rgba(224,91,91,0.8)]"
+                        : "bg-marigold"
+                    )}
+                  />
+                  {label}
+                </div>
                 <div className="text-[13px] text-text-muted">{t(hintKey)}</div>
               </div>
               <button
