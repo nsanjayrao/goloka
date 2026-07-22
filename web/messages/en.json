@@ -31,7 +31,7 @@
     "disclaimer": "Goloka is an index, not a host — every video plays through the official YouTube player and links back to its source channel. All content belongs to its creators.",
     "languageLabel": "Language",
     "chant": "Chant",
-    "sadhana": "My Sādhana",
+  "sadhana": "My Sādhana",
     "calendar": "Calendar"
   },
   "sectionHeader": {
@@ -94,11 +94,23 @@
     "belovedByMillions": "Beloved by millions",
     "mostWatched": "Most watched",
     "continueWatching": "Continue Watching",
+    "forYou": "For you",
+    "becauseYouWatched": "Because you watched {category}",
     "inYourLanguage": "In your language"
   },
   "watchPage": {
     "keepWatching": "Keep watching",
-    "moreFrom": "More from {category}"
+    "moreFrom": "More from {category}",
+    "upNextToggle": "Continue to next video",
+    "upNextToggleAria": "When a video ends, continue to the next one automatically",
+    "upNextKicker": "Up next",
+    "upNextContinuing": "Continuing in {seconds}s",
+    "upNextCancel": "Stay here",
+    "seriesKicker": "Series",
+    "seriesPart": "Part {position} of {total}",
+    "seriesPrev": "Previous episode",
+    "seriesNext": "Next episode",
+    "seriesViewAria": "View the whole series: {title}"
   },
   "emptyState": {
     "default": "Nothing here yet — like Vrindavan before the festival. Check back soon.",
@@ -191,7 +203,14 @@
     "delete": "Delete",
     "titlePlaceholder": "Ekādaśī lectures for Mā",
     "titleInputAria": "Title for this shared link",
-    "shareCollection": "Share this collection"
+    "shareCollection": "Share this collection",
+    "seriesKicker": "Series",
+    "seriesParts": "{count} parts"
+  },
+  "seriesPage": {
+    "kicker": "Series",
+    "episodesIndexed": "{count} of {total} episodes",
+    "empty": "The episodes of this series haven't been indexed yet — they will appear as the catalog syncs."
   },
   "sadhana": {
     "title": "My Sādhana",
@@ -204,6 +223,17 @@
     "thisYear": "This year",
     "thisYearHeading": "This year, month by month",
     "emptyMonth": "No rounds recorded this month yet — whenever you chant while signed in, they will rest here quietly.",
+    "allTime": "All time",
+    "unbrokenDays": "{count} days of the holy name, unbroken",
+    "milestoneYear": "{count} rounds offered this year",
+    "yearHeading": "{year}, month by month",
+    "emptyYear": "No rounds recorded in {year}.",
+    "prevMonthAria": "Earlier month",
+    "nextMonthAria": "Later month",
+    "prevYearAria": "Earlier year",
+    "nextYearAria": "Later year",
+    "chartAria": "Rounds by month, {year}",
+    "mantraShare": "{mantra}: {count, plural, one {# round} other {# rounds}}",
     "roundsCount": "{count, plural, one {# round} other {# rounds}}",
     "dayRounds": "{day}: {count, plural, one {# round} other {# rounds}}",
     "dayNone": "{day}: no rounds",
@@ -291,7 +321,16 @@
       "voiceMicDenied": "Microphone access wasn't granted — tap to count instead, eyes closed.",
       "voiceUnsupported": "Hands-free chanting isn't available in this browser — tap to count instead.",
       "voiceIosSafariHint": "On iPhone, chanting by voice works best in Safari.",
-      "mantraLabel": "Mantra"
+      "mantraLabel": "Mantra",
+      "sankalpaLabel": "Sankalpa",
+      "sankalpaAria": "Your own daily vow of rounds — tap the chosen number again to release it",
+      "sankalpaProgress": "Round {current} of your {vow}",
+      "sankalpaOffered": "Your {vow} rounds are offered",
+      "voiceIntroPace": "Chant at your own pace — softly is fine.",
+      "voiceIntroBreath": "The natural little breath between mantras is what counts each bead.",
+      "voiceIntroRhythm": "The glowing words follow your rhythm — a companion, not a transcript.",
+      "voiceIntroBegin": "Begin",
+      "recordedInSadhana": "Each round is recorded in My Sādhana"
     },
     "calendar": {
       "h1": "The Vaiṣṇava Calendar",

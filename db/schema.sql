@@ -367,3 +367,66 @@ as $$
 $$;
 
 grant execute on function japa_year_total(int) to authenticated;
+
+-- The devotee's total rounds ever recorded - the sādhana dashboard's
+-- "all time" figure. Summed here rather than in the browser because
+-- history is unbounded (the one case client-side aggregation must not
+-- handle). Same posture as japa_year_total: security invoker + RLS keeps
+-- it to the caller's own rows.
+create or replace function japa_all_time_total()
+returns integer
+language sql
+security invoker
+as $$
+  select coalesce(sum(rounds), 0)::int
+  from japa_rounds
+  where user_id = auth.uid();
+$$;
+
+grant execute on function japa_all_time_total() to authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Series (2026-07-22): the channels' own YouTube playlists, indexed so a
+-- devotee who lands on "episode 10" can walk back to episode 1 WITHOUT
+-- leaving Goloka. Pure metadata + ordering - index-never-host holds. The
+-- sync worker (worker/sync.py) fills both tables; the frontend reads with
+-- the anon key under the same public-SELECT-only RLS as videos/channels.
+-- ---------------------------------------------------------------------------
+
+create table if not exists playlists (
+  id bigint generated always as identity primary key,
+  youtube_playlist_id text not null unique,
+  channel_id bigint references channels(id) on delete cascade,
+  title text not null,
+  description text,
+  thumbnail_url text,
+  -- YouTube's own count of items in the playlist. May exceed the number of
+  -- rows we link below (Shorts and unindexed videos are skipped), and that
+  -- is exactly why it exists: "Part 10 of 24" should speak the playlist's
+  -- true length. Also the cheap change-detector the worker uses to skip
+  -- refreshing an unchanged playlist's links.
+  item_count integer not null default 0,
+  created_at timestamptz not null default now()
+);
+create index if not exists playlists_channel_idx on playlists (channel_id);
+
+create table if not exists playlist_videos (
+  playlist_id bigint not null references playlists(id) on delete cascade,
+  video_id bigint not null references videos(id) on delete cascade,
+  -- The video's true 0-based position in the YouTube playlist. Positions can
+  -- have gaps here (unindexed items keep their slot), so "previous episode"
+  -- is max(position) below mine, never position - 1.
+  position integer not null,
+  primary key (playlist_id, video_id)
+);
+create index if not exists playlist_videos_video_idx on playlist_videos (video_id);
+create index if not exists playlist_videos_playlist_position_idx
+  on playlist_videos (playlist_id, position);
+
+alter table playlists enable row level security;
+drop policy if exists "public read playlists" on playlists;
+create policy "public read playlists" on playlists for select using (true);
+
+alter table playlist_videos enable row level security;
+drop policy if exists "public read playlist videos" on playlist_videos;
+create policy "public read playlist videos" on playlist_videos for select using (true);

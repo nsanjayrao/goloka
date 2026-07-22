@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CalendarStrip } from "@/components/calendar-strip";
 import { CategoryCards } from "@/components/category-cards";
+import { BecauseYouWatched } from "@/components/because-you-watched";
 import { CategoryRow } from "@/components/category-row";
 import { ContinueWatchingShelf } from "@/components/continue-watching-shelf";
 import { EmptyState } from "@/components/empty-state";
@@ -144,6 +145,10 @@ export default async function HomePage({ params }: Props) {
 
       {/* Client-side personalization: renders null for first-time visitors. */}
       <ContinueWatchingShelf />
+
+      {/* "Because you watched X" - the on-device affinity shelf (up to two
+          rows; lib/affinity.ts). Also null until there's watch history. */}
+      <BecauseYouWatched />
 
       {/* Client-side personalization: the picker always renders, the shelf
           above it only once a language preference is set and has videos. */}

@@ -13,6 +13,10 @@ export type RecentlyWatchedEntry = {
   channel_title: string | null;
   duration_seconds: number | null;
   watched_at: number; // Date.now(), used only to order entries
+  /** The video's category at watch time - feeds the "Because you watched"
+   * affinity (lib/affinity.ts). Optional: entries recorded before this
+   * field existed simply don't contribute, no migration needed. */
+  category?: string | null;
 };
 
 /** Most-recently-watched first. Never throws - a disabled/blocked

@@ -10,6 +10,9 @@ export default async function NotFound() {
 
   return (
     <Container className="page-top pb-20">
+      {/* The invocation thread (DESIGN.md #9): a lost visitor is met with
+          Her name first - fixed liturgical text, same as /chant. */}
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
       <EmptyState title={t("notFoundTitle")} message={t("notFoundMessage")}>
         <Link
           href="/"

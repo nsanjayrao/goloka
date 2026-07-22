@@ -44,8 +44,14 @@ export type VoiceJapaErrorReason =
 export type VoiceJapaCallbacks = {
   onStatusChange?: (status: VoiceJapaStatus) => void;
   /** Fires once per detected mantra completion. The caller advances one bead
-   * per call, the same as a tap, and re-syncs the karaoke word-lighting. */
-  onMantraCompleted?: (n: number) => void;
+   * per call, the same as a tap, and re-syncs the karaoke word-lighting.
+   * `info.fluid` distinguishes a mid-run credit (the tempo counter saying
+   * "one mantra just finished inside continuous chanting" - the karaoke
+   * re-arms its glide) from a breath-closed one (the karaoke rests).
+   * `info.tempoMs` is the counter's current learned per-mantra duration
+   * (null before the first clean measurement) - the karaoke adopts it so
+   * words and beads share one clock. */
+  onMantraCompleted?: (n: number, info: { fluid: boolean; tempoMs: number | null }) => void;
   /** Fires when a breath closes a phrase, whether or not it counted - always
    * AFTER onMantraCompleted when the same breath did both, so a caller that
    * learns the chanter's tempo on completion still sees the mantra's timing
@@ -66,6 +72,13 @@ export type VoiceJapaCallbacks = {
  * without restarting the mic. Omitted → lib/japa-rhythm.ts's default. */
 export type VoiceJapaOptions = {
   getMinPhraseMs?: () => number;
+  /** The selected mantra's typical duration (lib/mantras.ts karaokeMs) -
+   * seeds fluid crediting before the devotee's own tempo is learned. Read
+   * fresh per frame, like getMinPhraseMs. */
+  getTempoSeedMs?: () => number;
+  /** The selected mantra's id - a switch resets the learned tempo and any
+   * open phrase inside the rhythm state (see lib/japa-rhythm.ts). */
+  getMantraId?: () => string;
 };
 
 export type VoiceJapaHandle = {
@@ -210,14 +223,20 @@ export async function startVoiceJapa(
     const result = pushAudioFrame(
       rhythmState,
       { timeMs: performance.now(), rms },
-      { minPhraseMs: options?.getMinPhraseMs?.() }
+      {
+        minPhraseMs: options?.getMinPhraseMs?.(),
+        tempoSeedMs: options?.getTempoSeedMs?.(),
+        mantraId: options?.getMantraId?.(),
+      }
     );
     rhythmState = result.state;
     if (result.onset) callbacks.onVocalOnset?.();
-    // Completion first, then the boundary - see onMantraBoundary's note: the
-    // tempo is learned from the mantra that just closed, so it has to be read
-    // before the boundary rests the flow.
-    if (result.mantraCompleted) callbacks.onMantraCompleted?.(1);
+    // Completion first, then the boundary, so the caller sees the completed
+    // mantra (and the freshly learned tempo) before the boundary rests the
+    // karaoke.
+    if (result.mantraCompleted) {
+      callbacks.onMantraCompleted?.(1, { fluid: result.fluid, tempoMs: result.state.tempoMs });
+    }
     if (result.mantraBoundary) callbacks.onMantraBoundary?.();
   }
 

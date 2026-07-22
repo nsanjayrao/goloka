@@ -11,12 +11,15 @@ export function RecordWatch({
   thumbnailUrl,
   channelTitle,
   durationSeconds,
+  category = null,
 }: {
   youtubeVideoId: string;
   title: string;
   thumbnailUrl: string | null;
   channelTitle: string | null;
   durationSeconds: number | null;
+  /** Feeds the "Because you watched" affinity - see lib/affinity.ts. */
+  category?: string | null;
 }) {
   useEffect(() => {
     recordWatched({
@@ -25,8 +28,9 @@ export function RecordWatch({
       thumbnail_url: thumbnailUrl,
       channel_title: channelTitle,
       duration_seconds: durationSeconds,
+      category,
     });
-  }, [youtubeVideoId, title, thumbnailUrl, channelTitle, durationSeconds]);
+  }, [youtubeVideoId, title, thumbnailUrl, channelTitle, durationSeconds, category]);
 
   return null;
 }

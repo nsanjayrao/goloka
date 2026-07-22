@@ -59,6 +59,47 @@ export async function recordRound(userId: string, mantra: string = DEFAULT_MANTR
 export type DailyRounds = { day: string; rounds: number };
 
 /**
+ * The raw (day, mantra, rounds) rows from `sinceDate` (inclusive) through
+ * today, ascending - ONE bounded query that powers everything recent on the
+ * dashboard at once: the month grid, the unbroken-days count, and the
+ * per-mantra split (lib/sadhana-insights.ts does the pure math). The bound:
+ * a ~400-day window × at most a handful of mantras per day sits comfortably
+ * under the 1600-row limit.
+ */
+export async function getRecentJapaRows(
+  userId: string,
+  sinceDate: string
+): Promise<{ day: string; mantra: string; rounds: number }[]> {
+  if (!userId) return [];
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("japa_rounds")
+      .select("day, mantra, rounds")
+      .eq("user_id", userId)
+      .gte("day", sinceDate)
+      .order("day", { ascending: true })
+      .limit(1600);
+    if (error) throw error;
+    return (data ?? []) as { day: string; mantra: string; rounds: number }[];
+  }, []);
+}
+
+/**
+ * The devotee's total rounds ever recorded - the dashboard's "all time"
+ * figure. Calls the `japa_all_time_total` Postgres function (db/schema.sql),
+ * which sums in the database: history is unbounded, so this is exactly the
+ * case that must NOT ship every row to the browser.
+ */
+export async function getAllTimeTotal(userId: string): Promise<number> {
+  if (!userId) return 0;
+  return safely(async () => {
+    const { data, error } = await supabase!.rpc("japa_all_time_total");
+    if (error) throw error;
+    return typeof data === "number" ? data : 0;
+  }, 0);
+}
+
+/**
  * Per-day totals (summed across mantras) from `sinceDate` (inclusive,
  * "YYYY-MM-DD") through today, ascending. One bounded query - the caller
  * decides the window (the dashboard passes the first of the current

@@ -8,7 +8,8 @@ import { Container } from "@/components/container";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
 import { TopicChips } from "@/components/topic-chips";
 import { VideoGrid } from "@/components/video-grid";
-import { CATEGORY_PAGE_SIZE, getChannelByHandle, getVideoCount, getVideosPage } from "@/lib/data";
+import { Link } from "@/i18n/navigation";
+import { CATEGORY_PAGE_SIZE, getChannelByHandle, getSeriesForChannel, getVideoCount, getVideosPage } from "@/lib/data";
 import { localizedAlternates } from "@/lib/site";
 import { TOPICS, TOPIC_LIST } from "@/lib/topics";
 import { safeDecodeURIComponent } from "@/lib/utils";
@@ -86,9 +87,10 @@ export default async function ChannelPage({ params, searchParams }: Props) {
     channelId: channel.id,
     ...(activeTopic ? { topicSlug: activeTopic.slug } : {}),
   };
-  const [count, videos] = await Promise.all([
+  const [count, videos, series] = await Promise.all([
     activeTopic ? Promise.resolve(countBySlug.get(activeTopic.slug) ?? 0) : getVideoCount({ channelId: channel.id }),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
+    getSeriesForChannel(channel.id, 12),
   ]);
 
   return (
@@ -140,6 +142,41 @@ export default async function ChannelPage({ params, searchParams }: Props) {
             path={`/channel/${handle}?topic=${activeTopic.slug}`}
           />
         </div>
+      )}
+
+      {/* The channel's series (its own playlists) - only on the unfiltered
+          view, so a topic-filtered page stays about that topic. */}
+      {!activeTopic && series.length > 0 && (
+        <section className="mt-10">
+          <p className="text-[11px] uppercase tracking-[0.18em] text-marigold">{t("seriesKicker")}</p>
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+            {series.map((s) => (
+              <Link
+                key={s.youtube_playlist_id}
+                href={`/series/${s.youtube_playlist_id}`}
+                className="group outline-none"
+              >
+                <span className="relative block aspect-video overflow-hidden rounded-lg bg-surface-2">
+                  {s.thumbnail_url && (
+                    <Image
+                      src={s.thumbnail_url}
+                      alt=""
+                      fill
+                      sizes="(min-width: 1024px) 300px, 50vw"
+                      className="object-cover"
+                    />
+                  )}
+                </span>
+                <span className="mt-2 line-clamp-2 block text-[14px] leading-snug text-text transition-colors group-hover:text-flame group-focus-visible:text-flame">
+                  {s.title}
+                </span>
+                <span className="mt-0.5 block text-[12px] text-text-muted">
+                  {t("seriesParts", { count: s.item_count })}
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       <div className="mt-8">

@@ -197,3 +197,28 @@ with .22-.24em tracking.
 6. Any further misalignment/overflow/clipping found during a port is
    fixed and listed in the deviation report — visual bugs are never
    preserved in the name of fidelity.
+
+## 9. The invocation thread (2026-07-22)
+
+The whole product is built in Śrīmatī Rādhārāṇī's mood — an offering made
+FOR Kṛṣṇa's pleasure, not an app optimizing a user (owner decision
+2026-07-22: "Her touch on every element"). Concretely, Her touch is
+RESTRAINT, expressed two ways:
+
+1. **The invocation.** "Rādhe Rādhe" appears as a small fixed liturgical
+   line — `text-[13px] uppercase tracking-[0.24em] text-marigold`, exactly
+   as the chant page opens — at the app's THRESHOLDS: the chant space, the
+   sādhana record, the footer (above the mahā-mantra inscription), and the
+   not-found page (a lost visitor is met with Her name). It is liturgical
+   text: never translated, never restyled per-page, never animated. Do not
+   scatter it further — a signature that appears everywhere signs nothing.
+2. **The register.** Interface copy at rest states (empty, error,
+   not-found) speaks devotionally-warm, never database-cold ("Nothing here
+   yet — like Vrindavan before the festival", never "No results found").
+   Streaks, milestones, and vows (sankalpa) exist only in their fulfilled
+   or living form; falling short is met with SILENCE, not markers. No fire
+   emoji, no loss language, no urging — anywhere, ever.
+
+Everything else about Her mood is already carried by the existing system:
+the midnight canvas, the gold restraint, the calm motion. Do not add
+ornament in Her name.

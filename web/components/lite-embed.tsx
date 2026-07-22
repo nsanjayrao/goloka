@@ -3,7 +3,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { useDataSaver } from "@/lib/data-saver";
 
@@ -19,18 +19,117 @@ import { useDataSaver } from "@/lib/data-saver";
 // autoplay=1, since a tap IS the play intent. When data-saver is off (the
 // default), the iframe renders immediately - identical to before this
 // existed.
-export function LiteEmbed({ videoId, title }: { videoId: string; title: string }) {
+//
+// UP-NEXT WIRING (see components/up-next.tsx): when `jsApi` is true the
+// iframe carries enablejsapi=1 and the OFFICIAL IFrame Player API script is
+// lazy-loaded to watch for the player's ENDED state - the documented,
+// ToS-clean way to know a standard player finished (the embed itself stays
+// standard and unmodified; nothing is drawn over it). `jsApi` is only ever
+// true after the visitor's explicit opt-in (lib/autoplay.ts is false on the
+// server and the first client render), so visitors who never opt in ship
+// ZERO extra JS and no youtube.com script.
+
+// One API script per page, however many embeds ask for it.
+type YtNamespace = {
+  Player: new (
+    el: HTMLIFrameElement,
+    opts: { events: { onStateChange?: (e: { data: number }) => void } }
+  ) => { destroy: () => void };
+  PlayerState: { ENDED: number };
+};
+let ytApiPromise: Promise<YtNamespace> | null = null;
+function loadYouTubeIframeApi(): Promise<YtNamespace> {
+  if (ytApiPromise) return ytApiPromise;
+  ytApiPromise = new Promise((resolve) => {
+    const w = window as unknown as { YT?: YtNamespace; onYouTubeIframeAPIReady?: () => void };
+    if (w.YT?.Player) {
+      resolve(w.YT);
+      return;
+    }
+    const previous = w.onYouTubeIframeAPIReady;
+    w.onYouTubeIframeAPIReady = () => {
+      previous?.();
+      resolve(w.YT!);
+    };
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(script);
+  });
+  return ytApiPromise;
+}
+
+export function LiteEmbed({
+  videoId,
+  title,
+  jsApi = false,
+  autoplay = false,
+  onEnded,
+}: {
+  videoId: string;
+  title: string;
+  /** Attach the IFrame Player API to hear the ENDED event. Only ever passed
+   * true client-side, after the autoplay opt-in - see the banner. */
+  jsApi?: boolean;
+  /** Start playing on mount (the ?continue=1 hand-off from up-next). Only
+   * ever true client-side, gated on the same opt-in. */
+  autoplay?: boolean;
+  onEnded?: () => void;
+}) {
   const dataSaver = useDataSaver();
   const [activated, setActivated] = useState(false);
   const t = useTranslations("liteEmbed");
+  const iframeRef = useRef<HTMLIFrameElement | null>(null);
+  // The player object lives for minutes; the callback prop is re-created
+  // every render - the ref keeps the API listener reading the latest one
+  // (same idiom as chant-space.tsx's advanceBeadsRef).
+  const onEndedRef = useRef(onEnded);
+  useEffect(() => {
+    onEndedRef.current = onEnded;
+  });
 
   const showIframe = !dataSaver || activated;
+
+  const params = new URLSearchParams();
+  if (activated || autoplay) params.set("autoplay", "1");
+  if (jsApi && typeof window !== "undefined") {
+    params.set("enablejsapi", "1");
+    // The API's recommended origin check - messages only ever go to/from
+    // this site.
+    params.set("origin", window.location.origin);
+  }
+  const query = params.toString();
+  const src = `https://www.youtube-nocookie.com/embed/${videoId}${query ? `?${query}` : ""}`;
+
+  useEffect(() => {
+    if (!jsApi || !showIframe) return;
+    let cancelled = false;
+    let player: { destroy: () => void } | null = null;
+    void loadYouTubeIframeApi().then((yt) => {
+      if (cancelled || !iframeRef.current) return;
+      player = new yt.Player(iframeRef.current, {
+        events: {
+          onStateChange: (e) => {
+            if (e.data === yt.PlayerState.ENDED) onEndedRef.current?.();
+          },
+        },
+      });
+    });
+    return () => {
+      cancelled = true;
+      try {
+        player?.destroy();
+      } catch {
+        // A player mid-teardown while the iframe unmounts - nothing to do.
+      }
+    };
+  }, [jsApi, showIframe, videoId]);
 
   return (
     <div className="relative aspect-video overflow-hidden rounded-xl shadow-2xl">
       {showIframe ? (
         <iframe
-          src={`https://www.youtube-nocookie.com/embed/${videoId}${activated ? "?autoplay=1" : ""}`}
+          ref={iframeRef}
+          src={src}
           title={title}
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
           allowFullScreen

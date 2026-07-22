@@ -204,6 +204,120 @@ def fetch_playlist_videos(playlist_id: str, max_pages: int) -> list[dict]:
     return videos
 
 
+def fetch_channel_playlists(youtube_channel_id: str, max_pages: int = 4) -> list[dict]:
+    """A channel's own public playlists (its hand-made series). The
+    auto-generated lists (uploads, liked videos) never appear in this
+    endpoint, so no filtering for them is needed. Costs 1 quota unit per
+    page of 50 - a few units per channel per run."""
+    playlists, page_token = [], None
+    for _ in range(max_pages):
+        params = {"part": "snippet,contentDetails", "channelId": youtube_channel_id, "maxResults": 50}
+        if page_token:
+            params["pageToken"] = page_token
+        data = yt_get("playlists", **params)
+        for item in data.get("items", []):
+            snippet = item["snippet"]
+            playlists.append({
+                "youtube_playlist_id": item["id"],
+                "title": snippet.get("title", ""),
+                "description": (snippet.get("description") or "")[:2000] or None,
+                "thumbnail_url": (snippet.get("thumbnails") or {}).get("medium", {}).get("url"),
+                "item_count": item.get("contentDetails", {}).get("itemCount", 0),
+            })
+        page_token = data.get("nextPageToken")
+        if not page_token:
+            break
+    return playlists
+
+
+def sync_channel_playlists(db, channel_pk: int, youtube_channel_id: str, full: bool) -> None:
+    """Index this channel's series: upsert its playlists and (playlist,
+    video, position) links, so the site can say "Part 10 of 24" and walk a
+    devotee back to episode 1 without a trip to YouTube.
+
+    Links only point at videos ALREADY in our index - a playlist item that
+    is a Short, excluded, or simply not synced keeps its position slot but
+    gets no row, which is why the frontend's prev/next walks by nearest
+    position rather than position ± 1.
+
+    Incremental discipline: a playlist whose item_count matches what we
+    stored is skipped (its links can't have changed count-wise; a pure
+    reorder waits for the next --full). One misbehaving playlist never
+    aborts the channel."""
+    try:
+        playlists = fetch_channel_playlists(youtube_channel_id)
+    except Exception as exc:
+        print(f"    playlists skipped: {exc}")
+        return
+    # A series needs at least two parts; empty and single-video playlists
+    # are noise ("Watch this!"-style pins), not series.
+    playlists = [p for p in playlists if p["item_count"] >= 2]
+    if not playlists:
+        return
+
+    existing = (db.table("playlists").select("id, youtube_playlist_id, item_count")
+                .eq("channel_id", channel_pk).execute())
+    known = {r["youtube_playlist_id"]: r for r in existing.data}
+
+    rows = [{**p, "channel_id": channel_pk} for p in playlists]
+    db.table("playlists").upsert(rows, on_conflict="youtube_playlist_id").execute()
+
+    # Re-read pks for the freshly upserted set (cheap: one bounded select).
+    stored = (db.table("playlists").select("id, youtube_playlist_id")
+              .eq("channel_id", channel_pk).execute())
+    pk_of = {r["youtube_playlist_id"]: r["id"] for r in stored.data}
+
+    refreshed = 0
+    for p in playlists:
+        prior = known.get(p["youtube_playlist_id"])
+        if prior and not full and prior["item_count"] == p["item_count"]:
+            continue  # unchanged - links stay as they are
+        playlist_pk = pk_of.get(p["youtube_playlist_id"])
+        if playlist_pk is None:
+            continue
+        try:
+            # Positions come from enumeration order: playlistItems returns
+            # items in playlist order from page 1, so the index IS the true
+            # 0-based position (including slots we won't link).
+            items = fetch_playlist_videos(p["youtube_playlist_id"],
+                                          max_pages=min(5, p["item_count"] // 50 + 1))
+        except Exception as exc:
+            print(f"    playlist '{p['title'][:40]}' items skipped: {exc}")
+            continue
+        yt_ids = [v["youtube_video_id"] for v in items]
+        indexed: dict[str, int] = {}
+        # .in_ has URL-length limits - chunk the lookup.
+        for i in range(0, len(yt_ids), 100):
+            got = (db.table("videos").select("id, youtube_video_id")
+                   .in_("youtube_video_id", yt_ids[i:i + 100]).execute())
+            indexed.update({r["youtube_video_id"]: r["id"] for r in got.data})
+        # A playlist CAN contain the same video twice (seen in the wild) -
+        # keep only its EARLIEST slot, or the single upsert statement would
+        # carry duplicate (playlist, video) keys and Postgres rejects the
+        # whole batch ("cannot affect row a second time").
+        links, seen_pks = [], set()
+        for pos, v in enumerate(items):
+            video_pk = indexed.get(v["youtube_video_id"])
+            if video_pk is None or video_pk in seen_pks:
+                continue
+            seen_pks.add(video_pk)
+            links.append({"playlist_id": playlist_pk, "video_id": video_pk, "position": pos})
+        # Replace-all per refreshed playlist: simplest correct answer to
+        # items moving, leaving, or joining. The delete+insert pair isn't
+        # atomic, but a public-read table of link rows has no reader that
+        # can be hurt by a half-second gap during a sync. One playlist's
+        # write failing must never kill the channel (or the run) - links
+        # are re-creatable on any later pass.
+        try:
+            db.table("playlist_videos").delete().eq("playlist_id", playlist_pk).execute()
+            if links:
+                db.table("playlist_videos").upsert(links, on_conflict="playlist_id,video_id").execute()
+            refreshed += 1
+        except Exception as exc:
+            print(f"    playlist '{p['title'][:40]}' links skipped: {exc}")
+    print(f"    playlists: {len(playlists)} kept, {refreshed} refreshed")
+
+
 # Owner decision 2026-07-05: Goloka indexes videos, not Shorts/reels. YouTube
 # Shorts don't carry an explicit flag from the videos.list API (only duration
 # and, often, a "#shorts" tag the creator adds), so this is a best-effort
@@ -1063,51 +1177,62 @@ def main() -> None:
                .single().execute())
         channel_pk = row.data["id"]
 
-        videos = fetch_playlist_videos(uploads, max_pages)
-        if not videos:
-            print("    no videos found")
-            continue
+        # The video section below exits early (`continue`) on quiet runs -
+        # the try/finally guarantees the SERIES sync still happens, and
+        # happens AFTER any new videos were upserted (a link can only point
+        # at an indexed video, so order matters: a new episode must be in
+        # `videos` before its playlist is refreshed).
+        try:
+            videos = fetch_playlist_videos(uploads, max_pages)
+            if not videos:
+                print("    no videos found")
+                continue
 
-        existing = (db.table("videos").select("youtube_video_id")
-                    .eq("channel_id", channel_pk).execute())
-        known_ids = {r["youtube_video_id"] for r in existing.data}
-        new_videos = [
-            v for v in videos
-            if v["youtube_video_id"] not in known_ids
-            and v["youtube_video_id"] not in EXCLUDED_VIDEO_IDS
-            # Cheap pre-filter on the "#shorts" tag alone (duration isn't
-            # known yet - that's the second filter below, after fetching it).
-            and not is_short(v["title"], None)
-        ]
-        print(f"    fetched {len(videos)}, new {len(new_videos)}")
-        if not new_videos:
-            continue
+            existing = (db.table("videos").select("youtube_video_id")
+                        .eq("channel_id", channel_pk).execute())
+            known_ids = {r["youtube_video_id"] for r in existing.data}
+            new_videos = [
+                v for v in videos
+                if v["youtube_video_id"] not in known_ids
+                and v["youtube_video_id"] not in EXCLUDED_VIDEO_IDS
+                # Cheap pre-filter on the "#shorts" tag alone (duration isn't
+                # known yet - that's the second filter below, after fetching it).
+                and not is_short(v["title"], None)
+            ]
+            print(f"    fetched {len(videos)}, new {len(new_videos)}")
+            if not new_videos:
+                continue
 
-        details = fetch_video_details([v["youtube_video_id"] for v in new_videos])
-        # Goloka indexes videos, not Shorts/reels (owner decision 2026-07-05) -
-        # duration is only known now, so this is where the real cutoff applies.
-        new_videos = [
-            v for v in new_videos
-            if not is_short(v["title"], details.get(v["youtube_video_id"], {}).get("duration"))
-        ]
-        if not new_videos:
-            continue
-        tags = classify_videos(new_videos, [default_category] * len(new_videos))
-        rows = []
-        for v, tag in zip(new_videos, tags):
-            d = details.get(v["youtube_video_id"], {})
-            rows.append({
-                **v,
-                "channel_id": channel_pk,
-                "duration_seconds": d.get("duration"),
-                "view_count": d.get("view_count"),
-                "category": tag["category"],
-                "language": tag["language"],
-                "tags": tag["topics"],
-            })
+            details = fetch_video_details([v["youtube_video_id"] for v in new_videos])
+            # Goloka indexes videos, not Shorts/reels (owner decision 2026-07-05) -
+            # duration is only known now, so this is where the real cutoff applies.
+            new_videos = [
+                v for v in new_videos
+                if not is_short(v["title"], details.get(v["youtube_video_id"], {}).get("duration"))
+            ]
+            if not new_videos:
+                continue
+            tags = classify_videos(new_videos, [default_category] * len(new_videos))
+            rows = []
+            for v, tag in zip(new_videos, tags):
+                d = details.get(v["youtube_video_id"], {})
+                rows.append({
+                    **v,
+                    "channel_id": channel_pk,
+                    "duration_seconds": d.get("duration"),
+                    "view_count": d.get("view_count"),
+                    "category": tag["category"],
+                    "language": tag["language"],
+                    "tags": tag["topics"],
+                })
 
-        db.table("videos").upsert(rows, on_conflict="youtube_video_id").execute()
-        total_new += len(rows)
+            db.table("videos").upsert(rows, on_conflict="youtube_video_id").execute()
+            total_new += len(rows)
+        finally:
+            # Series sync - always, and always after this run's new videos
+            # exist (see the try's comment). Its own failures are caught
+            # inside; one bad playlist never costs a channel its videos.
+            sync_channel_playlists(db, channel_pk, info["youtube_channel_id"], full)
 
     print(f"Done. {total_new} new video(s) synced.")
 

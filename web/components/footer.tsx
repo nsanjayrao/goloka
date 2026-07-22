@@ -19,6 +19,9 @@ export function Footer() {
   return (
     <footer className="site-footer">
       <div className="lamp-foot" aria-hidden="true" />
+      {/* The invocation thread (DESIGN.md #9): Her name above His - fixed
+          liturgical text, identical to the chant page's opening line. */}
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
       <p className="mantra">
         Hare Kṛṣṇa Hare Kṛṣṇa Kṛṣṇa Kṛṣṇa Hare Hare
         <br />

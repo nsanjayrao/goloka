@@ -4,21 +4,20 @@
 // lib/rounds.ts and lib/mantras.ts).
 
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import {
   createKaraokeFlow,
-  createKaraokeWord,
+  karaokeFlowAdopt,
   karaokeFlowArm,
-  karaokeFlowBoundary,
   karaokeFlowIndex,
+  karaokeFlowResync,
   karaokeFlowRest,
-  karaokeTap,
   type KaraokeFlow,
-  type KaraokeWord,
 } from "@/lib/japa-rhythm";
 import { MANTRAS, setSelectedMantraId, useSelectedMantra, type Mantra } from "@/lib/mantras";
 import { incrementRound, resetToday, useRoundsToday } from "@/lib/rounds";
+import { SANKALPA_CHOICES, setSankalpa, useSankalpa } from "@/lib/sankalpa";
 // Type-only import - erased at compile time, so referencing these types
 // here does NOT pull the voice pipeline into this component's bundle. The
 // actual module is loaded with a dynamic import() inside handleVoiceToggle,
@@ -39,6 +38,28 @@ const RESET_CONFIRM_WINDOW_MS = 3000;
 const KARAOKE_TICK_MS = 60;
 
 const SOUND_KEY = "goloka:chant-sound";
+
+// Shown once, ever: the three quiet lines that explain voice mode BEFORE the
+// mic prompt (chant at your pace; the breath counts the bead; the words
+// follow your rhythm, not a transcript). Read/written only inside the
+// toggle's click handler - after hydration - so SSR never sees it.
+const VOICE_INTRO_KEY = "goloka:voice-intro-seen";
+
+function hasSeenVoiceIntro(): boolean {
+  try {
+    return localStorage.getItem(VOICE_INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+function markVoiceIntroSeen(): void {
+  try {
+    localStorage.setItem(VOICE_INTRO_KEY, "1");
+  } catch {
+    // Storage unavailable - the intro will simply show again next time.
+  }
+}
 
 // A visitor preference (does a completed round play a soft tone?), stored
 // the same way as everything else on this page - on-device only, nothing
@@ -138,20 +159,27 @@ const VOICE_ERROR_MESSAGE_KEY: Record<VoiceJapaErrorReason, "voiceMicDenied" | "
   unsupported: "voiceUnsupported",
 };
 
-/** Fired once per completed round (108 beads), in BOTH voice and tap modes.
- * Deliberately the ONLY outward-facing hook this component exposes - it does
- * no recording of its own (the on-device "rounds today" store is the only
- * memory this page keeps; see lib/rounds.ts). The parent may wire this to
- * anything (e.g. an optional signed-in dashboard) without this component
- * knowing or caring. */
+/** Fired once per completed round (108 beads), in BOTH voice and tap modes,
+ * with the id of the mantra that was being chanted (lib/mantras.ts) so a
+ * recorder can keep each mantra's rounds as its own. Deliberately the ONLY
+ * outward-facing hook this component exposes - it does no recording of its
+ * own (the on-device "rounds today" store is the only memory this page
+ * keeps; see lib/rounds.ts). The parent may wire this to anything (e.g. an
+ * optional signed-in dashboard) without this component knowing or caring. */
 export type ChantSpaceProps = {
-  onRoundComplete?: () => void;
+  onRoundComplete?: (mantraId: string) => void;
+  /** Optional server/parent-provided line rendered under "Rounds today" -
+   * the signed-in "Recorded in My Sādhana →" link lives here (see
+   * chant-with-tracking.tsx), keeping ChantSpace itself entirely free of
+   * auth knowledge - the RSC children-as-props idiom, sideways. */
+  sadhanaSlot?: ReactNode;
 };
 
-export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
+export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {}) {
   const t = useTranslations("pages.chant");
   const roundsToday = useRoundsToday();
   const selectedMantra = useSelectedMantra();
+  const sankalpa = useSankalpa();
 
   // Kept in a ref so the long-lived voice callbacks (set once, in
   // handleVoiceToggle) always read the CURRENT mantra - its rhythm floor and
@@ -171,21 +199,30 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
   const [resetArmed, setResetArmed] = useState(false);
   const soundOn = useSyncExternalStore(subscribeSound, getSoundSnapshot, getSoundServerSnapshot) === "1";
 
-  // The karaoke cursor: which word of the selected mantra is lit. The timing
-  // logic is pure and unit-tested in lib/japa-rhythm.ts; this state only
-  // holds the word to glow. HONEST NOTE: this is NOT per-syllable
-  // transcription - there is no speech model (we removed it deliberately). In
-  // VOICE mode the highlight glides through the words on a clock paced to the
-  // chanter's own measured tempo (flowRef, below); in TAP mode it steps one
-  // word per tap. Either way it resets to the first word at every mantra
-  // boundary, so drift never accumulates.
-  const [karaoke, setKaraoke] = useState<KaraokeWord>(createKaraokeWord);
-  // The voice-mode tempo flow (lib/japa-rhythm.ts): remembers when the
-  // current mantra's voice began and how long this devotee's mantras run, so
-  // the clock effect below can light the right word at any instant. A ref,
-  // not state - it's read/written by the long-lived voice callbacks and the
-  // clock tick many times a second; only the resulting lit WORD is state.
+  // The karaoke cursor: which word of the selected mantra is lit, or null
+  // for none (at rest NOTHING glows - a lit word with nobody chanting reads
+  // as frozen). The timing logic is pure and unit-tested in
+  // lib/japa-rhythm.ts; this state only holds the word to glow. HONEST NOTE:
+  // this is NOT per-syllable transcription - there is no speech model (we
+  // removed it deliberately). Both modes play the same glide: in VOICE mode
+  // it flows at the tempo the counter has learned from the devotee's own
+  // chanting; in TAP mode one tap = one whole mantra = one full pass through
+  // the verse, then rest - the same meaning a tap has for the beads.
+  const [litWord, setLitWord] = useState<number | null>(null);
+  // True while a single tap-glide pass is playing (tap mode only) - it keeps
+  // the karaoke clock below running without the mic, and the clock turns it
+  // off again when the pass completes.
+  const [tapGlide, setTapGlide] = useState(false);
+  // The tempo flow (lib/japa-rhythm.ts): remembers when the current glide
+  // began and how long one mantra runs, so the clock effect below can light
+  // the right word at any instant. A ref, not state - it's read/written by
+  // the long-lived voice callbacks and the clock tick many times a second;
+  // only the resulting lit WORD is state.
   const flowRef = useRef<KaraokeFlow>(createKaraokeFlow(selectedMantra.karaokeMs));
+  // The one-time voice-mode introduction (see VOICE_INTRO_KEY): when true,
+  // the intro block renders where the status text lives, and the mic is only
+  // requested from its "Begin" button.
+  const [showVoiceIntro, setShowVoiceIntro] = useState(false);
 
   const [voiceStatus, setVoiceStatus] = useState<VoiceUiStatus>("off");
   const [voiceError, setVoiceError] = useState<VoiceJapaErrorReason | null>(null);
@@ -241,7 +278,7 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
     // one) after the same pause.
     for (let i = 0; i < completedRounds; i++) {
       incrementRound();
-      onRoundComplete?.();
+      onRoundComplete?.(selectedMantraRef.current.id);
     }
     if (soundOn) playRoundChime();
     setBlooming(true);
@@ -256,11 +293,18 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
 
   function handleTap() {
     advanceBeads(1);
-    // Tap-mode karaoke: each tap flows the lit word forward by one, wrapping
-    // at the end so the mantra keeps cycling and re-syncs every wordCount
-    // taps - a tasteful echo of the voiced karaoke, without pretending a tap
-    // maps to a specific syllable.
-    setKaraoke((k) => karaokeTap(k, selectedMantraRef.current.words.length));
+    // One tap = one whole chanted mantra = one full glide through the verse
+    // at the mantra's typical pace, then rest - the same meaning a tap has
+    // for the beads. A tap mid-glide simply restarts the pass (the devotee
+    // is chanting faster than the glide; follow them). Voice mode's clock
+    // owns the words while listening, so taps don't fight it.
+    if (voiceStatus === "listening") return;
+    flowRef.current = karaokeFlowResync(
+      createKaraokeFlow(selectedMantraRef.current.karaokeMs),
+      performance.now()
+    );
+    setLitWord(0);
+    setTapGlide(true);
   }
 
   // A voice session's callbacks (passed to startVoiceJapa once, in
@@ -280,28 +324,38 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
     selectedMantraRef.current = selectedMantra;
   });
 
-  // The karaoke clock (voice mode only). While listening, it asks the pure
-  // flow (lib/japa-rhythm.ts) which word should be lit "now" a few times a
-  // second and updates the glow - THIS is what paces the highlight to the
-  // devotee's chanting instead of waiting for gaps between words. When not
-  // listening it does nothing; tap mode moves the word directly in handleTap.
+  // The karaoke clock. While listening (voice mode) or while a tap-glide
+  // pass is playing, it asks the pure flow (lib/japa-rhythm.ts) which word
+  // should be lit "now" a few times a second and updates the glow - THIS is
+  // what paces the highlight to the devotee's chanting instead of waiting
+  // for gaps between words. Seeding/arming the flow happens in the handlers
+  // (handleVoiceToggle, handleTap, handleSelectMantra) - this effect is only
+  // the clock.
+  const listening = voiceStatus === "listening";
   useEffect(() => {
-    if (voiceStatus !== "listening") return;
-    // Seed a fresh flow whenever listening starts, or the mantra is switched
-    // mid-session: forget the old pace and rest on the first word.
-    flowRef.current = createKaraokeFlow(selectedMantra.karaokeMs);
+    if (!listening && !tapGlide) return;
     const intervalId = setInterval(() => {
       const now = performance.now();
       const wordCount = selectedMantraRef.current.words.length;
-      // Silence simply rests on the first word: only a real voiced onset arms
-      // the flow, so nothing glides until the devotee actually chants.
+      // A tap-glide plays exactly one pass through the verse, then rests -
+      // unlike voice, where the flow wraps until a real breath rests it.
+      if (
+        !listening &&
+        flowRef.current.startedMs !== null &&
+        now - flowRef.current.startedMs >= flowRef.current.mantraMs
+      ) {
+        flowRef.current = karaokeFlowRest(flowRef.current);
+        setTapGlide(false);
+        setLitWord(null);
+        return;
+      }
       const index = karaokeFlowIndex(flowRef.current, now, wordCount);
-      // Re-render only when the lit word actually changes (most ticks it
-      // doesn't) - a plain identity check keeps this from thrashing React.
-      setKaraoke((k) => (k.index === index && !k.primed ? k : { index, primed: false }));
+      // setState with an unchanged value is a no-op re-render-wise, so the
+      // frequent ticks where the word hasn't moved cost nothing.
+      setLitWord(index);
     }, KARAOKE_TICK_MS);
     return () => clearInterval(intervalId);
-  }, [voiceStatus, selectedMantra]);
+  }, [listening, tapGlide]);
 
   function handleReset() {
     if (!resetArmed) {
@@ -322,9 +376,13 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
   function handleSelectMantra(id: string) {
     if (id === selectedMantra.id) return;
     setSelectedMantraId(id);
-    // A fresh mantra starts clean on its own first word (its word list may be
-    // a different length; the old index could be out of range).
-    setKaraoke(createKaraokeWord());
+    // A fresh mantra starts clean and at rest: its word list may be a
+    // different length, and its pace is its own (the rhythm counter resets
+    // its learned tempo too, keyed by mantraId - see lib/japa-rhythm.ts).
+    const next = MANTRAS.find((m) => m.id === id);
+    flowRef.current = createKaraokeFlow((next ?? selectedMantra).karaokeMs);
+    setLitWord(null);
+    setTapGlide(false);
   }
 
   /** Turns hands-free chanting on or off. Every failure mode (denied
@@ -337,21 +395,46 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
    * permission is granted. The pipeline module is dynamically imported here
    * purely to keep it out of every page that never touches voice mode, not
    * because it has anything heavy to load. */
-  async function handleVoiceToggle() {
+  function handleVoiceToggle() {
     if (voiceStatus !== "off" && voiceStatus !== "error") {
       voiceGenerationRef.current += 1;
       voiceHandleRef.current?.stop();
       voiceHandleRef.current = null;
       setVoiceStatus("off");
       setVoiceError(null);
-      // Return the lit word to a calm first-word rest when listening stops.
-      setKaraoke(createKaraokeWord());
+      // Everything to a calm rest when listening stops - nothing lit.
+      flowRef.current = karaokeFlowRest(flowRef.current);
+      setLitWord(null);
       return;
     }
+    // Tapping the toggle while the intro is showing reads as "not now".
+    if (showVoiceIntro) {
+      setShowVoiceIntro(false);
+      return;
+    }
+    // First time ever: three quiet lines BEFORE the mic prompt, so the
+    // devotee knows what the listening actually does (and doesn't do).
+    if (!hasSeenVoiceIntro()) {
+      setShowVoiceIntro(true);
+      return;
+    }
+    void startVoice();
+  }
 
+  function handleVoiceIntroBegin() {
+    markVoiceIntroSeen();
+    setShowVoiceIntro(false);
+    void startVoice();
+  }
+
+  async function startVoice() {
     const generation = ++voiceGenerationRef.current;
     setVoiceError(null);
-    setKaraoke(createKaraokeWord());
+    // A fresh session starts at rest with the mantra's seed pace; the
+    // counter's learned tempo is adopted as it arrives (onMantraCompleted).
+    flowRef.current = createKaraokeFlow(selectedMantraRef.current.karaokeMs);
+    setLitWord(null);
+    setTapGlide(false);
 
     const { startVoiceJapa } = await import("@/lib/voice-japa");
     const handle = await startVoiceJapa(
@@ -362,35 +445,37 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
         },
         onVocalOnset: () => {
           if (voiceGenerationRef.current !== generation) return;
-          // The first voiced sound after a boundary STARTS this mantra's
-          // word-flow (the clock effect below then glides the highlight
-          // through the words at the learned tempo). Later onsets within the
-          // same mantra are ignored by karaokeFlowArm - the clock, not the
-          // onsets, moves the words. This is what fixed the old lag: flowing
-          // chant has few onsets, so onset-per-word skipped and stalled.
+          // The first voiced sound after a rest STARTS this mantra's glide
+          // (the clock effect then flows the highlight through the words at
+          // the adopted tempo). Later onsets within the same mantra are
+          // ignored by karaokeFlowArm - the clock, not the onsets, moves the
+          // words. This is what fixed the old lag: flowing chant has few
+          // onsets, so onset-per-word skipped and stalled.
           flowRef.current = karaokeFlowArm(flowRef.current, performance.now());
         },
-        onMantraCompleted: (n) => {
+        onMantraCompleted: (n, info) => {
           if (voiceGenerationRef.current !== generation) return;
           advanceBeadsRef.current(n);
-          // The breath that completes a mantra is the boundary: learn this
-          // devotee's actual pace from how long the mantra took, and rest the
-          // highlight back on the first word for the next repetition. The
-          // immediate reset here just avoids a one-tick flash of a late word
-          // lingering before the clock catches up.
-          flowRef.current = karaokeFlowBoundary(flowRef.current, performance.now());
-          setKaraoke(createKaraokeWord());
+          // One tempo, one owner: the counter learns the devotee's pace from
+          // real breath-delimited mantras, and the karaoke adopts it - words
+          // and beads on the same clock, never diverging.
+          flowRef.current = karaokeFlowAdopt(flowRef.current, info.tempoMs);
+          if (info.fluid) {
+            // A mid-run credit: one mantra just finished INSIDE continuous
+            // chanting. Re-anchor the glide to word one in stride - the
+            // devotee is still going.
+            flowRef.current = karaokeFlowResync(flowRef.current, performance.now());
+          }
+          // A breath-closed completion rests via onMantraBoundary, fired on
+          // the same frame just after this.
         },
         onMantraBoundary: () => {
           if (voiceGenerationRef.current !== generation) return;
-          // Any breath that closed a phrase - INCLUDING one too short to earn
-          // a bead. Since the word-flow now loops while voice continues, this
-          // is what tells it the devotee has actually stopped, so the words
-          // rest on the first word instead of cycling on into a silent room.
-          // A counted mantra already rested the flow a moment earlier (see
-          // onMantraCompleted); resting again is a no-op.
+          // Any breath that closed a phrase - a counted mantra, a reconciled
+          // fluid run, or half a mantra that earned nothing. The devotee has
+          // paused: rest the glide, light nothing, wait for the next onset.
           flowRef.current = karaokeFlowRest(flowRef.current);
-          setKaraoke(createKaraokeWord());
+          setLitWord(null);
         },
         onError: (reason) => {
           if (voiceGenerationRef.current !== generation) return;
@@ -401,8 +486,12 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
       },
       {
         // Read fresh per frame, so switching mantra mid-session applies the
-        // new mantra's rhythm floor immediately without restarting the mic.
+        // new mantra's rhythm floor, seed pace, and identity immediately
+        // without restarting the mic (a switch resets the learned tempo -
+        // see lib/japa-rhythm.ts).
         getMinPhraseMs: () => selectedMantraRef.current.minMantraMs,
+        getTempoSeedMs: () => selectedMantraRef.current.karaokeMs,
+        getMantraId: () => selectedMantraRef.current.id,
       }
     );
 
@@ -425,7 +514,6 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
   }
 
   const beads = Array.from({ length: BEADS_PER_ROUND }, (_, i) => i < beadIndex);
-  const listening = voiceStatus === "listening";
   const showIosHint = voiceStatus === "error" && isProbablyIos();
 
   // The mantra, word by word, split into its traditional lines with the one
@@ -450,7 +538,7 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
         {verseLines.map((line, li) => (
           <span key={li} className="chant-verse-line">
             {line.map(({ index, text }) => (
-              <span key={index} className={`chant-word${index === karaoke.index ? " is-lit" : ""}`}>
+              <span key={index} className={`chant-word${index === litWord ? " is-lit" : ""}`}>
                 {text}
               </span>
             ))}
@@ -495,87 +583,83 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
         </button>
       </div>
 
-      {listening && <p className="mt-4 text-[12px] uppercase tracking-[0.14em] text-marigold">{t("voiceListening")}</p>}
-
-      <div className="mt-8 flex items-center gap-6 text-[12px] uppercase tracking-[0.14em] text-text-muted">
-        <span>{t("roundsToday", { count: roundsToday })}</span>
-        <button
-          type="button"
-          onClick={handleReset}
-          className="text-text-muted underline-offset-4 outline-none transition-colors hover:text-flame focus-visible:text-flame"
-          aria-label={resetArmed ? t("resetConfirmAria") : t("resetAria")}
-        >
-          {resetArmed ? t("resetConfirm") : t("reset")}
-        </button>
-      </div>
-
-      {listening && (
-        <div className="mt-3 flex items-center gap-5 text-[11px] uppercase tracking-[0.14em] text-text-muted">
-          <button
-            type="button"
-            onClick={() => handleNudge(-1)}
-            aria-label={t("voiceNudgeMinusAria")}
-            className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
-          >
-            {t("voiceNudgeMinus")}
-          </button>
-          <button
-            type="button"
-            onClick={() => handleNudge(1)}
-            aria-label={t("voiceNudgePlusAria")}
-            className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
-          >
-            {t("voiceNudgePlus")}
-          </button>
-        </div>
-      )}
-
-      {/* The mantra selector - a quiet segmented switch, never a loud
-          dropdown. Names inside are fixed liturgical text; only the "Mantra"
-          label is translated. */}
-      <div className="mt-8 flex flex-col items-center gap-2">
-        <span className="text-[11px] uppercase tracking-[0.18em] text-text-muted">{t("mantraLabel")}</span>
-        <div className="mantra-switch" role="group" aria-label={t("mantraLabel")}>
-          {MANTRAS.map((mantra) => (
+      {/* Zone 1 - the session's living status. Fixed min-height so the
+          listening line and nudge row appearing/disappearing never shifts
+          anything below (the old layout jumped every time voice toggled). */}
+      <div className="mt-4 flex min-h-[56px] flex-col items-center justify-start gap-2">
+        {listening && (
+          <p className="text-[12px] uppercase tracking-[0.14em] text-marigold">{t("voiceListening")}</p>
+        )}
+        {listening && (
+          <div className="flex items-center gap-5 text-[11px] uppercase tracking-[0.14em] text-text-muted">
             <button
-              key={mantra.id}
               type="button"
-              aria-pressed={mantra.id === selectedMantra.id}
-              aria-label={mantra.name}
-              onClick={() => handleSelectMantra(mantra.id)}
-              className="mantra-switch-option"
+              onClick={() => handleNudge(-1)}
+              aria-label={t("voiceNudgeMinusAria")}
+              className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
             >
-              {mantra.shortName}
+              {t("voiceNudgeMinus")}
             </button>
-          ))}
-        </div>
+            <button
+              type="button"
+              onClick={() => handleNudge(1)}
+              aria-label={t("voiceNudgePlusAria")}
+              className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
+            >
+              {t("voiceNudgePlus")}
+            </button>
+          </div>
+        )}
       </div>
 
-      {/* The two quiet switches: a soft tone on a completed round, and
-          hands-free "Chant aloud". */}
-      <div className="mt-6 flex items-center gap-6">
-        <button
-          type="button"
-          role="switch"
-          aria-checked={soundOn}
-          aria-label={t("soundAria")}
-          onClick={handleSoundToggle}
-          className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
-        >
-          <span
-            className={`inline-block h-[9px] w-[9px] rounded-full border border-hairline transition-colors ${soundOn ? "bg-marigold" : "bg-transparent"}`}
-            aria-hidden="true"
-          />
-          {t("sound")}
-        </button>
+      {/* Zone 2 - the session line: today's offering, the sankalpa's quiet
+          progress when a vow exists, and (when signed in) the link to the
+          sādhana record it flows into. When the day falls short of a vow,
+          NOTHING here ever says so - the vow line only speaks while a round
+          is underway toward it, or once it is fulfilled. */}
+      <div className="flex flex-col items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-text-muted">
+        <span>{t("roundsToday", { count: roundsToday })}</span>
+        {sankalpa !== null && (
+          <span className="text-marigold/90">
+            {roundsToday >= sankalpa
+              ? t("sankalpaOffered", { vow: sankalpa })
+              : t("sankalpaProgress", { current: roundsToday + 1, vow: sankalpa })}
+          </span>
+        )}
+        {sadhanaSlot}
+      </div>
 
+      {/* Zone 3 - the controls, gathered in one cluster ordered by weight:
+          which mantra, then the chanting mode, then the small preferences. */}
+      <div className="mt-8 flex flex-col items-center gap-5">
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.18em] text-text-muted">{t("mantraLabel")}</span>
+          <div className="mantra-switch" role="group" aria-label={t("mantraLabel")}>
+            {MANTRAS.map((mantra) => (
+              <button
+                key={mantra.id}
+                type="button"
+                aria-pressed={mantra.id === selectedMantra.id}
+                aria-label={mantra.name}
+                onClick={() => handleSelectMantra(mantra.id)}
+                className="mantra-switch-option"
+              >
+                {mantra.shortName}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* "Chant aloud" promoted to a pill: it is a MODE (hands-free
+            chanting), not a preference - it must not read as the chime
+            toggle's twin, which is exactly how it got lost before. */}
         <button
           type="button"
           role="switch"
           aria-checked={listening}
           aria-label={t("voiceAria")}
           onClick={handleVoiceToggle}
-          className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+          className="chant-voice-toggle"
         >
           <span
             className={`inline-block h-[9px] w-[9px] rounded-full border border-hairline transition-colors ${listening ? "bg-marigold" : "bg-transparent"}`}
@@ -583,9 +667,74 @@ export function ChantSpace({ onRoundComplete }: ChantSpaceProps = {}) {
           />
           {t("voiceLabel")}
         </button>
+
+        {/* Sankalpa - the devotee's OWN daily vow (lib/sankalpa.ts). The
+            same segmented-switch clothing as the mantra selector; tapping
+            the chosen number again releases the vow. No default, no urging,
+            and nowhere on this page a word about falling short. */}
+        <div className="flex flex-col items-center gap-2">
+          <span className="text-[11px] uppercase tracking-[0.18em] text-text-muted">{t("sankalpaLabel")}</span>
+          <div className="mantra-switch" role="group" aria-label={t("sankalpaAria")}>
+            {SANKALPA_CHOICES.map((n) => (
+              <button
+                key={n}
+                type="button"
+                aria-pressed={sankalpa === n}
+                onClick={() => setSankalpa(sankalpa === n ? null : n)}
+                className="mantra-switch-option"
+              >
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Tertiary preferences: the round chime, and the day's reset. */}
+        <div className="flex items-center gap-6 text-[12px] uppercase tracking-[0.14em] text-text-muted">
+          <button
+            type="button"
+            role="switch"
+            aria-checked={soundOn}
+            aria-label={t("soundAria")}
+            onClick={handleSoundToggle}
+            className="inline-flex items-center gap-2 uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+          >
+            <span
+              className={`inline-block h-[9px] w-[9px] rounded-full border border-hairline transition-colors ${soundOn ? "bg-marigold" : "bg-transparent"}`}
+              aria-hidden="true"
+            />
+            {t("sound")}
+          </button>
+          <button
+            type="button"
+            onClick={handleReset}
+            className="text-text-muted underline-offset-4 outline-none transition-colors hover:text-flame focus-visible:text-flame"
+            aria-label={resetArmed ? t("resetConfirmAria") : t("resetAria")}
+          >
+            {resetArmed ? t("resetConfirm") : t("reset")}
+          </button>
+        </div>
       </div>
 
-      <div className="mt-3 flex flex-col items-center gap-2">
+      {/* Zone 4 - messages: the one-time voice introduction, or the mic
+          status lines. min-height reserves room for the common single-line
+          states so toggling never shifts the privacy line below. */}
+      <div className="mt-4 flex min-h-[40px] flex-col items-center gap-2">
+        {showVoiceIntro && (
+          <div className="flex max-w-sm flex-col items-center gap-3 rounded-2xl border border-hairline bg-shyama px-6 py-5">
+            <p className="text-[13px] leading-relaxed text-chandan">{t("voiceIntroPace")}</p>
+            <p className="text-[13px] leading-relaxed text-chandan">{t("voiceIntroBreath")}</p>
+            <p className="text-[13px] leading-relaxed text-text-muted">{t("voiceIntroRhythm")}</p>
+            <button
+              type="button"
+              onClick={handleVoiceIntroBegin}
+              className="chant-voice-toggle mt-1"
+            >
+              {t("voiceIntroBegin")}
+            </button>
+          </div>
+        )}
+
         {voiceStatus === "requesting-mic" && <p className="text-[12px] text-text-muted">{t("voiceRequestingMic")}</p>}
 
         {voiceStatus === "error" && voiceError && (

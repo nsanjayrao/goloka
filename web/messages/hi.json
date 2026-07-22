@@ -94,11 +94,23 @@
     "belovedByMillions": "लाखों भक्तों का प्रिय",
     "mostWatched": "सर्वाधिक देखा गया",
     "continueWatching": "देखना जारी रखें",
+    "forYou": "आपके लिए",
+    "becauseYouWatched": "आपने {category} देखा, इसलिए",
     "inYourLanguage": "आपकी भाषा में"
   },
   "watchPage": {
     "keepWatching": "देखते रहें",
-    "moreFrom": "{category} से और अधिक"
+    "moreFrom": "{category} से और अधिक",
+    "upNextToggle": "अगला वीडियो अपने आप चलाएँ",
+    "upNextToggleAria": "वीडियो समाप्त होने पर अगला अपने आप चलेगा",
+    "upNextKicker": "आगे",
+    "upNextContinuing": "{seconds} सेकंड में आगे बढ़ेंगे",
+    "upNextCancel": "यहीं रुकें",
+    "seriesKicker": "श्रृंखला",
+    "seriesPart": "{total} में से भाग {position}",
+    "seriesPrev": "पिछला भाग",
+    "seriesNext": "अगला भाग",
+    "seriesViewAria": "पूरी श्रृंखला देखें: {title}"
   },
   "emptyState": {
     "default": "अभी यहाँ कुछ नहीं है — उत्सव से पहले के वृंदावन की तरह। शीघ्र ही फिर देखें।",
@@ -191,7 +203,14 @@
     "delete": "हटाएँ",
     "titlePlaceholder": "माँ के लिए एकादशी प्रवचन",
     "titleInputAria": "इस साझा लिंक के लिए शीर्षक",
-    "shareCollection": "यह संग्रह साझा करें"
+    "shareCollection": "यह संग्रह साझा करें",
+    "seriesKicker": "श्रृंखला",
+    "seriesParts": "{count} भाग"
+  },
+  "seriesPage": {
+    "kicker": "श्रृंखला",
+    "episodesIndexed": "{total} में से {count} भाग",
+    "empty": "इस श्रृंखला के भाग अभी सूचीबद्ध नहीं हुए — कैटलॉग सिंक होते ही दिखेंगे।"
   },
   "sadhana": {
     "title": "मेरी साधना",
@@ -204,6 +223,17 @@
     "thisYear": "इस वर्ष",
     "thisYearHeading": "इस वर्ष, महीने दर महीने",
     "emptyMonth": "इस महीने अभी तक कोई माला दर्ज नहीं हुई — जब भी आप साइन इन रहते हुए जप करेंगे, वे यहाँ शांति से रहेंगी।",
+    "allTime": "अब तक",
+    "unbrokenDays": "लगातार {count} दिन हरिनाम",
+    "milestoneYear": "इस वर्ष {count} मालाएँ अर्पित",
+    "yearHeading": "{year}, महीने-दर-महीने",
+    "emptyYear": "{year} में कोई माला दर्ज नहीं।",
+    "prevMonthAria": "पिछला महीना",
+    "nextMonthAria": "अगला महीना",
+    "prevYearAria": "पिछला वर्ष",
+    "nextYearAria": "अगला वर्ष",
+    "chartAria": "महीने के अनुसार मालाएँ, {year}",
+    "mantraShare": "{mantra}: {count} माला",
     "roundsCount": "{count, plural, one {# माला} other {# मालाएँ}}",
     "dayRounds": "{day}: {count, plural, one {# माला} other {# मालाएँ}}",
     "dayNone": "{day}: कोई माला नहीं",
@@ -291,7 +321,16 @@
       "voiceMicDenied": "माइक्रोफ़ोन की अनुमति नहीं मिली — आँखें बंद कर, थपथपाकर गिनें।",
       "voiceUnsupported": "इस ब्राउज़र में हैंड्स-फ़्री जप उपलब्ध नहीं है — थपथपाकर गिनें।",
       "voiceIosSafariHint": "आईफ़ोन पर, आवाज़ से जप Safari में सबसे अच्छा चलता है।",
-      "mantraLabel": "मंत्र"
+      "mantraLabel": "मंत्र",
+      "sankalpaLabel": "संकल्प",
+      "sankalpaAria": "आपका अपना दैनिक संकल्प — चुने अंक को फिर छूने से हट जाता है",
+      "sankalpaProgress": "आपके {vow} में से {current}वीं माला",
+      "sankalpaOffered": "आपकी {vow} मालाएँ अर्पित",
+      "voiceIntroPace": "अपनी गति से जपें — धीमे स्वर में भी ठीक है।",
+      "voiceIntroBreath": "मंत्रों के बीच की सहज छोटी साँस से ही मनका गिना जाता है।",
+      "voiceIntroRhythm": "चमकते शब्द आपकी लय के साथ चलते हैं — यह एक साथी है, प्रतिलेख नहीं।",
+      "voiceIntroBegin": "आरंभ करें",
+      "recordedInSadhana": "हर माला मेरी साधना में दर्ज होती है"
     },
     "calendar": {
       "h1": "वैष्णव पंचांग",

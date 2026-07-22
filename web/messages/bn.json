@@ -94,11 +94,23 @@
     "belovedByMillions": "লক্ষ লক্ষ ভক্তের প্রিয়",
     "mostWatched": "সর্বাধিক দেখা",
     "continueWatching": "দেখা চালিয়ে যান",
+    "forYou": "আপনার জন্য",
+    "becauseYouWatched": "আপনি {category} দেখেছেন বলে",
     "inYourLanguage": "আপনার ভাষায়"
   },
   "watchPage": {
     "keepWatching": "দেখতে থাকুন",
-    "moreFrom": "{category} থেকে আরও"
+    "moreFrom": "{category} থেকে আরও",
+    "upNextToggle": "পরের ভিডিওতে এগিয়ে যান",
+    "upNextToggleAria": "ভিডিও শেষ হলে পরেরটি নিজে থেকে চলবে",
+    "upNextKicker": "এরপর",
+    "upNextContinuing": "{seconds} সেকেন্ডে পরেরটি",
+    "upNextCancel": "এখানেই থাকুন",
+    "seriesKicker": "সিরিজ",
+    "seriesPart": "{total}টির মধ্যে পর্ব {position}",
+    "seriesPrev": "আগের পর্ব",
+    "seriesNext": "পরের পর্ব",
+    "seriesViewAria": "পুরো সিরিজ দেখুন: {title}"
   },
   "emptyState": {
     "default": "এখানে এখনো কিছু নেই — উৎসবের আগের বৃন্দাবনের মতো। শীঘ্রই আবার দেখুন।",
@@ -191,7 +203,14 @@
     "delete": "মুছুন",
     "titlePlaceholder": "মায়ের জন্য একাদশী প্রবচন",
     "titleInputAria": "এই শেয়ার করা লিংকের শিরোনাম",
-    "shareCollection": "এই সংগ্রহ শেয়ার করুন"
+    "shareCollection": "এই সংগ্রহ শেয়ার করুন",
+    "seriesKicker": "সিরিজ",
+    "seriesParts": "{count}টি পর্ব"
+  },
+  "seriesPage": {
+    "kicker": "সিরিজ",
+    "episodesIndexed": "{total}টির মধ্যে {count} পর্ব",
+    "empty": "এই সিরিজের পর্বগুলি এখনও তালিকাভুক্ত হয়নি — ক্যাটালগ সিঙ্ক হলেই দেখা যাবে।"
   },
   "sadhana": {
     "title": "আমার সাধনা",
@@ -204,6 +223,17 @@
     "thisYear": "এই বছরে",
     "thisYearHeading": "এই বছর, মাসে মাসে",
     "emptyMonth": "এই মাসে এখনো কোনো মালা নথিভুক্ত হয়নি — সাইন ইন থাকা অবস্থায় আপনি যখনই জপ করবেন, সেগুলি এখানে শান্তভাবে থাকবে।",
+    "allTime": "সর্বমোট",
+    "unbrokenDays": "একটানা {count} দিন হরিনাম",
+    "milestoneYear": "এ বছরে {count} মালা নিবেদিত",
+    "yearHeading": "{year}, মাসে মাসে",
+    "emptyYear": "{year}-এ কোনো মালা লেখা নেই।",
+    "prevMonthAria": "আগের মাস",
+    "nextMonthAria": "পরের মাস",
+    "prevYearAria": "আগের বছর",
+    "nextYearAria": "পরের বছর",
+    "chartAria": "মাস অনুযায়ী মালা, {year}",
+    "mantraShare": "{mantra}: {count} মালা",
     "roundsCount": "{count, plural, one {# মালা} other {# মালা}}",
     "dayRounds": "{day}: {count, plural, one {# মালা} other {# মালা}}",
     "dayNone": "{day}: কোনো মালা নেই",
@@ -291,7 +321,16 @@
       "voiceMicDenied": "মাইক্রোফোনের অনুমতি পাওয়া যায়নি — চোখ বন্ধ করে, আলতো চেপে গুনুন।",
       "voiceUnsupported": "এই ব্রাউজারে হ্যান্ডস-ফ্রি জপ উপলব্ধ নেই — আলতো চেপে গুনুন।",
       "voiceIosSafariHint": "আইফোনে, কণ্ঠে জপ Safari-তে সবচেয়ে ভালো কাজ করে।",
-      "mantraLabel": "মন্ত্র"
+      "mantraLabel": "মন্ত্র",
+      "sankalpaLabel": "সংকল্প",
+      "sankalpaAria": "আপনার নিজের দৈনিক সংকল্প — বাছাই করা সংখ্যায় আবার চাপলে মুছে যায়",
+      "sankalpaProgress": "আপনার {vow}-এর মধ্যে {current} নম্বর মালা",
+      "sankalpaOffered": "আপনার {vow} মালা নিবেদিত",
+      "voiceIntroPace": "নিজের গতিতে জপ করুন — মৃদুস্বরেও চলবে।",
+      "voiceIntroBreath": "মন্ত্রের মাঝের স্বাভাবিক ছোট্ট শ্বাসেই প্রতিটি গুটি গোনা হয়।",
+      "voiceIntroRhythm": "উজ্জ্বল শব্দগুলি আপনার ছন্দ অনুসরণ করে — এ এক সঙ্গী, প্রতিলিপি নয়।",
+      "voiceIntroBegin": "শুরু করুন",
+      "recordedInSadhana": "প্রতিটি মালা আমার সাধনায় লেখা হয়"
     },
     "calendar": {
       "h1": "বৈষ্ণব পঞ্জিকা",

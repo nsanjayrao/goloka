@@ -24,7 +24,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default function SadhanaPage() {
   return (
     <Container className="page-top pb-10">
-      <SadhanaClient />
+      {/* The invocation thread (DESIGN.md #9): the record of the holy name
+          opens with Her name - fixed liturgical text, same as /chant. */}
+      <p className="text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <div className="mt-6">
+        <SadhanaClient />
+      </div>
     </Container>
   );
 }

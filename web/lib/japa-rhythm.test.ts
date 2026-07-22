@@ -6,17 +6,20 @@ import {
   countMantrasInFrames,
   createJapaRhythmState,
   createKaraokeFlow,
-  createKaraokeWord,
   DEBOUNCE_MS,
+  FLUID_CREDIT_MARGIN,
+  karaokeFlowAdopt,
   karaokeFlowArm,
-  karaokeFlowBoundary,
   karaokeFlowIndex,
+  karaokeFlowResync,
   karaokeFlowRest,
-  karaokeTap,
+  MAX_FRAME_DT_MS,
+  MAX_PHRASE_CREDITS,
   MICRO_GAP_MS,
   MIN_PHRASE_MS,
   ONSET_REARM_MS,
   pushAudioFrame,
+  type PushAudioFrameOptions,
 } from "./japa-rhythm";
 
 // ---------- Synthetic frame generation ----------
@@ -51,20 +54,23 @@ function framesFromSegments(segments: { durationMs: number; rms: number }[]): Au
 
 /** Runs frames through pushAudioFrame one at a time (rather than the
  * countMantrasInFrames convenience) so a test can also inspect the final
- * state, not just the count. */
-function run(frames: AudioFrame[], options?: { minPhraseMs?: number }) {
-  let state = createJapaRhythmState();
+ * state, not just the count. `initialState` lets a test chain runs (e.g.
+ * learn a tempo under one mantra, then switch to another). */
+function run(frames: AudioFrame[], options?: PushAudioFrameOptions, initialState = createJapaRhythmState()) {
+  let state = initialState;
   let mantraEvents = 0;
   let onsetEvents = 0;
   let boundaryEvents = 0;
+  let fluidEvents = 0;
   for (const frame of frames) {
     const result = pushAudioFrame(state, frame, options);
     state = result.state;
     if (result.mantraCompleted) mantraEvents += 1;
     if (result.mantraBoundary) boundaryEvents += 1;
     if (result.onset) onsetEvents += 1;
+    if (result.fluid) fluidEvents += 1;
   }
-  return { state, mantraEvents, onsetEvents, boundaryEvents };
+  return { state, mantraEvents, onsetEvents, boundaryEvents, fluidEvents };
 }
 
 describe("constants: the documented design invariants hold", () => {
@@ -350,44 +356,181 @@ describe("mantra boundary: any breath that closes a phrase (karaoke resync point
   });
 });
 
-describe("karaoke word-index stepping (pure)", () => {
-  const WORDS = 16; // the mahā-mantra
+// ---------- Fluid crediting (counting without a breath) ----------
+// The scenarios that prove tempo-elapsed crediting: fluid chanting credits
+// about the right number (never more), noise and coughs credit nothing and
+// teach nothing, every breath reconciles, and the safety clamps hold.
 
-  it("starts primed on the first word", () => {
-    const k = createKaraokeWord();
-    expect(k).toEqual({ index: 0, primed: true });
+const MAHA = { tempoSeedMs: 5500, mantraId: "maha" };
+
+/** Two clean breath-delimited mantras of `ms` voiced time each - the minimum
+ * to make the learned tempo confident. Returns the state to chain from.
+ * NOTE on arithmetic: the first frame of a burst pays the debounce, so a
+ * segment of N ms accumulates roughly N-40 ms of voiced time - tests
+ * therefore assert against ranges, not exact equality. */
+function learnTempo(ms: number, options: PushAudioFrameOptions) {
+  const frames = framesFromSegments([
+    segment(200, QUIET),
+    segment(ms, CHANT),
+    segment(500, QUIET),
+    segment(ms, CHANT),
+    segment(500, QUIET),
+  ]);
+  return run(frames, options);
+}
+
+describe("fluid crediting: chanting with no breath finally counts", () => {
+  it("without a tempo seed, behaves exactly as before - unbroken chant credits 0", () => {
+    // The original honest-undercount contract, preserved for any caller that
+    // doesn't opt in to fluid crediting.
+    const frames = framesFromSegments([segment(200, QUIET), segment(8000, CHANT)]);
+    expect(countMantrasInFrames(frames)).toBe(0);
   });
 
-  it("tap stepping wraps at the end so the words keep flowing", () => {
-    let k = createKaraokeWord();
-    const seen: number[] = [];
-    for (let i = 0; i < WORDS + 2; i++) {
-      k = karaokeTap(k, WORDS);
-      seen.push(k.index);
+  it("seed tier: a breathless session still moves the beads, undercounted", () => {
+    // No breath EVER - the devotee the old counter left at zero forever.
+    // Credits fire per SEED_CREDIT_FACTOR × seed (~9.6s of voice each):
+    // 30s of chanting ≈ 5 mantras chanted → 3 credited. Moving, never over.
+    const frames = framesFromSegments([segment(200, QUIET), segment(30000, CHANT)]);
+    const { mantraEvents, fluidEvents } = run(frames, MAHA);
+    expect(mantraEvents).toBe(3);
+    expect(fluidEvents).toBe(3);
+  });
+
+  it("seed tier stays conservative: 8s of unbroken chant is still 0", () => {
+    // 8s < SEED_CREDIT_FACTOR × 5500 = 9625 - under the first credit line.
+    const frames = framesFromSegments([segment(200, QUIET), segment(8000, CHANT)]);
+    expect(run(frames, MAHA).mantraEvents).toBe(0);
+  });
+
+  it("learned tempo: a fluid run credits one per mantra, reconciled at the breath", () => {
+    // Learn ~5s per mantra from two clean repetitions, then chant ~16s
+    // unbroken (≈3.2 mantras) and finally breathe: 2 credits in-flight
+    // (at ~1.15T and ~2.3T) + 1 reconciled at the breath = 5 total.
+    const learned = learnTempo(5000, MAHA);
+    expect(learned.mantraEvents).toBe(2);
+    const fluidRun = framesFromSegments([segment(16000, CHANT), segment(500, QUIET)]);
+    const after = run(fluidRun, MAHA, learned.state);
+    expect(after.fluidEvents).toBe(2);
+    expect(after.mantraEvents).toBe(3);
+  });
+
+  it("one slow mantra never becomes two", () => {
+    // 1.4× the learned tempo, then a breath: the in-flight credit at 1.15T
+    // fires, and the small remainder (0.25T) earns nothing at the breath.
+    const learned = learnTempo(5000, MAHA);
+    const slow = framesFromSegments([segment(7000, CHANT), segment(500, QUIET)]);
+    const after = run(slow, MAHA, learned.state);
+    expect(after.mantraEvents).toBe(1);
+  });
+
+  it("a typical single mantra with a breath still counts exactly once", () => {
+    // ~1.0T of voice never reaches the 1.15T fluid line - the breath path
+    // credits it, exactly as before fluid crediting existed.
+    const learned = learnTempo(5000, MAHA);
+    const one = framesFromSegments([segment(5000, CHANT), segment(500, QUIET)]);
+    const after = run(one, MAHA, learned.state);
+    expect(after.mantraEvents).toBe(1);
+    expect(after.fluidEvents).toBe(0);
+  });
+
+  it("noise credits nothing even with a seed and a learned tempo", () => {
+    const learned = learnTempo(5000, MAHA);
+    const noise = framesFromSegments([
+      segment(1200, 0.03),
+      segment(200, 0.045),
+      segment(1200, 0.03),
+      segment(200, 0.045),
+      segment(1200, 0.03),
+    ]);
+    expect(run(noise, MAHA, learned.state).mantraEvents).toBe(0);
+  });
+
+  it("a cough neither counts nor teaches the tempo", () => {
+    const frames = framesFromSegments([segment(200, QUIET), segment(300, CHANT), segment(500, QUIET)]);
+    const { state, mantraEvents } = run(frames, MAHA);
+    expect(mantraEvents).toBe(0);
+    expect(state.tempoSamples).toBe(0);
+    expect(state.tempoMs).toBeNull();
+  });
+
+  it("learns the devotee's pace from clean repetitions", () => {
+    const { state } = learnTempo(5000, MAHA);
+    expect(state.tempoSamples).toBe(2);
+    // voiced time ≈ 4960 per mantra (the first frame pays the debounce)
+    expect(state.tempoMs).toBeGreaterThan(4800);
+    expect(state.tempoMs).toBeLessThanOrEqual(5000);
+  });
+
+  it("adapts when the devotee's pace changes", () => {
+    let { state } = learnTempo(6000, MAHA);
+    const before = state.tempoMs!;
+    // four quicker mantras with breaths pull the estimate down
+    for (let i = 0; i < 4; i++) {
+      const one = framesFromSegments([segment(4000, CHANT), segment(500, QUIET)]);
+      state = run(one, MAHA, state).state;
     }
-    // first tap lights word 0, then 1..15, then wraps to 0, 1
-    expect(seen[0]).toBe(0);
-    expect(seen[WORDS - 1]).toBe(WORDS - 1);
-    expect(seen[WORDS]).toBe(0);
-    expect(seen[WORDS + 1]).toBe(1);
+    expect(state.tempoMs!).toBeLessThan(before - 800);
   });
 
-  it("guards a zero-length word list (never divides by zero, never advances)", () => {
-    const k = createKaraokeWord();
-    expect(karaokeTap(k, 0)).toBe(k);
+  it("after only ONE clean measurement, fluid crediting stays on the seed tier", () => {
+    const oneMantra = framesFromSegments([segment(200, QUIET), segment(5000, CHANT), segment(500, QUIET)]);
+    const learned = run(oneMantra, MAHA);
+    expect(learned.state.tempoSamples).toBe(1);
+    // 8s of unbroken chant: the learned tier (≈5.7s line) would credit, the
+    // seed tier (9.6s line) must not - one sample is not confidence.
+    const fluidRun = framesFromSegments([segment(8000, CHANT)]);
+    expect(run(fluidRun, MAHA, learned.state).fluidEvents).toBe(0);
+  });
+
+  it("switching mantra resets the learned tempo and any open phrase", () => {
+    const learned = learnTempo(5000, MAHA);
+    expect(learned.state.tempoMs).not.toBeNull();
+    // same frames, new mantra id: the old pace must not carry over
+    const radha = { tempoSeedMs: 2200, mantraId: "radha" };
+    const quiet = framesFromSegments([segment(200, QUIET)]);
+    const after = run(quiet, radha, learned.state);
+    expect(after.state.tempoMs).toBeNull();
+    expect(after.state.tempoSamples).toBe(0);
+    expect(after.state.phraseVoicedMs).toBe(0);
+  });
+
+  it("a frozen tab cannot mint credits (dt clamp)", () => {
+    // 3s of real chanting, then ONE frame arriving 30 seconds late while
+    // still "voiced" - without the clamp that single dt would inject 30s of
+    // phantom voiced time and burst several seed-tier credits at once.
+    const frames = framesFromSegments([segment(200, QUIET), segment(3000, CHANT)]);
+    const last = frames[frames.length - 1];
+    frames.push({ timeMs: last.timeMs + 30000, rms: CHANT });
+    const { state, mantraEvents } = run(frames, MAHA);
+    expect(mantraEvents).toBe(0);
+    expect(state.phraseVoicedMs).toBeLessThanOrEqual(3000 + MAX_FRAME_DT_MS);
+  });
+
+  it("an unbroken phrase stops crediting at the cap until a breath re-anchors", () => {
+    // ~200s of continuous voice at a learned ~5s tempo would earn ~34
+    // credits unbounded; the cap holds it to MAX_PHRASE_CREDITS. (If this
+    // much truly unbroken "chanting" is real, it isn't japa - it's a TV.)
+    const learned = learnTempo(5000, MAHA);
+    const unitMs = learned.state.tempoMs! * FLUID_CREDIT_MARGIN;
+    const runMs = Math.ceil(unitMs * (MAX_PHRASE_CREDITS + 3));
+    const marathon = framesFromSegments([segment(runMs, CHANT)]);
+    const after = run(marathon, MAHA, learned.state);
+    expect(after.fluidEvents).toBe(MAX_PHRASE_CREDITS);
   });
 });
 
-describe("karaoke tempo flow (voice mode)", () => {
+// ---------- Karaoke tempo flow ----------
+
+describe("karaoke tempo flow", () => {
   const WORDS = 16; // the mahā-mantra
   const SEED = 5500; // its seed tempo, ms for the whole mantra
 
-  it("rests on the first word until the mantra's voice begins", () => {
+  it("at rest nothing is lit, however long the silence", () => {
     const flow = createKaraokeFlow(SEED);
     expect(flow.startedMs).toBeNull();
-    // however long we wait, an unarmed flow stays on word 0
-    expect(karaokeFlowIndex(flow, 1000, WORDS)).toBe(0);
-    expect(karaokeFlowIndex(flow, 9000, WORDS)).toBe(0);
+    expect(karaokeFlowIndex(flow, 1000, WORDS)).toBeNull();
+    expect(karaokeFlowIndex(flow, 9000, WORDS)).toBeNull();
   });
 
   it("glides through the words in order at the seeded pace", () => {
@@ -400,39 +543,18 @@ describe("karaoke tempo flow (voice mode)", () => {
   });
 
   it("wraps to the first word instead of stalling lit on the last one", () => {
-    // THE FIX: a devotee running one mantra into the next with no clear
-    // breath used to leave the highlight parked on the final golden word
-    // until a boundary finally landed. Now it simply flows on.
+    // A devotee running one mantra into the next with no clear breath keeps
+    // flowing instead of parking on the final golden word.
     const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
     const perWord = SEED / WORDS;
     expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS - 0.5), WORDS)).toBe(WORDS - 1);
     expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS + 0.5), WORDS)).toBe(0);
     expect(karaokeFlowIndex(flow, 1000 + perWord * (WORDS + 1.5), WORDS)).toBe(1);
-    // and still lands on a real word many mantras later, never past the end
-    const late = karaokeFlowIndex(flow, 1000 + SEED * 9.37, WORDS);
-    expect(late).toBeGreaterThanOrEqual(0);
-    expect(late).toBeLessThan(WORDS);
   });
 
-  it("never reads a word before the flow was armed (clock going backwards)", () => {
+  it("never reads a word before the glide was armed (clock going backwards)", () => {
     const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
     expect(karaokeFlowIndex(flow, 900, WORDS)).toBe(0);
-  });
-
-  it("a rest stops the glide without forgetting the learned tempo", () => {
-    let flow = karaokeFlowArm(createKaraokeFlow(SEED), 0);
-    flow = karaokeFlowBoundary(flow, 8000 + BREATH_GAP_MS); // learn ~6750
-    const learned = flow.mantraMs;
-    flow = karaokeFlowArm(flow, 20000);
-    const rested = karaokeFlowRest(flow);
-    expect(rested.startedMs).toBeNull();
-    expect(rested.mantraMs).toBe(learned);
-    expect(karaokeFlowIndex(rested, 99000, WORDS)).toBe(0);
-  });
-
-  it("resting an already-resting flow changes nothing", () => {
-    const resting = createKaraokeFlow(SEED);
-    expect(karaokeFlowRest(resting)).toBe(resting);
   });
 
   it("arming is idempotent within a mantra - later onsets don't restart it", () => {
@@ -442,46 +564,32 @@ describe("karaoke tempo flow (voice mode)", () => {
     expect(again.startedMs).toBe(1000);
   });
 
-  it("a boundary learns the devotee's real pace and rests on the first word", () => {
+  it("a rest stops the glide and keeps the tempo; resting at rest is a no-op", () => {
     const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
-    // 9500ms from voiced start to boundary - but a boundary is only declared
-    // once silence has already run BREATH_GAP_MS, so the real chanting was
-    // 9500 - 400. Counting that gap would make the glide lag further behind
-    // every single mantra.
-    const after = karaokeFlowBoundary(armed, 10500);
-    expect(after.startedMs).toBeNull();
-    // smoothed halfway toward the measurement, not jumped to it
-    expect(after.mantraMs).toBeCloseTo((SEED + (9500 - BREATH_GAP_MS)) / 2, 5);
+    const rested = karaokeFlowRest(armed);
+    expect(rested.startedMs).toBeNull();
+    expect(rested.mantraMs).toBe(armed.mantraMs);
+    expect(karaokeFlowRest(rested)).toBe(rested);
   });
 
-  it("ignores implausible measurements so a miscount can't poison the tempo", () => {
-    const armed = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
-    // a 300ms "mantra" (a cough counted as a phrase) is below the floor
-    expect(karaokeFlowBoundary(armed, 1300).mantraMs).toBe(SEED);
-    // a 60s span (a long distracted pause) is above the ceiling
-    expect(karaokeFlowBoundary(armed, 61000).mantraMs).toBe(SEED);
+  it("a resync restarts the glide from word one right now", () => {
+    const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
+    const resynced = karaokeFlowResync(flow, 7000);
+    expect(karaokeFlowIndex(resynced, 7000 + 1, WORDS)).toBe(0);
   });
 
-  it("a boundary with no voiced start keeps the tempo unchanged", () => {
-    const resting = createKaraokeFlow(SEED);
-    expect(karaokeFlowBoundary(resting, 5000).mantraMs).toBe(SEED);
-  });
-
-  it("converges toward a steady pace over successive mantras", () => {
-    let flow = createKaraokeFlow(SEED);
-    let t = 0;
-    for (let i = 0; i < 5; i++) {
-      flow = karaokeFlowArm(flow, t);
-      t += 8000; // voiced start → boundary, of which 400ms is the breath
-      flow = karaokeFlowBoundary(flow, t);
-    }
-    const real = 8000 - BREATH_GAP_MS;
-    expect(flow.mantraMs).toBeGreaterThan(real * 0.97);
-    expect(flow.mantraMs).toBeLessThanOrEqual(real);
+  it("adopts the counter's learned tempo - one clock for words and beads", () => {
+    const flow = createKaraokeFlow(SEED);
+    const adopted = karaokeFlowAdopt(flow, 4200);
+    expect(adopted.mantraMs).toBe(4200);
+    // null (nothing learned yet) leaves the seed untouched
+    expect(karaokeFlowAdopt(flow, null)).toBe(flow);
+    // an absurd value is clamped, never trusted raw
+    expect(karaokeFlowAdopt(flow, 50).mantraMs).toBeGreaterThanOrEqual(1200);
   });
 
   it("guards a zero-length word list", () => {
     const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
-    expect(karaokeFlowIndex(flow, 5000, 0)).toBe(0);
+    expect(karaokeFlowIndex(flow, 5000, 0)).toBeNull();
   });
 });

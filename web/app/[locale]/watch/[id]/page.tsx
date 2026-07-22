@@ -5,14 +5,14 @@ import { cache } from "react";
 
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
-import { LiteEmbed } from "@/components/lite-embed";
 import { RecordWatch } from "@/components/record-watch";
+import { UpNext } from "@/components/up-next";
 import { SaveButtons } from "@/components/save-buttons";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
 import { VideoDescription } from "@/components/video-description";
 import { Link } from "@/i18n/navigation";
 import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
-import { getMoreFromCategory, getVideoByYoutubeId } from "@/lib/data";
+import { getMoreFromCategory, getSeriesForVideo, getVideoByYoutubeId } from "@/lib/data";
 import { localizedAlternates } from "@/lib/site";
 import type { Video } from "@/lib/types";
 
@@ -73,8 +73,28 @@ export default async function WatchPage({ params }: Props) {
   const video = await getVideo(id);
   if (!video) notFound();
 
-  const moreVideos = await getMoreFromCategory(video.category, video.youtube_video_id, 10);
+  const [moreVideos, series] = await Promise.all([
+    getMoreFromCategory(video.category, video.youtube_video_id, 10),
+    getSeriesForVideo(video.id),
+  ]);
   const title = cleanTitle(video.title);
+
+  // "Up next": the NEXT EPISODE when this video belongs to a series (a
+  // series flows in order - that's its whole nature); otherwise from the
+  // already-fetched category row - the same channel's video when the row
+  // has one, else the row's first. Always legible, no magic ranking.
+  const nextVideo =
+    series?.next ??
+    moreVideos.find((v) => video.channel?.title && v.channel?.title === video.channel.title) ??
+    moreVideos[0] ??
+    null;
+  const upNext = nextVideo
+    ? {
+        id: nextVideo.youtube_video_id,
+        title: cleanTitle(nextVideo.title),
+        thumbnailUrl: nextVideo.thumbnail_url,
+      }
+    : null;
 
   // schema.org VideoObject (DESIGN.md "Video page"): structured data that
   // lets search engines list this page as a *video* result. It describes
@@ -98,6 +118,7 @@ export default async function WatchPage({ params }: Props) {
         thumbnailUrl={video.thumbnail_url}
         channelTitle={video.channel?.title ?? null}
         durationSeconds={video.duration_seconds}
+        category={video.category}
       />
 
       {/* The cinematic stage (DESIGN.md #6 "Watch page"): the player sits
@@ -111,10 +132,51 @@ export default async function WatchPage({ params }: Props) {
             {/* Standard, unmodified YouTube embed via youtube-nocookie.com -
                 Goloka is an index, never a host (see README). No custom
                 controls, no download/proxy of the video itself. LiteEmbed
-                itself decides whether to render the iframe immediately or
-                a tap-to-load facade, based on the visitor's data-saver
-                preference - this page always renders it, unconditionally. */}
-            <LiteEmbed videoId={video.youtube_video_id} title={title} />
+                (inside UpNext) decides whether to render the iframe
+                immediately or a tap-to-load facade, based on the visitor's
+                data-saver preference; UpNext adds the opt-in "continue to
+                the next video" toggle and end-of-video moment. */}
+            <UpNext videoId={video.youtube_video_id} title={title} next={upNext} />
+
+            {/* The series bar (2026-07-22): when this video is part of a
+                playlist, say so and hand the devotee the whole path - the
+                series page, the previous episode, the next. Born of a real
+                wound: landing on "episode 10" with no road back to episode 1
+                except YouTube itself. */}
+            {series && (
+              <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-marigold">
+                  {t("seriesKicker")}
+                </span>
+                <Link
+                  href={`/series/${series.series.youtube_playlist_id}`}
+                  className="text-text underline-offset-4 outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                  aria-label={t("seriesViewAria", { title: series.series.title })}
+                >
+                  {t("seriesPart", {
+                    position: series.position + 1,
+                    total: series.series.item_count,
+                  })}{" "}
+                  · {series.series.title}
+                </Link>
+                {series.prev && (
+                  <Link
+                    href={`/watch/${series.prev.youtube_video_id}`}
+                    className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                  >
+                    ← {t("seriesPrev")}
+                  </Link>
+                )}
+                {series.next && (
+                  <Link
+                    href={`/watch/${series.next.youtube_video_id}`}
+                    className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                  >
+                    {t("seriesNext")} →
+                  </Link>
+                )}
+              </div>
+            )}
 
             <h1 className="mt-6 font-heading text-2xl font-medium leading-snug text-text sm:text-3xl">
               {title}

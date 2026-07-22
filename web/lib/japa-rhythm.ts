@@ -142,6 +142,23 @@ export type JapaRhythmState = {
   /** Running total of mantras counted so far - convenience for callers that
    * want the cumulative number rather than just this frame's delta. */
   mantrasCompleted: number;
+  /** The devotee's learned per-mantra VOICED duration (micro-gaps and the
+   * breath excluded), or null before the first clean measurement. Only
+   * breath-delimited single-mantra phrases teach it at full weight - see the
+   * fluid-crediting banner above. */
+  tempoMs: number | null;
+  /** How many full-weight measurements have been folded into tempoMs. */
+  tempoSamples: number;
+  /** EMA of the relative deviation between measurements - the consistency
+   * gate for fluid crediting (erratic pace → no extrapolation). */
+  tempoDeviation: number;
+  /** Mantras already credited INSIDE the current open phrase (fluid
+   * crediting). Reset to 0 whenever a breath closes the phrase - the breath
+   * reconciles, so cross-phrase error cannot accumulate. */
+  phraseCreditedCount: number;
+  /** Which mantra the learned tempo (and open phrase) belong to - reset
+   * everything tempo-related when the devotee switches mantras. */
+  mantraKey: string | null;
 };
 
 export function createJapaRhythmState(): JapaRhythmState {
@@ -155,6 +172,11 @@ export function createJapaRhythmState(): JapaRhythmState {
     inVoicedBurst: false,
     phraseVoicedMs: 0,
     mantrasCompleted: 0,
+    tempoMs: null,
+    tempoSamples: 0,
+    tempoDeviation: 0,
+    phraseCreditedCount: 0,
+    mantraKey: null,
   };
 }
 
@@ -174,7 +196,82 @@ function smoothingAlpha(dtMs: number, tauMs: number): number {
  * unaffected. */
 export type PushAudioFrameOptions = {
   minPhraseMs?: number;
+  /** The selected mantra's typical full duration (lib/mantras.ts karaokeMs) -
+   * the SEED for fluid crediting before the devotee's own tempo is learned.
+   * Omitted → fluid crediting stays off and only breaths ever count (the
+   * original, conservative behavior - existing tests rely on this). */
+  tempoSeedMs?: number;
+  /** Which mantra these frames belong to. When it changes, the learned tempo
+   * AND any open phrase are discarded - a Rādhā-mantra pace must never
+   * credit mahā-mantras, and voice accumulated under one mantra must never
+   * complete under another's (shorter) floor. */
+  mantraId?: string;
 };
+
+// ---------- Fluid crediting (counting without a breath) ----------
+// The breath-gap counter above is honest but assumes breaths HAPPEN. A
+// devotee chanting fluidly runs one mantra straight into the next with no
+// 400ms silence - under breath-only counting an entire fluid run credits
+// nothing (or one, at its eventual end). The fix: LEARN the devotee's own
+// per-mantra voiced duration from clean breath-delimited repetitions, then
+// credit a bead each time an unbroken phrase accumulates another mantra's
+// worth of voiced time. Breaths remain the gold standard: only they teach
+// the tempo at full weight, and every breath re-anchors the ledger to zero
+// so error can never accumulate across phrases. Every constant below is
+// biased toward UNDERCOUNT - a bead is never invented; this is an offering,
+// not a scoreboard.
+
+/** EMA weight per clean breath-delimited measurement - converges in ~5
+ * breaths while smoothing over one odd repetition. */
+export const TEMPO_ALPHA = 0.3;
+/** Breath-delimited measurements required before the LEARNED tempo may
+ * credit fluid runs. One measurement could be a fluke. */
+export const TEMPO_CONFIDENT_SAMPLES = 2;
+/** If the running relative deviation between measurements exceeds this, the
+ * pace is too erratic to extrapolate from - fall back to the seed tier. */
+export const TEMPO_CONSISTENT_DEV = 0.3;
+/** Fluid credits fire at (k+1) × tempo × THIS - a 15% grace so a slightly
+ * slower-than-usual repetition is never credited early. */
+export const FLUID_CREDIT_MARGIN = 1.15;
+/** At the breath ending a fluid run, the trailing remainder earns one final
+ * credit only if it is at least this fraction of a whole mantra - a trailing
+ * half-mantra stays uncounted. */
+export const RECONCILE_MIN_FRACTION = 0.75;
+/** Cold-start tier: before the tempo is learned, credit per THIS × the
+ * mantra's typical duration (tempoSeedMs). Deliberately ~2× undercount for a
+ * typical fluid chanter - beads move from the first session, honesty kept. */
+export const SEED_CREDIT_FACTOR = 1.75;
+/** Hard cap of credits per unbroken phrase (~3 minutes of the mahā-mantra
+ * with not one 400ms breath). Beyond it, assume the signal isn't japa (a TV,
+ * a conversation) and stop crediting until a breath re-anchors. */
+export const MAX_PHRASE_CREDITS = 32;
+/** A single inter-frame gap can contribute at most this much to any time
+ * accumulator. A frozen tab or a slept phone otherwise injects one giant dt
+ * into phraseVoicedMs - harmless under breath-only counting (capped at one
+ * phantom credit), but an overcount mint under elapsed-time crediting. */
+export const MAX_FRAME_DT_MS = 250;
+// A full-weight measurement is rejected above 2.5× the current tempo (or
+// 20s when unlearned) so one merged double-mantra can't poison the estimate;
+// fluid runs teach at HALF weight and only when their per-mantra average
+// sits within 25% of the current tempo.
+const TEMPO_LEARN_CEILING_FACTOR = 2.5;
+const TEMPO_LEARN_MAX_MS = 20000;
+const FLUID_LEARN_TOLERANCE = 0.25;
+
+/** The crediting unit for an open phrase: the learned tempo (with margin)
+ * once it is confident and consistent, else the conservative seed tier,
+ * else null - fluid crediting off. Pure so tests can pin the tiers. */
+function creditUnitMs(state: JapaRhythmState, tempoSeedMs: number | undefined): number | null {
+  if (
+    state.tempoMs !== null &&
+    state.tempoSamples >= TEMPO_CONFIDENT_SAMPLES &&
+    state.tempoDeviation <= TEMPO_CONSISTENT_DEV
+  ) {
+    return state.tempoMs * FLUID_CREDIT_MARGIN;
+  }
+  if (tempoSeedMs !== undefined && tempoSeedMs > 0) return tempoSeedMs * SEED_CREDIT_FACTOR;
+  return null;
+}
 
 /** Feeds one polled audio frame into the rolling rhythm state. Returns the
  * next state to carry forward plus three per-frame events:
@@ -200,10 +297,45 @@ export function pushAudioFrame(
   prev: JapaRhythmState,
   frame: AudioFrame,
   options?: PushAudioFrameOptions
-): { state: JapaRhythmState; mantraCompleted: boolean; mantraBoundary: boolean; onset: boolean } {
+): {
+  state: JapaRhythmState;
+  mantraCompleted: boolean;
+  mantraBoundary: boolean;
+  onset: boolean;
+  /** True when this frame's completion was a FLUID credit (mid-phrase, at
+   * the learned/seeded tempo) rather than a breath-closed one - the karaoke
+   * re-arms its glide on a fluid credit instead of resting. */
+  fluid: boolean;
+} {
   const minPhraseMs = options?.minPhraseMs ?? MIN_PHRASE_MS;
+  const mantraId = options?.mantraId ?? null;
+
+  // A mantra switch discards the learned tempo AND any open phrase: pace
+  // learned on one mantra must never credit another, and voice accumulated
+  // under the mahā-mantra must never complete under the Rādhā mantra's
+  // shorter floor.
+  if (mantraId !== prev.mantraKey) {
+    prev = {
+      ...prev,
+      mantraKey: mantraId,
+      tempoMs: null,
+      tempoSamples: 0,
+      tempoDeviation: 0,
+      phraseCreditedCount: 0,
+      phraseVoicedMs: 0,
+      phraseConfirmed: false,
+      activeStreakMs: 0,
+      inVoicedBurst: false,
+    };
+  }
+
   const isFirstFrame = prev.firstFrameMs === null;
-  const dt = prev.lastFrameMs === null ? 0 : Math.max(0, frame.timeMs - prev.lastFrameMs);
+  // Clamped: one frozen tab or slept phone otherwise injects a giant dt
+  // straight into the accumulators (see MAX_FRAME_DT_MS).
+  const dt =
+    prev.lastFrameMs === null
+      ? 0
+      : Math.min(Math.max(0, frame.timeMs - prev.lastFrameMs), MAX_FRAME_DT_MS);
   const firstFrameMs = isFirstFrame ? frame.timeMs : prev.firstFrameMs!;
   const elapsedSinceStart = frame.timeMs - firstFrameMs;
 
@@ -259,24 +391,101 @@ export function pushAudioFrame(
     inVoicedBurst = false;
   }
 
-  // 4. The breath decision - evaluated exactly once, on the frame where
-  // accumulated silence crosses BREATH_GAP_MS (phraseVoicedMs is reset to 0
-  // as soon as this fires, so it can never fire twice for the same phrase).
+  // 4. Crediting. Two paths, mutually exclusive on any one frame (one needs
+  // voice, the other needs silence), so the "never more than one mantra per
+  // call" invariant holds by construction.
   let mantraCompleted = false;
   let mantraBoundary = false;
+  let fluid = false;
   let mantrasCompleted = prev.mantrasCompleted;
+  let phraseCreditedCount = prev.phraseCreditedCount;
+  let tempoMs = prev.tempoMs;
+  let tempoSamples = prev.tempoSamples;
+  let tempoDeviation = prev.tempoDeviation;
+
+  // 4a. FLUID crediting - while a confirmed phrase runs on with no breath,
+  // credit each time another whole mantra's worth of voiced time (at the
+  // learned or seeded unit - see creditUnitMs) has accumulated. The unit is
+  // stable for the phrase's whole life: tempo only ever changes at a breath,
+  // and a breath closes the phrase.
+  const unit = creditUnitMs(prev, options?.tempoSeedMs);
+  if (
+    rawActive &&
+    phraseConfirmed &&
+    unit !== null &&
+    phraseCreditedCount < MAX_PHRASE_CREDITS &&
+    phraseVoicedMs >= (phraseCreditedCount + 1) * unit
+  ) {
+    phraseCreditedCount += 1;
+    mantrasCompleted += 1;
+    mantraCompleted = true;
+    fluid = true;
+  }
+
+  // 4b. The breath decision - evaluated exactly once, on the frame where
+  // accumulated silence crosses BREATH_GAP_MS (phraseVoicedMs is reset to 0
+  // as soon as this fires, so it can never fire twice for the same phrase).
+  // The breath RECONCILES a fluid run and is the only place tempo is
+  // learned.
   if (!rawActive && phraseConfirmed && silenceMs >= BREATH_GAP_MS) {
     // The breath closed a phrase - a boundary for the KARAOKE regardless of
     // whether it earned a bead (see mantraBoundary's note in the return).
     mantraBoundary = true;
-    if (phraseVoicedMs >= minPhraseMs) {
-      mantraCompleted = true;
-      mantrasCompleted += 1;
+    if (phraseCreditedCount === 0) {
+      // No fluid credits in this phrase - exactly the original path: one
+      // credit if the phrase was long enough to be a real mantra.
+      if (phraseVoicedMs >= minPhraseMs) {
+        mantraCompleted = true;
+        mantrasCompleted += 1;
+        // Learn at FULL weight - a breath-delimited single mantra is the
+        // cleanest measurement there is - unless it is implausibly long
+        // (a merged double-mantra must not poison the estimate).
+        const ceiling = tempoMs === null ? TEMPO_LEARN_MAX_MS : tempoMs * TEMPO_LEARN_CEILING_FACTOR;
+        if (phraseVoicedMs <= ceiling) {
+          if (tempoMs === null) {
+            tempoMs = phraseVoicedMs;
+            tempoDeviation = 0;
+          } else {
+            const dev = Math.abs(phraseVoicedMs - tempoMs) / tempoMs;
+            tempoDeviation = tempoDeviation + (dev - tempoDeviation) * TEMPO_ALPHA;
+            tempoMs = tempoMs + (phraseVoicedMs - tempoMs) * TEMPO_ALPHA;
+          }
+          tempoSamples += 1;
+        }
+      }
+    } else if (unit !== null) {
+      // A fluid run ends: credit the trailing remainder only if it is
+      // nearly a whole mantra (a trailing half-mantra stays uncounted),
+      // measured against the same base the credits used.
+      const remainder = phraseVoicedMs - phraseCreditedCount * unit;
+      const baseMantraMs =
+        tempoMs !== null && tempoSamples >= TEMPO_CONFIDENT_SAMPLES && tempoDeviation <= TEMPO_CONSISTENT_DEV
+          ? tempoMs
+          : options?.tempoSeedMs ?? null;
+      let totalCredits = phraseCreditedCount;
+      if (
+        baseMantraMs !== null &&
+        remainder >= Math.max(minPhraseMs, RECONCILE_MIN_FRACTION * baseMantraMs)
+      ) {
+        mantraCompleted = true;
+        mantrasCompleted += 1;
+        totalCredits += 1;
+      }
+      // A clean fluid run keeps the tempo fresh at HALF weight - but only
+      // when its per-mantra average agrees with what we already believe
+      // (a run that divides strangely teaches nothing).
+      if (tempoMs !== null && totalCredits > 0) {
+        const perMantra = phraseVoicedMs / totalCredits;
+        if (Math.abs(perMantra - tempoMs) / tempoMs < FLUID_LEARN_TOLERANCE) {
+          tempoMs = tempoMs + (perMantra - tempoMs) * (TEMPO_ALPHA / 2);
+        }
+      }
     }
-    // Either counted, or discarded as too short (a cough, a stray word) -
-    // the phrase is closed either way, ready for the next one.
+    // Counted, reconciled, or discarded as too short (a cough, a stray
+    // word) - the phrase is closed either way, its ledger zeroed.
     phraseVoicedMs = 0;
     phraseConfirmed = false;
+    phraseCreditedCount = 0;
   }
 
   return {
@@ -290,6 +499,11 @@ export function pushAudioFrame(
       inVoicedBurst,
       phraseVoicedMs,
       mantrasCompleted,
+      tempoMs,
+      tempoSamples,
+      tempoDeviation,
+      phraseCreditedCount,
+      mantraKey: prev.mantraKey,
     },
     mantraCompleted,
     // Any breath that CLOSED a phrase this frame - counted or discarded as
@@ -300,96 +514,58 @@ export function pushAudioFrame(
     // mantraCompleted moves a bead.
     mantraBoundary,
     onset,
+    fluid,
   };
 }
 
 /** Convenience for tests (and any batch use): runs a whole array of frames
  * through a fresh state and returns just the final mantra count. */
-export function countMantrasInFrames(frames: AudioFrame[]): number {
+export function countMantrasInFrames(frames: AudioFrame[], options?: PushAudioFrameOptions): number {
   let state = createJapaRhythmState();
   for (const frame of frames) {
-    state = pushAudioFrame(state, frame).state;
+    state = pushAudioFrame(state, frame, options).state;
   }
   return state.mantrasCompleted;
 }
 
-// ---------- Karaoke word-lighting ----------
-// The lit-word cursor for components/chant-space.tsx, kept here as pure
-// functions so it is unit-tested the same way the counter is. `index` is the
-// 0-based word currently lit in the selected mantra's `words` (see
-// lib/mantras.ts); `primed` means "a fresh mantra is about to begin - the
-// next tap should light the FIRST word rather than step past it", which is
-// what makes the first word of every repetition actually glow while it is
-// being chanted (instead of being skipped).
-//
-// TWO modes light words differently:
-//   - Tap mode steps one word per tap (karaokeTap) - a tap is a discrete
-//     event, so one-word-per-tap is the honest mapping.
-//   - Voice mode FLOWS the highlight on a clock paced to the chanter's own
-//     tempo (the KaraokeFlow helpers below), NOT one step per detected voiced
-//     burst. Continuous chanting runs its words together with almost no
-//     silences, so burst-stepping lagged badly and skipped the run-on words;
-//     a tempo clock instead glides through every word in turn over the
-//     mantra's measured duration, and re-syncs to the first word at each
-//     boundary so drift never accumulates.
-
-export type KaraokeWord = {
-  index: number;
-  primed: boolean;
-};
-
-/** The starting cursor: first word, primed so the very first tap lights
- * word 0 rather than advancing to word 1. */
-export function createKaraokeWord(): KaraokeWord {
-  return { index: 0, primed: true };
-}
-
-/** Advance on a tap (tap mode). Wraps back to the first word at the end so
- * the words keep flowing over successive taps, re-syncing every wordCount
- * taps - a tasteful, drift-free echo of the voiced karaoke without pretending
- * a tap maps to a specific syllable. */
-export function karaokeTap(prev: KaraokeWord, wordCount: number): KaraokeWord {
-  if (wordCount <= 0) return prev;
-  if (prev.primed) return { index: 0, primed: false };
-  return { index: (prev.index + 1) % wordCount, primed: false };
-}
-
-// (A mantra boundary simply resets to createKaraokeWord() - the callers do
-// that directly, so there is no separate boundary helper for the cursor.)
-
-// ---------- Karaoke tempo flow (voice mode) ----------
+// ---------- Karaoke tempo flow ----------
 // A tiny state machine that paces the lit word to the chanter's own tempo.
 // The component (components/chant-space.tsx) ticks a clock a few times a
 // second and asks karaokeFlowIndex which word should be lit "now"; these
 // functions carry only the timing state, no React. Everything is in the
 // performance.now() millisecond clock the voice pipeline already uses.
+//
+// HONEST NOTE: this is rhythm-paced, NOT per-syllable transcription (there
+// is no speech model - removed deliberately). Both modes play the same
+// glide:
+//   - Voice mode: a vocal onset arms the glide; it flows through the words
+//     at the tempo the COUNTER has learned (adopted via karaokeFlowAdopt -
+//     one tempo, one owner), wraps if the devotee runs mantras together,
+//     and re-anchors at every credit and every breath.
+//   - Tap mode: one tap = one whole chanted mantra = one full glide through
+//     the verse at the mantra's typical pace, then rest. The same meaning a
+//     tap has for the beads.
+// At rest NOTHING is lit (karaokeFlowIndex returns null) - a glowing word
+// with nobody chanting reads as frozen, not serene.
 
-// Bounds a measured mantra duration must fall within to be learned from, so
-// a miscount (a cough taken as a whole mantra, or a long distracted pause)
-// can't poison the tempo. A real spoken mantra sits comfortably inside this.
+// Bounds any adopted/seeded tempo so a bad value can never make the glide
+// strobe or freeze. A real spoken mantra sits comfortably inside this.
 const KARAOKE_MIN_MANTRA_MS = 1200;
 const KARAOKE_MAX_MANTRA_MS = 20000;
-// How strongly each freshly measured mantra pulls the running estimate
-// (0 = never adapt, 1 = jump to the latest). Half-and-half tracks a
-// devotee settling into (or shifting) their pace within a mantra or two,
-// while still smoothing over one odd measurement.
-const KARAOKE_TEMPO_SMOOTHING = 0.5;
 
 export type KaraokeFlow = {
-  /** When the current mantra's voice began (performance.now clock), or null
-   * while resting on the first word between mantras - i.e. waiting for the
-   * next repetition to start. */
+  /** When the current glide began (performance.now clock), or null while
+   * resting - nothing lit, waiting for the next repetition to start. */
   startedMs: number | null;
-  /** The learned duration of one full mantra, in ms - smoothed from the span
-   * between a mantra's voiced start and its completion boundary, seeded from
-   * the mantra's own typical length (lib/mantras.ts). */
+  /** The duration of one full mantra's glide, in ms - seeded from the
+   * mantra's typical length (lib/mantras.ts karaokeMs) and thereafter
+   * ADOPTED from the counter's learned tempo (JapaRhythmState.tempoMs), so
+   * the words and the beads move to the same clock. */
   mantraMs: number;
 };
 
-/** A fresh flow, resting on the first word, seeded with a bootstrap tempo
- * (the mantra's typical full duration) until the first real mantra is
- * measured. Nothing moves until a voiced onset arms it - silence keeps the
- * highlight resting on the first word, however long it lasts. */
+/** A fresh flow, resting (nothing lit), seeded with the mantra's typical
+ * full duration until the counter has learned the devotee's own. */
 export function createKaraokeFlow(bootstrapMantraMs: number): KaraokeFlow {
   return {
     startedMs: null,
@@ -397,57 +573,54 @@ export function createKaraokeFlow(bootstrapMantraMs: number): KaraokeFlow {
   };
 }
 
-/** Arm the flow: mark that the current mantra's voice has begun, so the
- * highlight starts gliding from the first word. Idempotent within a mantra -
- * only the first call after a boundary (when startedMs is null) takes
- * effect; later onsets in the same mantra are ignored, since the clock, not
- * the onsets, drives the words. */
+/** Arm the flow: the current mantra's voice has begun, start gliding from
+ * the first word. Idempotent within a mantra - only the first call after a
+ * rest takes effect; later onsets in the same mantra are ignored, since the
+ * clock, not the onsets, drives the words. */
 export function karaokeFlowArm(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
   if (flow.startedMs !== null) return flow;
   return { ...flow, startedMs: nowMs };
 }
 
-/** Rest the flow on the first word without learning anything - used when a
- * breath closes a phrase that never counted (half a mantra, then silence).
- * Keeps the learned tempo; only stops the glide. */
+/** Rest the flow - nothing lit, glide stopped, tempo kept. Used at every
+ * breath (counted or not), when listening stops, and when a tap-glide
+ * completes its single pass. */
 export function karaokeFlowRest(flow: KaraokeFlow): KaraokeFlow {
   if (flow.startedMs === null) return flow;
   return { ...flow, startedMs: null };
 }
 
-/** Learn from a completed mantra and rest for the next one: measure how long
- * this mantra actually took, fold that into the running tempo estimate if it
- * is plausible, and return to resting on the first word.
- *
- * The measurement subtracts BREATH_GAP_MS, because a boundary is only
- * declared once silence has ALREADY persisted that long - so the raw span
- * from voiced start to boundary overstates the chanting by exactly that
- * gap. Counting it would make the glide lag a little further behind every
- * mantra. */
-export function karaokeFlowBoundary(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
-  let mantraMs = flow.mantraMs;
-  if (flow.startedMs !== null) {
-    const measured = nowMs - flow.startedMs - BREATH_GAP_MS;
-    if (measured >= KARAOKE_MIN_MANTRA_MS && measured <= KARAOKE_MAX_MANTRA_MS) {
-      mantraMs = clampMantraMs(
-        flow.mantraMs * (1 - KARAOKE_TEMPO_SMOOTHING) + measured * KARAOKE_TEMPO_SMOOTHING
-      );
-    }
-  }
-  return { startedMs: null, mantraMs };
+/** Restart the glide from the first word RIGHT NOW, keeping the tempo -
+ * used on a fluid credit (the counter says "one mantra just finished
+ * mid-run"), so the words re-anchor in stride instead of resting, and on a
+ * tap (one tap = one fresh glide). */
+export function karaokeFlowResync(flow: KaraokeFlow, nowMs: number): KaraokeFlow {
+  return { ...flow, startedMs: nowMs };
 }
 
-/** Which word should be lit right now. Resting (no mantra underway) → the
- * first word. Underway → glide through the words in order, one every
+/** Adopt the counter's learned tempo (JapaRhythmState.tempoMs). The counter
+ * measures VOICED time from real breath-delimited mantras - strictly better
+ * data than anything the karaoke could measure for itself, and keeping a
+ * single tempo means the words and the beads can never disagree. A null
+ * (nothing learned yet) leaves the seed untouched. */
+export function karaokeFlowAdopt(flow: KaraokeFlow, tempoMs: number | null): KaraokeFlow {
+  if (tempoMs === null) return flow;
+  const clamped = clampMantraMs(tempoMs);
+  if (clamped === flow.mantraMs) return flow;
+  return { ...flow, mantraMs: clamped };
+}
+
+/** Which word should be lit right now. Resting → null (nothing lit).
+ * Underway → glide through the words in order, one every
  * mantraMs/wordCount, WRAPPING back to the first word at the end so a
  * devotee who runs one mantra straight into the next (with no breath clear
  * enough for the counter to see) keeps flowing instead of stalling lit on
- * the last word. Every real boundary still re-syncs to word 0, so drift
- * never accumulates across mantras. Pure: the same inputs always give the
- * same word, so the driving clock can tick as often or seldom as it likes. */
-export function karaokeFlowIndex(flow: KaraokeFlow, nowMs: number, wordCount: number): number {
-  if (wordCount <= 0) return 0;
-  if (flow.startedMs === null) return 0;
+ * the last word. Every credit and every breath re-anchors, so drift never
+ * accumulates. Pure: the same inputs always give the same word, so the
+ * driving clock can tick as often or seldom as it likes. */
+export function karaokeFlowIndex(flow: KaraokeFlow, nowMs: number, wordCount: number): number | null {
+  if (wordCount <= 0) return null;
+  if (flow.startedMs === null) return null;
   const perWordMs = flow.mantraMs / wordCount;
   const elapsed = nowMs - flow.startedMs;
   if (elapsed <= 0) return 0;

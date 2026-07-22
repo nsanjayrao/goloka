@@ -94,11 +94,23 @@
     "belovedByMillions": "Amado por millones",
     "mostWatched": "Más visto",
     "continueWatching": "Continuar viendo",
+    "forYou": "Para ti",
+    "becauseYouWatched": "Porque viste {category}",
     "inYourLanguage": "En tu idioma"
   },
   "watchPage": {
     "keepWatching": "Sigue viendo",
-    "moreFrom": "Más de {category}"
+    "moreFrom": "Más de {category}",
+    "upNextToggle": "Continuar con el siguiente video",
+    "upNextToggleAria": "Al terminar un video, continuar automáticamente con el siguiente",
+    "upNextKicker": "A continuación",
+    "upNextContinuing": "Continuando en {seconds}s",
+    "upNextCancel": "Quedarme aquí",
+    "seriesKicker": "Serie",
+    "seriesPart": "Parte {position} de {total}",
+    "seriesPrev": "Episodio anterior",
+    "seriesNext": "Siguiente episodio",
+    "seriesViewAria": "Ver la serie completa: {title}"
   },
   "emptyState": {
     "default": "Todavía no hay nada aquí — como Vrindavan antes del festival. Vuelve pronto.",
@@ -191,7 +203,14 @@
     "delete": "Eliminar",
     "titlePlaceholder": "Conferencias de ekādaśī para mamá",
     "titleInputAria": "Título para este enlace compartido",
-    "shareCollection": "Compartir esta colección"
+    "shareCollection": "Compartir esta colección",
+    "seriesKicker": "Series",
+    "seriesParts": "{count} partes"
+  },
+  "seriesPage": {
+    "kicker": "Serie",
+    "episodesIndexed": "{count} de {total} episodios",
+    "empty": "Los episodios de esta serie aún no están indexados — aparecerán cuando el catálogo se sincronice."
   },
   "sadhana": {
     "title": "Mi sādhana",
@@ -204,6 +223,17 @@
     "thisYear": "Este año",
     "thisYearHeading": "Este año, mes a mes",
     "emptyMonth": "Aún no hay rondas registradas este mes — cada vez que cantes con la sesión iniciada, reposarán aquí en silencio.",
+    "allTime": "Desde siempre",
+    "unbrokenDays": "{count} días del santo nombre, sin interrupción",
+    "milestoneYear": "{count} rondas ofrecidas este año",
+    "yearHeading": "{year}, mes a mes",
+    "emptyYear": "No hay rondas registradas en {year}.",
+    "prevMonthAria": "Mes anterior",
+    "nextMonthAria": "Mes siguiente",
+    "prevYearAria": "Año anterior",
+    "nextYearAria": "Año siguiente",
+    "chartAria": "Rondas por mes, {year}",
+    "mantraShare": "{mantra}: {count, plural, one {# ronda} other {# rondas}}",
     "roundsCount": "{count, plural, one {# ronda} other {# rondas}}",
     "dayRounds": "{day}: {count, plural, one {# ronda} other {# rondas}}",
     "dayNone": "{day}: sin rondas",
@@ -291,7 +321,16 @@
       "voiceMicDenied": "No se concedió acceso al micrófono — toca para contar, con los ojos cerrados.",
       "voiceUnsupported": "El canto manos libres no está disponible en este navegador — toca para contar.",
       "voiceIosSafariHint": "En el iPhone, cantar con la voz funciona mejor en Safari.",
-      "mantraLabel": "Mantra"
+      "mantraLabel": "Mantra",
+      "sankalpaLabel": "Sankalpa",
+      "sankalpaAria": "Tu propio voto diario de rondas — toca de nuevo el número elegido para soltarlo",
+      "sankalpaProgress": "Ronda {current} de tus {vow}",
+      "sankalpaOffered": "Tus {vow} rondas están ofrecidas",
+      "voiceIntroPace": "Canta a tu propio ritmo — en voz baja está bien.",
+      "voiceIntroBreath": "La breve respiración natural entre mantras es la que marca cada cuenta.",
+      "voiceIntroRhythm": "Las palabras iluminadas siguen tu ritmo — un acompañante, no una transcripción.",
+      "voiceIntroBegin": "Comenzar",
+      "recordedInSadhana": "Cada ronda se guarda en Mi Sādhana"
     },
     "calendar": {
       "h1": "El calendario vaisnava",

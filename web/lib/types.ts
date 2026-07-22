@@ -41,3 +41,38 @@ export type Video = {
 };
 
 export type DurationBucket = "short" | "medium" | "long";
+
+// A channel's own YouTube playlist, indexed as a "series" (2026-07-22) so a
+// devotee landing mid-series can reach episode 1 without leaving Goloka.
+// Mirrors db/schema.sql's `playlists`.
+export type Series = {
+  id: number;
+  youtube_playlist_id: string;
+  title: string;
+  description: string | null;
+  thumbnail_url: string | null;
+  /** YouTube's full item count - may exceed the episodes we have indexed
+   * (Shorts and unindexed items keep their slots but get no link). */
+  item_count: number;
+  channel: {
+    title: string;
+    handle: string | null;
+  } | null;
+};
+
+/** One indexed episode of a series, in playlist order. `position` is the
+ * TRUE 0-based slot in the YouTube playlist (gaps possible). */
+export type SeriesEpisode = {
+  position: number;
+  video: Video;
+};
+
+/** What the watch page needs to say "Part 10 of 24" and walk the series:
+ * where this video sits, and its nearest indexed neighbours. */
+export type SeriesContext = {
+  series: Series;
+  /** This video's true 0-based playlist position (display as position + 1). */
+  position: number;
+  prev: Video | null;
+  next: Video | null;
+};

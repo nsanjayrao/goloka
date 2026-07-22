@@ -6,7 +6,7 @@
 // "database may be empty or unreachable" requirement.
 import { expandQueryWord } from "@/lib/search-expansion";
 import { supabase } from "@/lib/supabase";
-import type { Channel, DurationBucket, Video } from "@/lib/types";
+import type { Channel, DurationBucket, Series, SeriesContext, SeriesEpisode, Video } from "@/lib/types";
 
 const VIDEO_COLUMNS = "*, channel:channels(title, handle, thumbnail_url)";
 
@@ -399,6 +399,98 @@ export async function getVideoByYoutubeId(youtubeVideoId: string): Promise<Video
     if (error) throw error;
     return data as unknown as Video | null;
   }, null);
+}
+
+const SERIES_COLUMNS =
+  "id, youtube_playlist_id, title, description, thumbnail_url, item_count, channel:channels(title, handle)";
+
+/**
+ * The series context for a video on /watch/[id]: which playlist it belongs
+ * to, its true position, and the nearest INDEXED neighbours (positions can
+ * gap where a playlist item isn't in our catalog, so prev/next walk by
+ * nearest position, never position ± 1). Null when the video is in no
+ * series. A video in several playlists resolves to the largest one - the
+ * most likely "episode N of" home. Four small bounded queries, only on
+ * watch pages, only when a membership exists.
+ */
+export async function getSeriesForVideo(videoId: number): Promise<SeriesContext | null> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("playlist_videos")
+      .select(`position, series:playlists(${SERIES_COLUMNS})`)
+      .eq("video_id", videoId)
+      .limit(5);
+    if (error) throw error;
+    const memberships = (data ?? []) as unknown as { position: number; series: Series | null }[];
+    const best = memberships
+      .filter((m) => m.series !== null)
+      .sort((a, b) => (b.series!.item_count ?? 0) - (a.series!.item_count ?? 0))[0];
+    if (!best) return null;
+
+    const [prevRes, nextRes] = await Promise.all([
+      supabase!
+        .from("playlist_videos")
+        .select(`position, video:videos(${VIDEO_COLUMNS})`)
+        .eq("playlist_id", best.series!.id)
+        .lt("position", best.position)
+        .order("position", { ascending: false })
+        .limit(1),
+      supabase!
+        .from("playlist_videos")
+        .select(`position, video:videos(${VIDEO_COLUMNS})`)
+        .eq("playlist_id", best.series!.id)
+        .gt("position", best.position)
+        .order("position", { ascending: true })
+        .limit(1),
+    ]);
+    if (prevRes.error) throw prevRes.error;
+    if (nextRes.error) throw nextRes.error;
+    const prev = (prevRes.data?.[0] as unknown as SeriesEpisode | undefined)?.video ?? null;
+    const next = (nextRes.data?.[0] as unknown as SeriesEpisode | undefined)?.video ?? null;
+    return { series: best.series!, position: best.position, prev, next };
+  }, null);
+}
+
+/** A series by its YouTube playlist id (the /series/[id] route param). */
+export async function getSeriesByPlaylistId(youtubePlaylistId: string): Promise<Series | null> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("playlists")
+      .select(SERIES_COLUMNS)
+      .eq("youtube_playlist_id", youtubePlaylistId)
+      .maybeSingle();
+    if (error) throw error;
+    return data as unknown as Series | null;
+  }, null);
+}
+
+/** A series' indexed episodes in playlist order, for /series/[id]. Bounded:
+ * even the longest lecture series stays well under 500 parts. */
+export async function getSeriesEpisodes(playlistId: number): Promise<SeriesEpisode[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("playlist_videos")
+      .select(`position, video:videos(${VIDEO_COLUMNS})`)
+      .eq("playlist_id", playlistId)
+      .order("position", { ascending: true })
+      .limit(500);
+    if (error) throw error;
+    return ((data ?? []) as unknown as SeriesEpisode[]).filter((e) => e.video !== null);
+  }, []);
+}
+
+/** A channel's series, largest first, for the channel page's series shelf. */
+export async function getSeriesForChannel(channelId: number, limit = 24): Promise<Series[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("playlists")
+      .select(SERIES_COLUMNS)
+      .eq("channel_id", channelId)
+      .order("item_count", { ascending: false })
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []) as unknown as Series[];
+  }, []);
 }
 
 /** Other videos in the same category, for the "More from this category" row. */

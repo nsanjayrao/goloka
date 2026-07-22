@@ -94,11 +94,23 @@
     "belovedByMillions": "Любимое миллионами",
     "mostWatched": "Самое популярное",
     "continueWatching": "Продолжить просмотр",
+    "forYou": "Для вас",
+    "becauseYouWatched": "Потому что вы смотрели {category}",
     "inYourLanguage": "На вашем языке"
   },
   "watchPage": {
     "keepWatching": "Смотрите дальше",
-    "moreFrom": "Ещё из категории «{category}»"
+    "moreFrom": "Ещё из категории «{category}»",
+    "upNextToggle": "Продолжать со следующего видео",
+    "upNextToggleAria": "Когда видео закончится, автоматически перейти к следующему",
+    "upNextKicker": "Далее",
+    "upNextContinuing": "Продолжение через {seconds} с",
+    "upNextCancel": "Остаться здесь",
+    "seriesKicker": "Цикл",
+    "seriesPart": "Часть {position} из {total}",
+    "seriesPrev": "Предыдущая часть",
+    "seriesNext": "Следующая часть",
+    "seriesViewAria": "Смотреть весь цикл: {title}"
   },
   "emptyState": {
     "default": "Здесь пока ничего нет — как во Вриндаване перед праздником. Загляните позже.",
@@ -191,7 +203,14 @@
     "delete": "Удалить",
     "titlePlaceholder": "Лекции на экадаши для мамы",
     "titleInputAria": "Название для этой общей ссылки",
-    "shareCollection": "Поделиться подборкой"
+    "shareCollection": "Поделиться подборкой",
+    "seriesKicker": "Циклы",
+    "seriesParts": "{count} частей"
+  },
+  "seriesPage": {
+    "kicker": "Цикл",
+    "episodesIndexed": "{count} из {total} частей",
+    "empty": "Части этого цикла ещё не проиндексированы — они появятся после синхронизации каталога."
   },
   "sadhana": {
     "title": "Моя садхана",
@@ -204,6 +223,17 @@
     "thisYear": "В этом году",
     "thisYearHeading": "Этот год, месяц за месяцем",
     "emptyMonth": "В этом месяце ещё не записано ни одного круга — когда бы вы ни читали джапу, войдя в аккаунт, они тихо останутся здесь.",
+    "allTime": "За всё время",
+    "unbrokenDays": "{count} дней святого имени подряд",
+    "milestoneYear": "{count} кругов поднесено в этом году",
+    "yearHeading": "{year}, месяц за месяцем",
+    "emptyYear": "В {year} году кругов не записано.",
+    "prevMonthAria": "Предыдущий месяц",
+    "nextMonthAria": "Следующий месяц",
+    "prevYearAria": "Предыдущий год",
+    "nextYearAria": "Следующий год",
+    "chartAria": "Круги по месяцам, {year}",
+    "mantraShare": "{mantra}: {count, plural, one {# круг} few {# круга} other {# кругов}}",
     "roundsCount": "{count, plural, one {# круг} few {# круга} many {# кругов} other {# круга}}",
     "dayRounds": "{day}: {count, plural, one {# круг} few {# круга} many {# кругов} other {# круга}}",
     "dayNone": "{day}: нет кругов",
@@ -291,7 +321,16 @@
       "voiceMicDenied": "Доступ к микрофону не предоставлен — считайте касанием, с закрытыми глазами.",
       "voiceUnsupported": "Джапа без рук недоступна в этом браузере — считайте касанием.",
       "voiceIosSafariHint": "На iPhone пение голосом лучше всего работает в Safari.",
-      "mantraLabel": "Мантра"
+      "mantraLabel": "Мантра",
+      "sankalpaLabel": "Санкальпа",
+      "sankalpaAria": "Ваш собственный ежедневный обет кругов — повторное нажатие снимает его",
+      "sankalpaProgress": "Круг {current} из ваших {vow}",
+      "sankalpaOffered": "Ваши {vow} кругов поднесены",
+      "voiceIntroPace": "Повторяйте в своём темпе — можно тихо.",
+      "voiceIntroBreath": "Естественный короткий вдох между мантрами — именно он засчитывает бусину.",
+      "voiceIntroRhythm": "Светящиеся слова следуют вашему ритму — это спутник, а не расшифровка.",
+      "voiceIntroBegin": "Начать",
+      "recordedInSadhana": "Каждый круг записывается в «Моя садхана»"
     },
     "calendar": {
       "h1": "Вайшнавский календарь",
