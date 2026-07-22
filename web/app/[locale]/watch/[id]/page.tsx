@@ -6,6 +6,7 @@ import { cache } from "react";
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
 import { RecordWatch } from "@/components/record-watch";
+import { TempleLamp } from "@/components/temple-lamp";
 import { UpNext } from "@/components/up-next";
 import { SaveButtons } from "@/components/save-buttons";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
@@ -123,10 +124,12 @@ export default async function WatchPage({ params }: Props) {
 
       {/* The cinematic stage (DESIGN.md #6 "Watch page"): the player sits
           directly on the midnight canvas with the āratī lamp glowing behind
-          it at low intensity. The old light-theme CSS-var override band is
-          gone - the page IS dark now. */}
+          it at low intensity, now time-of-day aware (#5.13) - the same lamp
+          quality a devotee would find sitting before the actual player at
+          that hour. The old light-theme CSS-var override band is gone -
+          the page IS dark now. */}
       <div className="relative overflow-hidden">
-        <div className="lamp dim" aria-hidden="true" />
+        <TempleLamp dim />
         <Container className="page-top pb-8 sm:pb-10">
           <div className="mx-auto max-w-4xl">
             {/* Standard, unmodified YouTube embed via youtube-nocookie.com -

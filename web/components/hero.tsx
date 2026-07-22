@@ -8,6 +8,7 @@ import { useEffect, useState } from "react";
 
 import { AartiPeriod } from "@/components/aarti-period";
 import { HeroImage } from "@/components/hero-image";
+import { TempleLamp } from "@/components/temple-lamp";
 import { Link } from "@/i18n/navigation";
 import { useDataSaver } from "@/lib/data-saver";
 
@@ -88,7 +89,7 @@ export function Hero({ features }: { features: HeroFeature[] }) {
             its own hqdefault fallback (see HeroImage). */}
         <HeroImage key={feature.videoId} videoId={feature.videoId} alt="" priority />
       </div>
-      <div className="lamp" aria-hidden="true" />
+      <TempleLamp />
       {!dataSaver && <Embers />}
 
       <AartiPeriod />

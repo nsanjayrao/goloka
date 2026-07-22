@@ -320,7 +320,23 @@
       rgba(10, 15, 38, 0.75) 100%
     );
   }
+  /* The āratī lamp's light quality by temple period (DESIGN.md #5.13,
+     2026-07-22): a real oil lamp doesn't read the same at every hour - dim
+     and cool before dawn, brightest at midday, warmest at dusk (the one
+     period the gradient's OUTER stops turn flame instead of marigold - real
+     dusk light is warmer/more saturated than midday's, and this is the only
+     hour the lamp goes fully warm end to end), quietest once the temple
+     rests. `--lamp-mult` is a plain multiplier on the ORIGINAL intensities
+     (so śṛṅgāra-darśana, 1, is byte-for-byte the site's original look -
+     nothing regresses for the hours most visitors actually browse in);
+     `--lamp-outer` picks which token colors the middle/outer stops. Both
+     are read via calc()/color-mix(), so a period change is one attribute
+     write, not a loop - the same battery discipline as the rest of the
+     motion system. `data-period` is stamped by components/temple-lamp.tsx,
+     client-side after mount (the server can't know the visitor's hour). */
   .lamp {
+    --lamp-mult: 1;
+    --lamp-outer: var(--marigold);
     position: absolute;
     z-index: -1;
     left: 50%;
@@ -330,14 +346,22 @@
     transform: translateX(-50%);
     background: radial-gradient(
       ellipse at 50% 100%,
-      rgba(245, 201, 123, 0.34) 0%,
-      rgba(232, 163, 61, 0.16) 34%,
-      rgba(232, 163, 61, 0.05) 58%,
+      color-mix(in srgb, var(--flame) calc(34% * var(--lamp-mult)), transparent) 0%,
+      color-mix(in srgb, var(--lamp-outer) calc(16% * var(--lamp-mult)), transparent) 34%,
+      color-mix(in srgb, var(--lamp-outer) calc(5% * var(--lamp-mult)), transparent) 58%,
       transparent 75%
     );
     animation: lamp-light 2.2s ease-out both, breathe 6.5s ease-in-out 2.2s infinite;
     pointer-events: none;
   }
+  .lamp[data-period="mangala"] { --lamp-mult: 0.6; }   /* pre-dawn - dim, the day hasn't broken yet */
+  .lamp[data-period="shringara"] { --lamp-mult: 1; }   /* morning - the site's original baseline */
+  .lamp[data-period="rajabhoga"] { --lamp-mult: 1.15; } /* midday - brightest */
+  .lamp[data-period="sandhya"] {                        /* dusk - warmest, not just brighter */
+    --lamp-mult: 1.1;
+    --lamp-outer: var(--flame);
+  }
+  .lamp[data-period="shayana"] { --lamp-mult: 0.5; }   /* night - the temple rests */
   .lamp::before {
     content: "";
     position: absolute;
@@ -346,13 +370,14 @@
     animation: flicker 2.3s ease-in-out infinite;
     opacity: 0.5;
   }
-  /* Low-intensity lamp for the watch page (DESIGN.md #6). */
+  /* Low-intensity lamp for the watch/chant pages (DESIGN.md #6) - same
+     period variables, just a dimmer base the multiplier scales from. */
   .lamp.dim {
     background: radial-gradient(
       ellipse at 50% 100%,
-      rgba(245, 201, 123, 0.14) 0%,
-      rgba(232, 163, 61, 0.07) 34%,
-      rgba(232, 163, 61, 0.02) 58%,
+      color-mix(in srgb, var(--flame) calc(14% * var(--lamp-mult)), transparent) 0%,
+      color-mix(in srgb, var(--lamp-outer) calc(7% * var(--lamp-mult)), transparent) 34%,
+      color-mix(in srgb, var(--lamp-outer) calc(2% * var(--lamp-mult)), transparent) 58%,
       transparent 75%
     );
   }

@@ -3,6 +3,7 @@ import { setRequestLocale } from "next-intl/server";
 
 import { ChantWithTracking } from "@/components/chant-with-tracking";
 import { Container } from "@/components/container";
+import { TempleLamp } from "@/components/temple-lamp";
 import { localizedAlternates } from "@/lib/site";
 
 type Props = { params: Promise<{ locale: string }> };
@@ -29,9 +30,10 @@ export default async function ChantPage({ params }: Props) {
   return (
     <div className="relative overflow-hidden">
       {/* The breathing āratī lamp, low intensity - the same living warmth as
-          the hero, reused verbatim (DESIGN.md #5.2 / #6), so this space
-          feels like sitting before a lamp rather than a UI screen. */}
-      <div className="lamp dim" aria-hidden="true" />
+          the hero, now also time-of-day aware (DESIGN.md #5.2 / #5.13 / #6),
+          so this space feels like sitting before a REAL lamp, whose light
+          actually differs at dawn and at dusk, rather than a UI screen. */}
+      <TempleLamp dim />
       <Container className="page-top pb-16">
         {/* ChantWithTracking is a thin client wrapper: when signed in, it
             records each completed round to the devotee's /sadhana journal;

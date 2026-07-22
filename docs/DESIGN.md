@@ -123,7 +123,21 @@ with .22-.24em tracking.
 11. **Film grain** — fixed overlay, opacity .045, `steps(8)` shift; and
     the glassy header: transparent gradient at top, blur + gold hairline
     after 40px scroll.
-12. **The Courtyard** (2026-07-22, Design Manifesto) — every `VideoCard`
+12. **Time-of-day light** (2026-07-22, Design Manifesto) — the āratī lamp
+    (hero, watch page, chant page) and the hero's ember canvas now follow
+    the real temple day, sharing ONE hour computation with the eyebrow
+    label (`lib/temple-period.ts`'s `useTemplePeriod`, refactored out of
+    `components/aarti-period.tsx`): dim and cool before dawn (mangala),
+    the site's original baseline at morning (śṛṅgāra — nothing regresses
+    for the hours most visitors browse in), brightest at midday
+    (rāja-bhoga), warm/flame-toned at dusk (sandhyā — the one period the
+    lamp's outer gradient stops turn `--flame` instead of `--marigold`),
+    quietest at night (śayana). Applied via a CSS custom property
+    (`--lamp-mult` + `color-mix()`) set once by a `data-period` attribute,
+    not a continuous loop — the same battery discipline as every other
+    ambient effect. `components/temple-lamp.tsx` is the thin client
+    island; watch/chant pages stay server components around it.
+13. **The Courtyard** (2026-07-22, Design Manifesto) — every `VideoCard`
     meta line reads channel · relative date only; raw view counts were
     removed everywhere a card renders (a number badge turns liturgical
     footage into a metric — popularity survives only as the "Most

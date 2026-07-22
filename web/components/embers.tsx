@@ -2,6 +2,25 @@
 
 import { useEffect, useRef } from "react";
 
+import { useTemplePeriod, type PeriodKey } from "@/lib/temple-period";
+
+// The embers' intensity by temple period (DESIGN.md #5.13, 2026-07-22) -
+// the SAME day-arc as the lamp's --lamp-mult in globals.css (kept in sync
+// by value, not by import: one is CSS, one is a canvas draw loop, so the
+// numbers are duplicated deliberately rather than sharing a token that
+// only one of the two systems could actually consume). Hue is left alone
+// here - unlike the lamp, the embers don't already blend two tokens, so
+// only reaching for MORE change (a new hue split) than the lamp's own
+// precedent justifies would be exactly the ornament-for-its-own-sake this
+// whole system argues against.
+const PERIOD_EMBER_SCALE: Record<PeriodKey, number> = {
+  mangala: 0.6,
+  shringara: 1,
+  rajabhoga: 1.15,
+  sandhya: 1.1,
+  shayana: 0.5,
+};
+
 type Ember = {
   x: number;
   y: number;
@@ -18,12 +37,14 @@ type Ember = {
 // prefers-reduced-motion; the rAF loop is cancelled on unmount.
 export function Embers() {
   const ref = useRef<HTMLCanvasElement>(null);
+  const period = useTemplePeriod();
 
   useEffect(() => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     const canvas = ref.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return;
+    const scale = PERIOD_EMBER_SCALE[period];
 
     let w = 0;
     let h = 0;
@@ -60,7 +81,7 @@ export function Embers() {
         p.x += p.drift + Math.sin(p.y * 0.01) * 0.15;
         p.tw += 0.05;
         if (p.y < -10) Object.assign(p, spawn());
-        const glow = p.a * (0.6 + 0.4 * Math.sin(p.tw));
+        const glow = p.a * (0.6 + 0.4 * Math.sin(p.tw)) * scale;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, 7);
         ctx.fillStyle = `rgba(245,201,123,${glow})`;
@@ -77,7 +98,11 @@ export function Embers() {
       cancelAnimationFrame(raf);
       window.removeEventListener("resize", size);
     };
-  }, []);
+    // `period` changes at most once an hour (useTemplePeriod is stable
+    // within it), so this restarts the whole particle loop only that
+    // rarely - a cheap, honest way to pick up the new scale rather than
+    // threading a ref through the closure for a change this infrequent.
+  }, [period]);
 
   return <canvas ref={ref} className="embers" aria-hidden="true" />;
 }
