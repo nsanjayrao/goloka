@@ -540,12 +540,15 @@
   .hero-swap.fading {
     opacity: 0;
   }
+  /* Motion audit (2026-07-22, DESIGN.md #7): this used to bob up and down
+     on a 2.4s loop - a literal bounce, the one motion the manifesto names
+     outright ("never bouncing"). A quiet, static chevron says the same
+     thing (there's more below) without the gesture. */
   .scroll-cue {
     position: absolute;
     right: var(--pad);
     bottom: 30px;
     color: rgba(232, 163, 61, 0.7);
-    animation: cue 2.4s ease-in-out infinite;
   }
   .scroll-cue svg {
     width: 20px;
@@ -1701,11 +1704,6 @@
     transform: translate(-3%, -3%);
   }
 }
-@keyframes bindu-glow {
-  50% {
-    box-shadow: 0 0 18px rgba(245, 201, 123, 1);
-  }
-}
 @keyframes drift {
   from {
     transform: scale(1.04);
@@ -1765,17 +1763,6 @@
   }
   to {
     transform: scaleX(1);
-  }
-}
-@keyframes cue {
-  0%,
-  100% {
-    transform: translateY(0);
-    opacity: 0.7;
-  }
-  50% {
-    transform: translateY(8px);
-    opacity: 1;
   }
 }
 @keyframes pulse {

@@ -225,6 +225,26 @@ exempt; the measure governs reading paragraphs only.
   lazy below the fold.
 - No new animation dependencies. (framer-motion is already installed but
   the signature elements use vanilla CSS/JS per the prototype.)
+- **Motion vocabulary** (2026-07-22, Design Manifesto motion audit): every
+  ambient/decorative animation in the app is one of three things - a
+  BREATH (slow opacity/scale pulse: the lamp, the chant-listening glow,
+  the lit karaoke word), a DRIFT (slow floating movement: the hero
+  image's 26s Ken-Burns pan), or a CURTAIN (a threshold crossed once:
+  the darshan veil parting on arrival, `.rise`/`route-in`'s quieter
+  fade-and-rise for routine content/page entrances - the same idea at a
+  smaller scale, not a literal curtain for every card). Functional
+  feedback is a SEPARATE category, exempt from this list because it
+  carries information rather than atmosphere: the hero progress bars
+  filling (how long until the next slide), the live-dot and skeleton
+  pulses (a status, not a mood), film grain's texture shift (material
+  simulation, not object motion). Audited and fixed: the scroll-cue's
+  vertical bob was a literal bounce - the one thing named outright as
+  forbidden - and is now a static chevron; the orphaned `bindu-glow`
+  keyframe (zero call sites) was removed. Every JS-driven animation
+  (embers, hero rotation, the darshan veil) already checks
+  `prefers-reduced-motion` itself and stops outright, on top of the
+  blanket CSS kill-switch (§1 principle 3's `*` rule) - confirmed, not
+  assumed, by reading each one during this audit.
 - Keyboard: visible flame focus rings everywhere; one h1 per page; alt
   text on thumbnails; aria-labels on rows/arrows/progress bars.
 - Lighthouse mobile targets: Performance ≥ 90, Accessibility ≥ 95,
