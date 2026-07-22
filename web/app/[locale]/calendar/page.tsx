@@ -124,7 +124,7 @@ export default async function CalendarPage({ params }: Props) {
   return (
     <Container className="page-top pb-16">
       <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{t("h1")}</h1>
-      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-text-muted">{t("intro")}</p>
+      <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-text-muted">{t("intro")}</p>
 
       <div className="mt-10 flex flex-col gap-10">
         {groups.map((group) => (
@@ -158,7 +158,7 @@ export default async function CalendarPage({ params }: Props) {
                         </span>
                       </div>
                       {row.note && (
-                        <p className="mt-1.5 max-w-2xl text-[13px] leading-relaxed text-text-muted">{row.note}</p>
+                        <p className="mt-1.5 max-w-measure text-[13px] leading-relaxed text-text-muted">{row.note}</p>
                       )}
                       {row.href && (
                         <Link

@@ -26,7 +26,11 @@ export default async function AboutPage({ params }: Props) {
     <Container className="page-top pb-10">
       <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{t("h1")}</h1>
 
-      <div className="mt-6 max-w-2xl space-y-6 text-text-muted">
+      {/* max-w-measure (the 68-character measure, DESIGN.md #3): this is the
+          site's longest-running prose - every section below is a paragraph
+          meant to be read, not skimmed, so the line length matters here
+          more than almost anywhere else in the app. */}
+      <div className="mt-6 max-w-measure space-y-6 text-text-muted">
         <p>{t("intro")}</p>
 
         <section>

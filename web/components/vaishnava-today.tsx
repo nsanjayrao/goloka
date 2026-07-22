@@ -53,7 +53,7 @@ export function VaishnavaToday({ now = new Date() }: { now?: Date }) {
             >
               {t(isDisappearance ? "remember" : "honor", { name: entry.name })}
             </h2>
-            <p className="mt-3 max-w-2xl text-[14px] leading-relaxed text-text-muted">{entry.note}</p>
+            <p className="mt-3 max-w-measure text-[14px] leading-relaxed text-text-muted">{entry.note}</p>
             {href && (
               <Link
                 href={href}

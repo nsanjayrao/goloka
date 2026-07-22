@@ -335,7 +335,7 @@ export function SadhanaClient() {
         </button>
       </div>
 
-      <p className="mt-3 max-w-2xl text-[15px] leading-relaxed text-text-muted">{t("intro")}</p>
+      <p className="mt-3 max-w-measure text-[15px] leading-relaxed text-text-muted">{t("intro")}</p>
 
       {/* Today / this month / this year / all time - four quiet figures. */}
       <div className="mt-8 grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -454,7 +454,7 @@ export function SadhanaClient() {
         )}
       </section>
 
-      <p className="mt-12 max-w-2xl text-[13px] leading-relaxed text-text-muted/80">{t("footNote")}</p>
+      <p className="mt-12 max-w-measure text-[13px] leading-relaxed text-text-muted/80">{t("footNote")}</p>
     </div>
   );
 }

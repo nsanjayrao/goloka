@@ -30,7 +30,7 @@ export default async function BooksPage({ params }: Props) {
   return (
     <Container className="page-top pb-10">
       <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("h1")}</h1>
-      <p className="mt-2 max-w-2xl text-text-muted">{t("intro")}</p>
+      <p className="mt-2 max-w-measure text-text-muted">{t("intro")}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {BOOKS.map((book) => {
@@ -84,7 +84,7 @@ export default async function BooksPage({ params }: Props) {
       </div>
 
       <h2 className="mt-14 font-heading text-2xl text-text">{t("essentialsTitle")}</h2>
-      <p className="mt-1 max-w-2xl text-sm text-text-muted">{t("essentialsSubtitle")}</p>
+      <p className="mt-1 max-w-measure text-sm text-text-muted">{t("essentialsSubtitle")}</p>
       <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
         {ESSENTIALS.map((item) => (
           <a
@@ -100,7 +100,7 @@ export default async function BooksPage({ params }: Props) {
         ))}
       </div>
 
-      <p className="mt-10 max-w-2xl text-[13px] text-text-muted/80">{t("disclaimer")}</p>
+      <p className="mt-10 max-w-measure text-[13px] text-text-muted/80">{t("disclaimer")}</p>
     </Container>
   );
 }

@@ -76,6 +76,19 @@
   --radius-feature: 18px;
   --radius-section: 16px;
 
+  /* The reading measure (DESIGN.md #3, 2026-07-22): body prose is
+     constrained to `max-w-measure` (this token, used as a Tailwind
+     `max-w-*` utility), a real 65-68 CHARACTERS-of-running-prose width,
+     not Tailwind's own built-in `max-w-prose`. That utility is 65ch, and
+     `ch` is the "0" DIGIT's width - for Figtree that measures ~7.22px at
+     16px, so 65ch resolves to ~667px, which actually renders ~92
+     characters of real prose per line (verified by measuring real About-
+     page text with canvas.measureText - see the commit). 480px is the
+     value that measures out to the genuine target for Figtree at 16px;
+     if the body face or its base size ever changes, re-measure rather
+     than assume `ch` still tracks correctly. */
+  --max-width-measure: 480px;
+
   /* Elevation on the dark canvas: deep, soft. Resting cards are flat
      (borders do the work); shadow-lift is the hover state. */
   --shadow-card: 0 1px 2px rgba(0, 0, 0, 0.3);

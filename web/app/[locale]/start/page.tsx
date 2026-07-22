@@ -95,7 +95,10 @@ export default async function StartPage({ params }: Props) {
         <div className="max-w-2xl">
           <p className={KICKER}>{t("eyebrow")}</p>
           <h1 className="mt-3 font-heading text-3xl text-text sm:text-4xl">{t("h1")}</h1>
-          <div className="mt-6 space-y-4 text-[15px] leading-relaxed text-text-muted sm:text-base">
+          {/* max-w-measure (the 68-character measure, DESIGN.md #3): narrower
+              than the h1 above it is allowed to be - a heading reads fine
+              wide, three sentences of body prose don't. */}
+          <div className="mt-6 max-w-measure space-y-4 text-[15px] leading-relaxed text-text-muted sm:text-base">
             <p>{t("welcomeP1")}</p>
             <p>{t("welcomeP2")}</p>
             <p>{t("welcomeP3")}</p>
@@ -140,7 +143,7 @@ export default async function StartPage({ params }: Props) {
         <div className="mt-16 max-w-2xl border-t border-border pt-10 sm:mt-20">
           <p className={KICKER}>{t("outroKicker")}</p>
           <h2 className="mt-2 font-heading text-2xl text-text">{t("outroTitle")}</h2>
-          <p className="mt-4 leading-relaxed text-text-muted">
+          <p className="mt-4 max-w-measure leading-relaxed text-text-muted">
             {t.rich("outroBody", {
               chant: (chunks) => (
                 <Link href="/chant" className="text-accent-strong underline-offset-4 hover:underline">

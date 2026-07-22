@@ -67,10 +67,40 @@ Google Fonts via `next/font` (self-hosted at build, zero layout shift):
   families, so Hindi titles render as elegant serif, never system
   fallback.
 
-Scale (from the prototype): hero h1 `clamp(30px,5.2vw,62px)` lh 1.13;
-section h2 `clamp(22px,2.6vw,32px)`; quote `clamp(24px,3.4vw,42px)`;
-card title 15px/500; meta 13px muted; kickers/eyebrows 12-13px uppercase
-with .22-.24em tracking.
+Scale (from the prototype, formalized as a binding ladder 2026-07-22 —
+Design Manifesto "The Weight of a Word"): every new size reaches for one
+of these first; a fresh one-off px value is a signal something drifted,
+not a free choice.
+
+| Level | Size | Weight | Face | Use |
+|---|---|---|---|---|
+| Hero h1 | `clamp(30px,5.2vw,62px)` lh 1.13 | 400 | Marcellus | the one LCP title, home hero only |
+| Page h1 | `text-3xl` → `sm:text-4xl` (30–36px) | 500 | Marcellus | every other page's title |
+| Section h2 | `clamp(22px,2.6vw,32px)` | 400 | Marcellus | home row headings |
+| Card/sub-heading | 19–28px (19/20/22/26/28 by context) | 400 | Marcellus | book/temple/category names, step titles — width-dependent, not one fixed value |
+| Quote | `clamp(24px,3.4vw,42px)` | 400 | Marcellus | pull-quote interludes |
+| Body prose | 15–16px, `leading-relaxed` | 400 | Figtree | paragraphs — see the measure rule below |
+| Secondary text | 13–14px | 400 | Figtree | card titles, descriptions, step "why" text |
+| Meta | 12–13px, muted | 400 | Figtree | card meta lines, captions |
+| Kicker/eyebrow | 11–13px, uppercase | 400–600 | Figtree | `.18–.28em` tracking, always on its own line above a title |
+
+**The measure**: any block of genuine multi-sentence body prose (About,
+Start's welcome/outro, page intros, footnotes) is constrained to
+`max-w-measure` (a real design token, `globals.css`'s `--max-width-
+measure: 480px`) — 65–68 ACTUAL characters of running Figtree prose at
+16px, verified with `canvas.measureText()` against real page copy, not
+assumed. Deliberately NOT Tailwind's own built-in `max-w-prose`: that
+utility is 65ch, and `ch` is the width of the "0" DIGIT, which for
+Figtree measures wide enough that 65ch resolves to ~667px and actually
+renders ~92 characters per line on this site's real prose — a name that
+promises the measure without delivering it. Re-measure `--max-width-
+measure` if the body face or its base size ever changes; don't assume
+`ch` tracks correctly for a new typeface either. Put the token on the
+paragraph itself (or a div containing ONLY paragraphs/sub-headings meant
+to share the reading column, like About's stacked sections) — never on
+a wrapper that also holds a page h1, which wants the fuller column width
+a heading is allowed. Headings, kickers, and short one-line captions are
+exempt; the measure governs reading paragraphs only.
 
 ## 4. Layout & rhythm
 

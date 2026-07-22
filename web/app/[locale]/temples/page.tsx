@@ -36,7 +36,7 @@ export default async function TemplesPage({ params }: Props) {
   return (
     <Container className="page-top pb-10">
       <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("h1")}</h1>
-      <p className="mt-2 max-w-2xl text-text-muted">{t("intro")}</p>
+      <p className="mt-2 max-w-measure text-text-muted">{t("intro")}</p>
 
       <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {TEMPLES.map((temple) => {
@@ -80,7 +80,7 @@ export default async function TemplesPage({ params }: Props) {
         })}
       </div>
 
-      <p className="mt-10 max-w-2xl text-[13px] text-text-muted/80">
+      <p className="mt-10 max-w-measure text-[13px] text-text-muted/80">
         {t.rich("knowTemple", {
           sendNote: (chunks) => (
             <a
