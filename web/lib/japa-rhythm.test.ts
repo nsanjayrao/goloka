@@ -21,6 +21,7 @@ import {
   pushAudioFrame,
   type PushAudioFrameOptions,
 } from "./japa-rhythm";
+import { RADHA_MANTRA } from "./mantras";
 
 // ---------- Synthetic frame generation ----------
 // Every test builds its audio out of "segments" (a duration at a constant
@@ -379,6 +380,47 @@ function learnTempo(ms: number, options: PushAudioFrameOptions) {
   return run(frames, options);
 }
 
+describe("regression: a quick, real 'Śrī Rādhā' must count (2026-07-22)", () => {
+  // Owner-reported bug: a single, correctly chanted "Śrī Rādhā" produced no
+  // bead. Root cause, found by measuring actual VOICED time rather than
+  // guessing: a natural two-word utterance runs ~350-550ms of voice once
+  // the small gap between the words is excluded, but the shipped floor
+  // (RADHA_MANTRA.minMantraMs) was 800ms - silently discarding a correctly
+  // spoken mantra as "too short" every single time. These tests read the
+  // REAL registered constant, not a copy of it, so a future edit to
+  // mantras.ts that regresses the floor breaks this test immediately.
+  const opts = { minPhraseMs: RADHA_MANTRA.minMantraMs };
+
+  it("a brisk but real utterance (~500ms voiced) counts", () => {
+    const frames = framesFromSegments([
+      segment(300, QUIET),
+      segment(180, CHANT), // "Śrī"
+      segment(120, QUIET), // the natural gap between the two words
+      segment(320, CHANT), // "Rādhā"
+      segment(500, QUIET), // the breath
+    ]);
+    expect(run(frames, opts).mantraEvents).toBe(1);
+  });
+
+  it("an even quicker, softer utterance (~360ms voiced) still counts", () => {
+    const frames = framesFromSegments([
+      segment(300, QUIET),
+      segment(140, CHANT),
+      segment(90, QUIET),
+      segment(220, CHANT),
+      segment(500, QUIET),
+    ]);
+    expect(run(frames, opts).mantraEvents).toBe(1);
+  });
+
+  it("a single short blip (one syllable, ~180ms) still does not count", () => {
+    // The floor exists precisely to keep rejecting this - lowering it to
+    // fix real utterances must not also start counting a cough.
+    const frames = framesFromSegments([segment(300, QUIET), segment(180, CHANT), segment(500, QUIET)]);
+    expect(run(frames, opts).mantraEvents).toBe(0);
+  });
+});
+
 describe("fluid crediting: chanting with no breath finally counts", () => {
   it("without a tempo seed, behaves exactly as before - unbroken chant credits 0", () => {
     // The original honest-undercount contract, preserved for any caller that
@@ -585,7 +627,7 @@ describe("karaoke tempo flow", () => {
     // null (nothing learned yet) leaves the seed untouched
     expect(karaokeFlowAdopt(flow, null)).toBe(flow);
     // an absurd value is clamped, never trusted raw
-    expect(karaokeFlowAdopt(flow, 50).mantraMs).toBeGreaterThanOrEqual(1200);
+    expect(karaokeFlowAdopt(flow, 50).mantraMs).toBeGreaterThanOrEqual(300);
   });
 
   it("guards a zero-length word list", () => {

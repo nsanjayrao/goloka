@@ -549,8 +549,11 @@ export function countMantrasInFrames(frames: AudioFrame[], options?: PushAudioFr
 // with nobody chanting reads as frozen, not serene.
 
 // Bounds any adopted/seeded tempo so a bad value can never make the glide
-// strobe or freeze. A real spoken mantra sits comfortably inside this.
-const KARAOKE_MIN_MANTRA_MS = 1200;
+// strobe or freeze. A real spoken mantra sits comfortably inside this - the
+// floor matches the counter's own shortest-mantra floor (lib/mantras.ts
+// RADHA_MANTRA.minMantraMs, 300ms), so a brisk chanter's true LEARNED pace
+// is never clamped upward into visible lag the way an 800ms floor once did.
+const KARAOKE_MIN_MANTRA_MS = 300;
 const KARAOKE_MAX_MANTRA_MS = 20000;
 
 export type KaraokeFlow = {

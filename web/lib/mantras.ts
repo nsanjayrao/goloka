@@ -80,24 +80,31 @@ export const MAHAMANTRA: Mantra = {
 };
 
 // The Śrī Rādhā mantra: Her name, called again and again - as the followers
-// of Premānanda Mahārāja chant it in Vṛndāvana. One completed "Śrī Rādhā Śrī
-// Rādhā" counts as one bead. (Owner-confirmed text and word-breakdown; the
-// diacritics - Ś, ā - are preserved exactly and are liturgical, never
-// translated.)
+// of Premānanda Mahārāja chant it in Vṛndāvana. ONE "Śrī Rādhā" is one bead
+// (owner correction 2026-07-22 - the earlier doubled "Śrī Rādhā Śrī Rādhā"
+// form counted Her name twice per bead). The diacritics - Ś, ā - are
+// preserved exactly and are liturgical, never translated.
 export const RADHA_MANTRA: Mantra = {
   id: "sri-radha",
   name: "Śrī Rādhā",
   shortName: "Śrī Rādhā",
-  words: ["Śrī", "Rādhā", "Śrī", "Rādhā"],
-  devanagari: "श्री राधा श्री राधा",
-  // Four short words - a lower floor than the mahā-mantra's 2500ms, or a
-  // brisk chanter would be undercounted. Chosen by the same "comfortably
-  // above a stray word, comfortably under a real recitation" reasoning as
-  // MIN_PHRASE_MS itself.
-  minMantraMs: 1500,
-  // ~2.2s for "Śrī Rādhā Śrī Rādhā" (~550ms a word) - Her name called
-  // gently, twice; adapts to the devotee's pace after the first repetition.
-  karaokeMs: 2200,
+  words: ["Śrī", "Rādhā"],
+  devanagari: "श्री राधा",
+  // Two short words - a much lower floor than the mahā-mantra's 2500ms, or
+  // every call of Her name would be discarded as "too short". Tuned by
+  // measuring actual VOICED time (not wall-clock time - the two matter
+  // differently here): a real, even brisk, "Śrī Rādhā" runs ~350-550ms of
+  // voice once the natural gap between the two words is excluded (see
+  // lib/japa-rhythm.test.ts's synthetic-frame regression test for the exact
+  // numbers this was tuned against). The first shipped value, 800ms, was
+  // picked from wall-clock intuition and silently discarded a correctly
+  // spoken mantra as "too short" every time (owner-reported 2026-07-22).
+  // 300ms sits with real margin below that range while still comfortably
+  // rejecting a single short blip (a cough, a mic pop, one syllable alone).
+  minMantraMs: 300,
+  // ~1.1s for one gentle "Śrī Rādhā" (~550ms a word) - the seed pace;
+  // adapts to the devotee's own after the first few repetitions.
+  karaokeMs: 1100,
 };
 
 export const MANTRAS: Mantra[] = [MAHAMANTRA, RADHA_MANTRA];
