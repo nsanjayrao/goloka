@@ -130,7 +130,9 @@
     "offlineTitle": "Estás sin conexión",
     "offlineMessage": "Goloka necesita conexión para obtener los videos — reconéctate e inténtalo de nuevo.",
     "notIndexedTitle": "No está en el índice de Goloka",
-    "notIndexedMessage": "Este video no está en el índice de Goloka — indexamos un conjunto seleccionado de canales oficiales de ISKCON. Aún puedes verlo en YouTube, o explorar lo que hay aquí."
+    "notIndexedMessage": "Este video no está en el índice de Goloka — indexamos un conjunto seleccionado de canales oficiales de ISKCON. Aún puedes verlo en YouTube, o explorar lo que hay aquí.",
+    "errorTitle": "Algo salió mal",
+    "errorMessage": "Esta página tropezó al cargar — inténtalo de nuevo, o vuelve al inicio. No se ha perdido nada de lo que hacías."
   },
   "buttons": {
     "share": "Compartir",
@@ -152,7 +154,8 @@
     "less": "Menos",
     "backToHome": "Volver al inicio",
     "watchOnYoutube": "Ver en YouTube ↗",
-    "browseGoloka": "Explorar Goloka →"
+    "browseGoloka": "Explorar Goloka →",
+    "tryAgain": "Intentar de nuevo"
   },
   "push": {
     "title": "Notificaciones",

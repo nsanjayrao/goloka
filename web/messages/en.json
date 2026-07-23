@@ -130,7 +130,9 @@
     "offlineTitle": "You're offline",
     "offlineMessage": "Goloka needs a connection to fetch videos — reconnect and try again.",
     "notIndexedTitle": "Not in Goloka's index",
-    "notIndexedMessage": "This video isn't in Goloka's index — we index a curated set of official ISKCON channels. You can still watch it on YouTube, or explore what's here."
+    "notIndexedMessage": "This video isn't in Goloka's index — we index a curated set of official ISKCON channels. You can still watch it on YouTube, or explore what's here.",
+    "errorTitle": "Something went wrong",
+    "errorMessage": "This page stumbled loading — try again, or head back home. Nothing you were doing has been lost."
   },
   "buttons": {
     "share": "Share",
@@ -152,7 +154,8 @@
     "less": "Less",
     "backToHome": "Back to Home",
     "watchOnYoutube": "Watch on YouTube ↗",
-    "browseGoloka": "Browse Goloka →"
+    "browseGoloka": "Browse Goloka →",
+    "tryAgain": "Try again"
   },
   "push": {
     "title": "Notifications",
