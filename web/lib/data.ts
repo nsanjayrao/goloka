@@ -493,6 +493,22 @@ export async function getSeriesForChannel(channelId: number, limit = 24): Promis
   }, []);
 }
 
+/** Every series' YouTube playlist id, for the sitemap's /series/[id] URLs -
+ * these pages were absent from the sitemap entirely (audit finding,
+ * 2026-07-23), so several hundred pages of real, walkable content were
+ * undiscoverable by search engines. Bounded the same way getChannelHandles
+ * is; a light single-column select. */
+export async function getSeriesHandles(limit = 1000): Promise<string[]> {
+  return safely(async () => {
+    const { data, error } = await supabase!
+      .from("playlists")
+      .select("youtube_playlist_id")
+      .limit(limit);
+    if (error) throw error;
+    return (data ?? []).map((row: { youtube_playlist_id: string }) => row.youtube_playlist_id);
+  }, []);
+}
+
 /** Other videos in the same category, for the "More from this category" row. */
 export async function getMoreFromCategory(
   category: string,
