@@ -7,9 +7,16 @@ import { EmptyState } from "@/components/empty-state";
 // group deliberately stays outside locale routing (i18n plan goal #3), so
 // this mirrors the English copy in app/[locale]/not-found.tsx rather than
 // pulling in getTranslations.
+//
+// Audit finding (2026-07-23): the invocation thread (DESIGN.md #9 - a lost
+// visitor is met with "Rādhe Rādhe" before the error message) was added to
+// app/[locale]/not-found.tsx but missed this sibling file, since the two
+// aren't in the same route tree and Next never falls back from one to the
+// other - a devotee hitting a dead /c/<id> link saw the plain empty state.
 export default function LegacyNotFound() {
   return (
     <Container className="page-top pb-20">
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
       <EmptyState title="Page not found" message="This page wandered off the path — nothing to see here.">
         <Link
           href="/"
