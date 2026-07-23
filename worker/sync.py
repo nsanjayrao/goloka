@@ -251,7 +251,22 @@ def sync_channel_playlists(db, channel_pk: int, youtube_channel_id: str, full: b
         return
     # A series needs at least two parts; empty and single-video playlists
     # are noise ("Watch this!"-style pins), not series.
-    playlists = [p for p in playlists if p["item_count"] >= 2]
+    #
+    # Upper bound (owner decision 2026-07-23, audited against the real
+    # distribution across ~2,200 synced playlists at the time: median 10
+    # parts, p95 243, p99 709, max 5000): past a few hundred parts, a
+    # "series" stops being a narrative arc a devotee walks through in
+    # order and becomes a daily-broadcast archive bucketed by name -
+    # "Mangal Aarti" (2,716 parts), "Darshan Arati" (3,562), "Srimad
+    # Bhagavad Gita Classes" (5,000). Nobody needs day 46's arati before
+    # day 47's. 250 keeps genuinely long scriptural series intact (Canto
+    # 10 at 194 parts, a Caitanya-caritamrta lecture series at 189) while
+    # excluding the mega-archives - a size-only heuristic can't perfectly
+    # separate "recipe playlist" from "scripture series" at the same
+    # size, and a small amount of topical-playlist residue in the 100-250
+    # range is the accepted cost of not building real content
+    # classification for what is otherwise a cosmetic distinction.
+    playlists = [p for p in playlists if 2 <= p["item_count"] <= 250]
     if not playlists:
         return
 
