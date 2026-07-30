@@ -26,7 +26,7 @@ export default function SadhanaPage() {
     <Container className="page-top pb-10">
       {/* The invocation thread (DESIGN.md #9): the record of the holy name
           opens with Her name - fixed liturgical text, same as /chant. */}
-      <p className="text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <p className="text-[13px] uppercase tracking-[0.24em] text-accent">Rādhe Rādhe</p>
       <div className="mt-6">
         <SadhanaClient />
       </div>

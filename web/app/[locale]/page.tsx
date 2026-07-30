@@ -11,7 +11,9 @@ import { FadeUp } from "@/components/fade-up";
 import { Hero, type HeroFeature } from "@/components/hero";
 import { HomeDoorways } from "@/components/home-doorways";
 import { LanguageShelf } from "@/components/language-shelf";
+import { Movement } from "@/components/movement";
 import { VaishnavaToday } from "@/components/vaishnava-today";
+import { VrindavanHour } from "@/components/vrindavan-hour";
 import { LiveStrip } from "@/components/live-strip";
 import { QuoteBlock } from "@/components/quote-block";
 import { SplitFeature } from "@/components/split-feature";
@@ -27,6 +29,8 @@ import {
 import { cleanTitle } from "@/lib/format";
 import { localizedAlternates } from "@/lib/site";
 import { getActiveFestivalTopic, TOPIC_LIST } from "@/lib/topics";
+import { nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calendar";
+import { todaysObservances } from "@/lib/vaishnava-observances";
 import type { Video } from "@/lib/types";
 
 // Without this, Next.js bakes the page once at build time and it never
@@ -117,93 +121,125 @@ export default async function HomePage({ params }: Props) {
     (entry, index) => index !== splitIndex && entry.videos.length > 0
   );
 
+  // Movement one can genuinely be empty - no stream running, no observance
+  // today - and a heading stranded over nothing is worse than no heading. The
+  // same pure helpers the two strips use decide it here, on the server, so
+  // the label never renders alone. (In practice the ekadashi registry always
+  // has a next date, so this is a guard rather than a common branch.)
+  const now = new Date();
+  const hasToday =
+    live.length > 0 ||
+    todaysEkadashi(now) !== null ||
+    nextEkadashi(now) !== null ||
+    todaysObservances(now).length > 0;
+
   return (
     <div>
       {heroFeatures.length > 0 && <Hero features={heroFeatures} />}
 
-      <FadeUp>
-        <LiveStrip videos={live} />
-      </FadeUp>
+      {/* ---- 1. What is happening today ---------------------------------- */}
+      {hasToday && (
+        <Movement label={t("movementToday")}>
+          {/* The one line that points at the real place: what hour it is in
+              Vrindavan right now, and what the temple is doing. Renders
+              nothing until the browser has a clock. */}
+          <VrindavanHour />
 
-      <FadeUp>
-        <CalendarStrip />
-      </FadeUp>
+          <FadeUp>
+            <LiveStrip videos={live} />
+          </FadeUp>
 
-      {/* Honoring the parampara (Rādhā mood): on an ācārya's appearance or
-          disappearance day, or a festival, a quiet card bows the app's head
-          and offers that soul's words to hear. Renders null on ordinary
-          days, so it never leaves a gap. */}
-      <FadeUp>
-        <VaishnavaToday />
-      </FadeUp>
+          <FadeUp>
+            <CalendarStrip />
+          </FadeUp>
 
-      {/* Two gentle doorways (Rādhā mood): the newcomer's welcome and the
-          holy-name space, offered quietly before the content rows begin. */}
-      <FadeUp>
-        <HomeDoorways />
-      </FadeUp>
+          {/* Honoring the parampara (Rādhā mood): on an ācārya's appearance or
+              disappearance day, or a festival, a quiet card bows the app's head
+              and offers that soul's words to hear. Renders null on ordinary
+              days, so it never leaves a gap. */}
+          <FadeUp>
+            <VaishnavaToday />
+          </FadeUp>
+        </Movement>
+      )}
 
-      {/* Client-side personalization: renders null for first-time visitors. */}
-      <ContinueWatchingShelf />
+      {/* ---- 2. Where this devotee already is ----------------------------- */}
+      {/* Never empty: the doorways always render, so this movement is safe to
+          label even for a first-time visitor with no history at all. */}
+      <Movement label={t("movementPath")}>
+        {/* Two gentle doorways (Rādhā mood): the newcomer's welcome and the
+            holy-name space, offered quietly before the content rows begin. */}
+        <FadeUp>
+          <HomeDoorways />
+        </FadeUp>
 
-      {/* "Because you watched X" - the on-device affinity shelf (up to two
-          rows; lib/affinity.ts). Also null until there's watch history. */}
-      <BecauseYouWatched />
+        {/* Client-side personalization: renders null for first-time visitors. */}
+        <ContinueWatchingShelf />
 
-      {/* Client-side personalization: the picker always renders, the shelf
-          above it only once a language preference is set and has videos. */}
-      <LanguageShelf />
+        {/* "Because you watched X" - the on-device affinity shelf (up to two
+            rows; lib/affinity.ts). Also null until there's watch history. */}
+        <BecauseYouWatched />
 
-      <FadeUp>
-        <CategoryRow
-          kicker={t("freshFromTheTemples")}
-          title={t("arrivedToday")}
-          href="/browse"
-          videos={latest.slice(0, 8)}
-        />
-      </FadeUp>
+        {/* Client-side personalization: the picker always renders, the shelf
+            above it only once a language preference is set and has videos. */}
+        <LanguageShelf />
+      </Movement>
 
-      {activeFestival && festivalVideos.length > 0 && (
+      {/* ---- 3. The catalogue -------------------------------------------- */}
+      {/* Also never empty - the page early-returns above when there are
+          neither videos nor categories. */}
+      <Movement label={t("movementLibrary")}>
         <FadeUp>
           <CategoryRow
-            kicker={t("festivalDays")}
-            title={activeFestival.title}
-            href={`/topic/${activeFestival.slug}`}
-            videos={festivalVideos}
+            kicker={t("freshFromTheTemples")}
+            title={t("arrivedToday")}
+            href="/browse"
+            videos={latest.slice(0, 8)}
           />
         </FadeUp>
-      )}
 
-      {splitTopic && (
+        {activeFestival && festivalVideos.length > 0 && (
+          <FadeUp>
+            <CategoryRow
+              kicker={t("festivalDays")}
+              title={activeFestival.title}
+              href={`/topic/${activeFestival.slug}`}
+              videos={festivalVideos}
+            />
+          </FadeUp>
+        )}
+
+        {splitTopic && (
+          <FadeUp>
+            <SplitFeature
+              kicker={t("topic")}
+              title={splitTopic.topic.title}
+              href={`/topic/${splitTopic.topic.slug}`}
+              videos={splitTopic.videos}
+            />
+          </FadeUp>
+        )}
+
         <FadeUp>
-          <SplitFeature
-            kicker={t("topic")}
-            title={splitTopic.topic.title}
-            href={`/topic/${splitTopic.topic.slug}`}
-            videos={splitTopic.videos}
-          />
+          <QuoteBlock />
         </FadeUp>
-      )}
 
-      <FadeUp>
-        <QuoteBlock />
-      </FadeUp>
+        {rowTopics.map(({ topic, videos }) => (
+          <FadeUp key={topic.slug}>
+            <CategoryRow kicker={t("topic")} title={topic.title} href={`/topic/${topic.slug}`} videos={videos} />
+          </FadeUp>
+        ))}
 
-      {rowTopics.map(({ topic, videos }) => (
-        <FadeUp key={topic.slug}>
-          <CategoryRow kicker={t("topic")} title={topic.title} href={`/topic/${topic.slug}`} videos={videos} />
-        </FadeUp>
-      ))}
-
-      <FadeUp>
-        <CategoryCards categories={categories} />
-      </FadeUp>
-
-      {popular.length > 0 && (
         <FadeUp>
-          <CategoryRow kicker={t("belovedByMillions")} title={t("mostWatched")} videos={popular} />
+          <CategoryCards categories={categories} />
         </FadeUp>
-      )}
+
+        {popular.length > 0 && (
+          <FadeUp>
+            <CategoryRow kicker={t("belovedByMillions")} title={t("mostWatched")} videos={popular} />
+          </FadeUp>
+        )}
+      </Movement>
     </div>
   );
 }

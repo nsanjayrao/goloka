@@ -50,9 +50,21 @@ export function Embers() {
     let h = 0;
     let raf = 0;
 
+    // A canvas has TWO sizes: its CSS box (offsetWidth/Height) and its backing
+    // store (width/height, in device pixels). Setting the backing store to the
+    // CSS size meant every ember was drawn at 1x and stretched by the display
+    // - soft blobs on every retina phone and Mac, which is most of the
+    // difference between "expensive" and "approximate". setTransform then lets
+    // the draw loop below keep thinking in CSS pixels.
+    // Capped at 2: fill cost scales with AREA, so 3x would be 2.25x the work
+    // of 2x for a difference nobody can see on a speck under 2.3px.
     const size = () => {
-      w = canvas.width = canvas.offsetWidth;
-      h = canvas.height = canvas.offsetHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = canvas.offsetWidth;
+      h = canvas.offsetHeight;
+      canvas.width = Math.round(w * dpr);
+      canvas.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     };
     size();
     window.addEventListener("resize", size, { passive: true });
@@ -74,8 +86,19 @@ export function Embers() {
       embers.push(ember);
     }
 
+    // Particle colour comes from the theme, not from this file (2026-07-23).
+    // On the midnight canvas embers are bright specks ADDED to a dark room;
+    // on a light canvas the same specks are invisible, so the Aruṇa theme
+    // hands us rose-gold pollen and a "multiply" blend, which darkens the
+    // page instead of lighting it. Read once per effect run, not per frame.
+    const styles = getComputedStyle(canvas);
+    const fill = styles.getPropertyValue("--ember-fill").trim() || "245,201,123";
+    const halo = styles.getPropertyValue("--ember-halo").trim() || "rgba(232,163,61,.8)";
+    const blend = styles.getPropertyValue("--ember-blend").trim() || "source-over";
+
     const tick = () => {
       ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = blend as GlobalCompositeOperation;
       for (const p of embers) {
         p.y -= p.s;
         p.x += p.drift + Math.sin(p.y * 0.01) * 0.15;
@@ -84,8 +107,8 @@ export function Embers() {
         const glow = p.a * (0.6 + 0.4 * Math.sin(p.tw)) * scale;
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, 7);
-        ctx.fillStyle = `rgba(245,201,123,${glow})`;
-        ctx.shadowColor = "rgba(232,163,61,.8)";
+        ctx.fillStyle = `rgba(${fill},${glow})`;
+        ctx.shadowColor = halo;
         ctx.shadowBlur = 6;
         ctx.fill();
       }
@@ -94,8 +117,23 @@ export function Embers() {
     };
     raf = requestAnimationFrame(tick);
 
+    // The hero canvas kept drawing at 60fps while the devotee was thousands of
+    // pixels down the page. Each frame is 42 arc fills with shadowBlur - a
+    // software blur per draw call, the most expensive thing in the app's frame
+    // budget - so this was a sustained battery cost for pixels nobody could
+    // see. (A hidden TAB is throttled by the browser; scrolled-past is not.)
+    let visible = true;
+    const io = new IntersectionObserver(([entry]) => {
+      if (entry.isIntersecting === visible) return;
+      visible = entry.isIntersecting;
+      if (visible) raf = requestAnimationFrame(tick);
+      else cancelAnimationFrame(raf);
+    });
+    io.observe(canvas);
+
     return () => {
       cancelAnimationFrame(raf);
+      io.disconnect();
       window.removeEventListener("resize", size);
     };
     // `period` changes at most once an hour (useTemplePeriod is stable

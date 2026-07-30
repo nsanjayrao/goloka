@@ -44,7 +44,7 @@ export default async function OpengraphImage() {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: "#0A0F26",
+          backgroundColor: "#0A0F26", // --midnight
           fontFamily: "Marcellus",
         }}
       >
@@ -59,7 +59,7 @@ export default async function OpengraphImage() {
             fontSize: 96,
             fontWeight: 400, // Marcellus ships a single weight
             letterSpacing: "0.06em", // matches the site wordmark
-            color: "#F3EDDF",
+            color: "#F3EDDF", // chandan
           }}
         >
           Goloka<span style={{ color: "#E8A33D" }}>.</span>

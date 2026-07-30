@@ -8,13 +8,19 @@
     "search": "খুঁজুন",
     "searchAria": "গোলোক খুঁজুন",
     "chant": "জপ",
-    "calendar": "পঞ্জিকা"
+    "calendar": "পঞ্জিকা",
+    "more": "আরও",
+    "moreAria": "আরও পৃষ্ঠা",
+    "start": "এখান থেকে শুরু করুন",
+    "sadhana": "আমার সাধনা",
+    "about": "পরিচিতি"
   },
   "tabs": {
     "home": "হোম",
     "browse": "ব্রাউজ",
-    "search": "খুঁজুন",
-    "library": "লাইব্রেরি"
+    "library": "লাইব্রেরি",
+    "chant": "জপ",
+    "more": "আরও"
   },
   "footer": {
     "tagline": "দিব্য প্রেমের শাশ্বত ধাম। আধিকারিক চ্যানেল থেকে ইসকন প্রবচন, কীর্তন ও উৎসবের একটি বিনামূল্যের, কেন্দ্রীভূত তালিকা।",
@@ -45,7 +51,8 @@
     "primary": "প্রধান",
     "main": "মূল",
     "footer": "ফুটার",
-    "language": "ভাষা"
+    "language": "ভাষা",
+    "skip": "মূল অংশে যান"
   },
   "hero": {
     "watchNow": "এখনই দেখুন",
@@ -101,7 +108,10 @@
     "continueWatching": "দেখা চালিয়ে যান",
     "forYou": "আপনার জন্য",
     "becauseYouWatched": "আপনি {category} দেখেছেন বলে",
-    "inYourLanguage": "আপনার ভাষায়"
+    "inYourLanguage": "আপনার ভাষায়",
+    "movementToday": "আজ মন্দিরে",
+    "movementPath": "আপনার পথ",
+    "movementLibrary": "সংগ্রহ"
   },
   "watchPage": {
     "keepWatching": "দেখতে থাকুন",
@@ -143,6 +153,8 @@
     "favourited": "প্রিয়তে যোগ হয়েছে",
     "watchLater": "পরে দেখুন",
     "saved": "সংরক্ষিত",
+    "signInToFavourite": "আপনার প্রিয় তালিকায় সংরক্ষণ করতে সাইন ইন করুন",
+    "signInToWatchLater": "পরে দেখার জন্য সংরক্ষণ করতে সাইন ইন করুন",
     "signOut": "সাইন আউট",
     "dataSaver": "ডেটা সেভার",
     "dataSaverHint": "ধীর সংযোগে স্বয়ংক্রিয়ভাবে সক্রিয়",
@@ -174,7 +186,8 @@
     "clear": "মুছে ফেলুন",
     "popular": "জনপ্রিয়",
     "browseByCategory": "বিভাগ অনুযায়ী ব্রাউজ করুন",
-    "newestAdditions": "নতুন সংযোজন"
+    "newestAdditions": "নতুন সংযোজন",
+    "resultCount": "“{query}” এর জন্য {count, plural, one {#টি ফলাফল} other {#টি ফলাফল}}"
   },
   "languagePicker": {
     "watchIn": "এই ভাষায় দেখুন",
@@ -187,8 +200,9 @@
     "featuredTag": "নির্বাচিত"
   },
   "liteEmbed": {
-    "tapToLoad": "প্লেয়ার লোড করতে ট্যাপ করুন",
-    "tapToLoadAria": "প্লেয়ার লোড করতে ট্যাপ করুন: {title}"
+    "tapToLoadAria": "{title} শোনা শুরু করুন",
+    "beginListening": "শোনা শুরু করুন",
+    "curtain": "পট বন্ধ আছে"
   },
   "topicChips": {
     "on": "বিষয়:"
@@ -357,5 +371,20 @@
     "newHint": "এখান থেকে শুরু করুন — ধীরে",
     "chantLabel": "পবিত্র নাম জপ করুন",
     "chantHint": "তাঁকে ডাকার একটি শান্ত স্থান"
+  },
+  "moreSheet": {
+    "title": "আরও",
+    "close": "বন্ধ করুন"
+  },
+  "breadcrumb": {
+    "backTo": "{label}-এ ফিরে যান"
+  },
+  "vrindavan": {
+    "now": "বৃন্দাবনে এখন {time}।",
+    "mangala": "মঙ্গল-আরতি শুরু হয়েছে।",
+    "shringara": "শ্রীবিগ্রহের শৃঙ্গার চলছে।",
+    "rajabhoga": "মধ্যাহ্ন ভোগ নিবেদন হচ্ছে।",
+    "sandhya": "সন্ধ্যা-আরতি নিবেদিত হচ্ছে।",
+    "shayana": "মন্দির বিশ্রামে আছে।"
   }
 }

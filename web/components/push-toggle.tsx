@@ -88,7 +88,7 @@ export function PushToggle() {
                     className={cn(
                       "size-2 shrink-0 rounded-full",
                       topic === "live"
-                        ? "animate-[pulse_1.6s_infinite] bg-[#e05b5b] shadow-[0_0_10px_rgba(224,91,91,0.8)]"
+                        ? "animate-[pulse_1.6s_infinite] bg-live shadow-[0_0_10px_rgb(var(--live-rgb)/0.8)]"
                         : "bg-marigold"
                     )}
                   />

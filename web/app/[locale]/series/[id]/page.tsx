@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { Container } from "@/components/container";
 import { Link } from "@/i18n/navigation";
 import { getSeriesByPlaylistId, getSeriesEpisodes } from "@/lib/data";
@@ -39,6 +40,7 @@ export default async function SeriesPage({ params }: Props) {
   const { locale, id } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("seriesPage");
+  const tNav = await getTranslations("nav");
   const series = await getSeries(id);
   if (!series) notFound();
 
@@ -47,7 +49,19 @@ export default async function SeriesPage({ params }: Props) {
   return (
     <Container className="page-top pb-16">
       <div className="mx-auto max-w-3xl">
-        <p className="text-[11px] uppercase tracking-[0.18em] text-marigold">{t("kicker")}</p>
+        {/* A series' parent is the channel that published it - and only
+            Browse when we don't have a handle to link to. */}
+        <div className="mb-5">
+          {series.channel?.handle ? (
+            <Breadcrumb
+              href={`/channel/${encodeURIComponent(series.channel.handle)}`}
+              label={series.channel.title}
+            />
+          ) : (
+            <Breadcrumb href="/browse" label={tNav("browse")} />
+          )}
+        </div>
+        <p className="text-[11px] uppercase tracking-[0.18em] text-accent">{t("kicker")}</p>
         <h1 className="mt-2 font-heading text-3xl leading-snug text-text sm:text-4xl">
           {series.title}
         </h1>
@@ -83,7 +97,7 @@ export default async function SeriesPage({ params }: Props) {
               <li key={episode.video.youtube_video_id}>
                 <Link
                   href={`/watch/${episode.video.youtube_video_id}`}
-                  className="group flex items-center gap-4 py-3 outline-none"
+                  className="group flex items-center gap-4 rounded-lg py-3"
                 >
                   {/* The TRUE playlist slot, 1-based - so numbering matches
                       what the devotee saw on YouTube even when we haven't

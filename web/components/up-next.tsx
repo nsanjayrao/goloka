@@ -106,7 +106,7 @@ export function UpNext({
           aria-checked={autoplayOn}
           aria-label={t("upNextToggleAria")}
           onClick={() => setAutoplay(!autoplayOn)}
-          className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+          className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
         >
           <span
             className={`inline-block h-[9px] w-[9px] rounded-full border border-hairline transition-colors ${autoplayOn ? "bg-marigold" : "bg-transparent"}`}
@@ -134,7 +134,7 @@ export function UpNext({
             />
           </Link>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-marigold">{t("upNextKicker")}</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-accent">{t("upNextKicker")}</p>
             <p className="mt-1 line-clamp-2 font-heading text-[15px] leading-snug text-text">
               {next.title}
             </p>
@@ -146,7 +146,7 @@ export function UpNext({
             ref={cancelRef}
             type="button"
             onClick={() => setEnded(false)}
-            className="shrink-0 rounded-full border border-hairline px-4 py-2 text-[12px] uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+            className="shrink-0 rounded-full border border-hairline px-4 py-2 text-[12px] uppercase tracking-[0.14em] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
           >
             {t("upNextCancel")}
           </button>

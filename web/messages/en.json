@@ -8,13 +8,19 @@
     "search": "Search",
     "searchAria": "Search Goloka",
     "chant": "Chant",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "more": "More",
+    "moreAria": "More pages",
+    "start": "Begin Here",
+    "sadhana": "My Sādhana",
+    "about": "About"
   },
   "tabs": {
     "home": "Home",
     "browse": "Browse",
-    "search": "Search",
-    "library": "Library"
+    "library": "Library",
+    "chant": "Chant",
+    "more": "More"
   },
   "footer": {
     "tagline": "Eternal abode of divine love. A free, centralized index of ISKCON lectures, kirtans and festivals from official channels.",
@@ -31,7 +37,7 @@
     "disclaimer": "Goloka is an index, not a host — every video plays through the official YouTube player and links back to its source channel. All content belongs to its creators.",
     "languageLabel": "Language",
     "chant": "Chant",
-  "sadhana": "My Sādhana",
+    "sadhana": "My Sādhana",
     "calendar": "Calendar"
   },
   "sectionHeader": {
@@ -45,7 +51,8 @@
     "primary": "Primary",
     "main": "Main",
     "footer": "Footer",
-    "language": "Language"
+    "language": "Language",
+    "skip": "Skip to content"
   },
   "hero": {
     "watchNow": "Watch now",
@@ -101,7 +108,10 @@
     "continueWatching": "Continue Watching",
     "forYou": "For you",
     "becauseYouWatched": "Because you watched {category}",
-    "inYourLanguage": "In your language"
+    "inYourLanguage": "In your language",
+    "movementToday": "Today at the temple",
+    "movementPath": "Your path",
+    "movementLibrary": "The library"
   },
   "watchPage": {
     "keepWatching": "Keep watching",
@@ -143,6 +153,8 @@
     "favourited": "Favourited",
     "watchLater": "Watch later",
     "saved": "Saved",
+    "signInToFavourite": "Sign in to save this to your favourites",
+    "signInToWatchLater": "Sign in to save this for later",
     "signOut": "Sign out",
     "dataSaver": "Data saver",
     "dataSaverHint": "Auto-enabled on slow connections",
@@ -174,7 +186,8 @@
     "clear": "Clear",
     "popular": "Popular",
     "browseByCategory": "Browse by category",
-    "newestAdditions": "Newest additions"
+    "newestAdditions": "Newest additions",
+    "resultCount": "{count, plural, one {# result} other {# results}} for “{query}”"
   },
   "languagePicker": {
     "watchIn": "Watch in",
@@ -187,8 +200,9 @@
     "featuredTag": "Featured"
   },
   "liteEmbed": {
-    "tapToLoad": "Tap to load player",
-    "tapToLoadAria": "Tap to load player: {title}"
+    "tapToLoadAria": "Begin listening to {title}",
+    "beginListening": "Begin listening",
+    "curtain": "The curtain is closed"
   },
   "topicChips": {
     "on": "On:"
@@ -357,5 +371,20 @@
     "newHint": "Begin here — gently",
     "chantLabel": "Chant the holy name",
     "chantHint": "A still place to call out to Him"
+  },
+  "moreSheet": {
+    "title": "More",
+    "close": "Close"
+  },
+  "breadcrumb": {
+    "backTo": "Back to {label}"
+  },
+  "vrindavan": {
+    "now": "In Vrindavan it is {time}.",
+    "mangala": "Maṅgala-ārati has begun.",
+    "shringara": "The deities are being dressed.",
+    "rajabhoga": "The midday offering is being made.",
+    "sandhya": "The evening ārati is being offered.",
+    "shayana": "The temple is resting."
   }
 }

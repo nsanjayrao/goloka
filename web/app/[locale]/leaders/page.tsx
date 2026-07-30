@@ -54,7 +54,7 @@ export default async function LeadersPage({ params }: Props) {
           <Link
             key={channel.id}
             href={`/channel/${encodeURIComponent(channel.handle!)}`}
-            className="group flex flex-col items-center gap-2 text-center outline-none"
+            className="group flex flex-col items-center gap-2 rounded-xl text-center"
           >
             {channel.thumbnail_url ? (
               <Image

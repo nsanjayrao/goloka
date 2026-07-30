@@ -17,7 +17,7 @@ export default function LegacyError({ error, reset }: { error: Error & { digest?
 
   return (
     <Container className="page-top pb-20">
-      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-accent">Rādhe Rādhe</p>
       <EmptyState title="Something went wrong" message="This page stumbled loading — try again, or head back home. Nothing you were doing has been lost.">
         <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
           <button

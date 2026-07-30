@@ -1,10 +1,11 @@
 "use client"; // per-user state (is this video saved?) can only exist in
 // the browser - the server renders neutral, unsaved buttons.
 
-import { Bookmark, Heart } from "lucide-react";
+import { Bookmark } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
+import { Diya } from "@/components/icons/diya";
 import { signInWithGoogle, useSession } from "@/lib/auth";
 import { getSavedKinds, toggleSaved, type SavedKind } from "@/lib/saved";
 import { cn } from "@/lib/utils";
@@ -59,20 +60,39 @@ export function SaveButtons({ youtubeVideoId }: { youtubeVideoId: string }) {
     }
   }
 
-  const buttons: { kind: SavedKind; label: string; onLabel: string; icon: typeof Heart }[] = [
-    { kind: "favourite", label: t("favourite"), onLabel: t("favourited"), icon: Heart },
-    { kind: "watch_later", label: t("watchLater"), onLabel: t("saved"), icon: Bookmark },
+  // Favouriting lights a lamp; watch-later stays a bookmark. They are
+  // genuinely different acts - one is an offering, the other is "not now" -
+  // and giving them the same shape was flattening that.
+  const buttons: { kind: SavedKind; label: string; onLabel: string; signInLabel: string }[] = [
+    {
+      kind: "favourite",
+      label: t("favourite"),
+      onLabel: t("favourited"),
+      signInLabel: t("signInToFavourite"),
+    },
+    {
+      kind: "watch_later",
+      label: t("watchLater"),
+      onLabel: t("saved"),
+      signInLabel: t("signInToWatchLater"),
+    },
   ];
 
   return (
     <>
-      {buttons.map(({ kind, label, onLabel, icon: Icon }) => {
+      {buttons.map(({ kind, label, onLabel, signInLabel }) => {
         const active = saved.has(kind);
         return (
           <button
             key={kind}
             type="button"
-            aria-pressed={active}
+            // Signed out, this button does not toggle anything - it starts a
+            // full-page redirect to Google. aria-pressed promises in-place
+            // state, so announcing "Favourite, toggle button, not pressed"
+            // and then navigating off-site is a lie. Drop the state and say
+            // what actually happens instead.
+            aria-pressed={session ? active : undefined}
+            aria-label={session ? undefined : signInLabel}
             onClick={() => onToggle(kind)}
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 outline-none transition-colors",
@@ -82,7 +102,13 @@ export function SaveButtons({ youtubeVideoId }: { youtubeVideoId: string }) {
                 : "border-border text-text-muted hover:border-hairline hover:text-text"
             )}
           >
-            <Icon className={cn("size-3.5", active && "fill-current")} />
+            {kind === "favourite" ? (
+              // Once lit it breathes on prāṇa (6.5s) and simply stays lit -
+              // no burst, no confetti, nothing that congratulates you.
+              <Diya lit={active} className={cn("size-4", active && "diya lit")} />
+            ) : (
+              <Bookmark className={cn("size-3.5", active && "fill-current")} />
+            )}
             {active ? onLabel : label}
           </button>
         );

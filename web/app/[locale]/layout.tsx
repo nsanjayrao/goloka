@@ -7,8 +7,10 @@ import { notFound } from "next/navigation";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { Footer } from "@/components/footer";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { Feather } from "@/components/feather";
+import { Jali } from "@/components/jali";
+import { SkipLink } from "@/components/skip-link";
 import { TopBar } from "@/components/top-bar";
-import { Veil } from "@/components/veil";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import "../globals.css";
@@ -88,18 +90,33 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${marcellus.variable} ${figtree.variable} ${tiro.variable}`}>
+    <html
+      lang={locale}
+      // Midnight is the active theme (owner preference, 2026-07-24). The
+      // Aruṇa dawn palette is kept whole in globals.css and is one attribute
+      // away: add data-theme="aruna" here (and in app/(legacy)/layout.tsx)
+      // to switch. That reversibility is exactly what Phase 0's token layer
+      // was built for.
+      className={`${marcellus.variable} ${figtree.variable} ${tiro.variable}`}
+    >
       <body className="min-h-screen bg-bg text-text antialiased">
         <NextIntlClientProvider messages={messages}>
-          {/* Darshan curtain (first visit per session) + film grain overlay
-              (DESIGN.md #5.1 / #5.11) sit above everything and never catch
-              pointer events. */}
-          <Veil />
+          {/* The jālī throws the hour's light across the page and the grain
+              is the paper it lands on - both sit BEHIND content and never
+              catch pointer events. The darshan curtain used to be here as a
+              page preloader; it now belongs to the player
+              (components/lite-embed.tsx), because a curtain parts for
+              darshan, not for a page load. */}
+          <SkipLink />
+          <Jali />
           <div className="grain" aria-hidden="true" />
           <TopBar />
-          <main className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</main>
+          <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+            {children}
+          </main>
           <Footer />
           <BottomTabBar />
+          <Feather />
           <RegisterServiceWorker />
         </NextIntlClientProvider>
       </body>

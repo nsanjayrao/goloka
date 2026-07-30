@@ -4,6 +4,7 @@ import Image from "next/image";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { Container } from "@/components/container";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
 import { TopicChips } from "@/components/topic-chips";
@@ -56,6 +57,7 @@ export default async function ChannelPage({ params, searchParams }: Props) {
   const { locale, handle } = await params;
   setRequestLocale(locale);
   const t = await getTranslations("library");
+  const tNav = await getTranslations("nav");
   const decoded = safeDecodeURIComponent(handle);
   if (decoded === null) notFound(); // malformed percent-encoding -> 404, not 500
   const channel = await getChannel(decoded);
@@ -95,6 +97,9 @@ export default async function ChannelPage({ params, searchParams }: Props) {
 
   return (
     <Container className="page-top pb-10">
+      <div className="mb-5">
+        <Breadcrumb href="/browse" label={tNav("browse")} />
+      </div>
       <div className="flex items-center gap-4">
         {channel.thumbnail_url ? (
           <Image
@@ -148,13 +153,13 @@ export default async function ChannelPage({ params, searchParams }: Props) {
           view, so a topic-filtered page stays about that topic. */}
       {!activeTopic && series.length > 0 && (
         <section className="mt-10">
-          <p className="text-[11px] uppercase tracking-[0.18em] text-marigold">{t("seriesKicker")}</p>
+          <p className="text-[11px] uppercase tracking-[0.18em] text-accent">{t("seriesKicker")}</p>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {series.map((s) => (
               <Link
                 key={s.youtube_playlist_id}
                 href={`/series/${s.youtube_playlist_id}`}
-                className="group outline-none"
+                className="group rounded-lg"
               >
                 <span className="relative block aspect-video overflow-hidden rounded-lg bg-surface-2">
                   {s.thumbnail_url && (

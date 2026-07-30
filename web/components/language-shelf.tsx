@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 import { CategoryRow } from "@/components/category-row";
 import { FadeUp } from "@/components/fade-up";
 import { LanguagePicker } from "@/components/language-picker";
-import { getVideosPage } from "@/lib/data";
+import { fetchShelves } from "@/lib/shelves";
 import { LANGUAGE_OPTIONS, useContentLanguage } from "@/lib/content-language";
 import type { Video } from "@/lib/types";
 
@@ -25,19 +25,19 @@ export function LanguageShelf() {
   // below simply stops matching the stale result and falls back to [].
   const [result, setResult] = useState<{ language: string; videos: Video[] } | null>(null);
 
-  // getVideosPage (lib/data.ts) reads with the anon key and is safe to call
-  // from the browser - same query the /browse language filter chips use.
-  // Cancelled-flag guard: switching the preference mid-fetch must not let a
-  // stale response overwrite the newer selection.
+  // Goes through /api/shelves rather than querying Supabase from the browser,
+  // so the SDK stays off this page's bundle and the response can be cached at
+  // the edge (a language shelf is identical for everyone who picked that
+  // language). AbortController: switching the preference mid-fetch must not
+  // let a stale response overwrite the newer selection.
   useEffect(() => {
     if (!preference) return;
-    let cancelled = false;
-    getVideosPage({ language: preference }, 0, 12).then((videos) => {
-      if (!cancelled) setResult({ language: preference, videos });
+    const controller = new AbortController();
+    fetchShelves({ language: preference }, controller.signal).then(({ language }) => {
+      if (controller.signal.aborted || !language) return;
+      setResult({ language: language.language, videos: language.videos });
     });
-    return () => {
-      cancelled = true;
-    };
+    return () => controller.abort();
   }, [preference]);
 
   const videos = preference && result?.language === preference ? result.videos : [];

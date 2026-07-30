@@ -530,7 +530,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
     <div className="mx-auto flex max-w-xl flex-col items-center text-center">
       {/* The page's opening invocation - a warm call to Śrīmatī Rādhārāṇī,
           fixed regardless of which mantra is being counted below. */}
-      <p className="text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <p className="text-[13px] uppercase tracking-[0.24em] text-accent">Rādhe Rādhe</p>
 
       {/* Centerpiece: the mantra itself, lit word by word, with its
           Devanagari gracefully beneath. This is the one h1 on the page. */}
@@ -588,7 +588,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
           anything below (the old layout jumped every time voice toggled). */}
       <div className="mt-4 flex min-h-[56px] flex-col items-center justify-start gap-2">
         {listening && (
-          <p className="text-[12px] uppercase tracking-[0.14em] text-marigold">{t("voiceListening")}</p>
+          <p className="text-[12px] uppercase tracking-[0.14em] text-accent">{t("voiceListening")}</p>
         )}
         {listening && (
           <div className="flex items-center gap-5 text-[11px] uppercase tracking-[0.14em] text-text-muted">
@@ -596,7 +596,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
               type="button"
               onClick={() => handleNudge(-1)}
               aria-label={t("voiceNudgeMinusAria")}
-              className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
+              className="transition-colors hover:text-flame focus-visible:text-flame"
             >
               {t("voiceNudgeMinus")}
             </button>
@@ -604,7 +604,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
               type="button"
               onClick={() => handleNudge(1)}
               aria-label={t("voiceNudgePlusAria")}
-              className="outline-none transition-colors hover:text-flame focus-visible:text-flame"
+              className="transition-colors hover:text-flame focus-visible:text-flame"
             >
               {t("voiceNudgePlus")}
             </button>
@@ -620,7 +620,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
       <div className="flex flex-col items-center gap-1.5 text-[12px] uppercase tracking-[0.14em] text-text-muted">
         <span>{t("roundsToday", { count: roundsToday })}</span>
         {sankalpa !== null && (
-          <span className="text-marigold/90">
+          <span className="text-accent/90">
             {roundsToday >= sankalpa
               ? t("sankalpaOffered", { vow: sankalpa })
               : t("sankalpaProgress", { current: roundsToday + 1, vow: sankalpa })}
@@ -697,7 +697,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
             aria-checked={soundOn}
             aria-label={t("soundAria")}
             onClick={handleSoundToggle}
-            className="inline-flex items-center gap-2 uppercase tracking-[0.14em] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+            className="inline-flex items-center gap-2 uppercase tracking-[0.14em] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
           >
             <span
               className={`inline-block h-[9px] w-[9px] rounded-full border border-hairline transition-colors ${soundOn ? "bg-marigold" : "bg-transparent"}`}
@@ -708,7 +708,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
           <button
             type="button"
             onClick={handleReset}
-            className="text-text-muted underline-offset-4 outline-none transition-colors hover:text-flame focus-visible:text-flame"
+            className="text-text-muted underline-offset-4 transition-colors hover:text-flame focus-visible:text-flame"
             aria-label={resetArmed ? t("resetConfirmAria") : t("resetAria")}
           >
             {resetArmed ? t("resetConfirm") : t("reset")}

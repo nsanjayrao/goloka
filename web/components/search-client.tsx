@@ -4,7 +4,7 @@
 import { Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { VideoCard } from "@/components/video-card";
@@ -97,6 +97,18 @@ export function SearchClient({
 
   const resting = !trimmedQuery;
   const noResults = !isPending && trimmedQuery !== "" && videos.length === 0;
+  const hasResults = !isPending && trimmedQuery !== "" && videos.length > 0;
+
+  // Focus the field on a real keyboard, never on a phone (2026-07-23). The
+  // old `autoFocus` prop fired everywhere, so opening /search on mobile threw
+  // up the on-screen keyboard immediately and buried the recent, popular and
+  // category chips underneath it - the resting state was unreachable on the
+  // device most devotees use. 640px matches the `sm:` breakpoint the grid
+  // below already switches at.
+  const input = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    if (window.matchMedia("(min-width: 640px)").matches) input.current?.focus();
+  }, []);
 
   // Category chips navigate to /browse (a different action than searching),
   // so they stay Links; recent/popular chips set the query.
@@ -130,7 +142,7 @@ export function SearchClient({
       >
         <Search className="pointer-events-none absolute left-4 top-1/2 size-[18px] -translate-y-1/2 text-text-muted" />
         <input
-          autoFocus
+          ref={input}
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           // Blur fires when focus leaves the input - including when the
@@ -155,7 +167,7 @@ export function SearchClient({
                   <button
                     type="button"
                     onClick={clearRecentSearches}
-                    className="text-[13px] text-text-muted outline-none transition-colors hover:text-accent-strong focus-visible:text-accent-strong"
+                    className="text-[13px] text-text-muted transition-colors hover:text-accent-strong focus-visible:text-accent-strong"
                   >
                     {t("clear")}
                   </button>
@@ -215,7 +227,21 @@ export function SearchClient({
           </EmptyState>
         )}
 
-        {!isPending && trimmedQuery !== "" && videos.length > 0 && (
+        {/* The live region is mounted ALWAYS, and only its text changes.
+            A screen reader announces mutations to a region it was already
+            watching; an element that appears with its text already in place
+            is usually registered and read as one silent event, so wrapping
+            this in `hasResults &&` meant the count was announced to nobody -
+            the exact gap the line was added to close. */}
+        <p
+          className={`text-[13px] text-text-muted ${hasResults ? "mb-4" : ""}`}
+          aria-live="polite"
+          role="status"
+        >
+          {hasResults ? t("resultCount", { count: videos.length, query: trimmedQuery }) : ""}
+        </p>
+
+        {hasResults && (
           <div className={GRID_CLASSES}>
             {videos.map((video) => (
               <VideoCard key={video.id} video={video} />

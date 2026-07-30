@@ -16,7 +16,7 @@ import { EmptyState } from "@/components/empty-state";
 export default function LegacyNotFound() {
   return (
     <Container className="page-top pb-20">
-      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-accent">Rādhe Rādhe</p>
       <EmptyState title="Page not found" message="This page wandered off the path — nothing to see here.">
         <Link
           href="/"

@@ -8,13 +8,19 @@
     "search": "खोजें",
     "searchAria": "गोलोक खोजें",
     "chant": "जप",
-    "calendar": "पंचांग"
+    "calendar": "पंचांग",
+    "more": "अधिक",
+    "moreAria": "अधिक पृष्ठ",
+    "start": "यहाँ से शुरू करें",
+    "sadhana": "मेरी साधना",
+    "about": "परिचय"
   },
   "tabs": {
     "home": "होम",
     "browse": "ब्राउज़",
-    "search": "खोजें",
-    "library": "लाइब्रेरी"
+    "library": "लाइब्रेरी",
+    "chant": "जप",
+    "more": "अधिक"
   },
   "footer": {
     "tagline": "दिव्य प्रेम का शाश्वत धाम। आधिकारिक चैनलों से इस्कॉन के प्रवचनों, कीर्तनों और उत्सवों की एक निःशुल्क, केंद्रीकृत सूची।",
@@ -45,7 +51,8 @@
     "primary": "प्राथमिक",
     "main": "मुख्य",
     "footer": "फ़ुटर",
-    "language": "भाषा"
+    "language": "भाषा",
+    "skip": "सामग्री पर जाएँ"
   },
   "hero": {
     "watchNow": "अभी देखें",
@@ -101,7 +108,10 @@
     "continueWatching": "देखना जारी रखें",
     "forYou": "आपके लिए",
     "becauseYouWatched": "आपने {category} देखा, इसलिए",
-    "inYourLanguage": "आपकी भाषा में"
+    "inYourLanguage": "आपकी भाषा में",
+    "movementToday": "आज मंदिर में",
+    "movementPath": "आपका मार्ग",
+    "movementLibrary": "संग्रह"
   },
   "watchPage": {
     "keepWatching": "देखते रहें",
@@ -143,6 +153,8 @@
     "favourited": "पसंदीदा में",
     "watchLater": "बाद में देखें",
     "saved": "सहेजा गया",
+    "signInToFavourite": "अपनी पसंद में सहेजने के लिए साइन इन करें",
+    "signInToWatchLater": "बाद में देखने के लिए सहेजने हेतु साइन इन करें",
     "signOut": "साइन आउट",
     "dataSaver": "डेटा सेवर",
     "dataSaverHint": "धीमे कनेक्शन पर स्वतः सक्रिय",
@@ -174,7 +186,8 @@
     "clear": "साफ़ करें",
     "popular": "लोकप्रिय",
     "browseByCategory": "श्रेणी अनुसार ब्राउज़ करें",
-    "newestAdditions": "नवीनतम जोड़"
+    "newestAdditions": "नवीनतम जोड़",
+    "resultCount": "“{query}” के लिए {count, plural, one {# परिणाम} other {# परिणाम}}"
   },
   "languagePicker": {
     "watchIn": "इस भाषा में देखें",
@@ -187,8 +200,9 @@
     "featuredTag": "चयनित"
   },
   "liteEmbed": {
-    "tapToLoad": "प्लेयर लोड करने के लिए टैप करें",
-    "tapToLoadAria": "प्लेयर लोड करने के लिए टैप करें: {title}"
+    "tapToLoadAria": "{title} सुनना आरंभ करें",
+    "beginListening": "सुनना आरंभ करें",
+    "curtain": "पट बंद है"
   },
   "topicChips": {
     "on": "विषय:"
@@ -357,5 +371,20 @@
     "newHint": "यहाँ से शुरू करें — धीरे से",
     "chantLabel": "पवित्र नाम का जप करें",
     "chantHint": "उन्हें पुकारने का एक शांत स्थान"
+  },
+  "moreSheet": {
+    "title": "अधिक",
+    "close": "बंद करें"
+  },
+  "breadcrumb": {
+    "backTo": "{label} पर वापस"
+  },
+  "vrindavan": {
+    "now": "वृंदावन में अभी {time} है।",
+    "mangala": "मंगल-आरती आरंभ हो चुकी है।",
+    "shringara": "श्रीविग्रहों का शृंगार हो रहा है।",
+    "rajabhoga": "मध्याह्न भोग अर्पित हो रहा है।",
+    "sandhya": "संध्या-आरती अर्पित हो रही है।",
+    "shayana": "मंदिर विश्राम कर रहा है।"
   }
 }

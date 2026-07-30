@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { CategoryBanner } from "@/components/category-banner";
 import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
@@ -44,6 +45,7 @@ export default async function TopicPage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("library");
   const tEmpty = await getTranslations("emptyState");
+  const tNav = await getTranslations("nav");
   const topic = TOPICS[slug];
   if (!topic) notFound();
 
@@ -69,6 +71,9 @@ export default async function TopicPage({ params }: Props) {
 
   return (
     <Container className="page-top pb-10">
+      <div className="mb-5">
+        <Breadcrumb href="/browse" label={tNav("browse")} />
+      </div>
       <CategoryBanner category={topic.title} count={count} subtitle={topic.subtitle} />
 
       {/* Topic pages are a saved search devotees pass around - give the

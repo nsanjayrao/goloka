@@ -8,13 +8,19 @@
     "search": "Buscar",
     "searchAria": "Buscar en Goloka",
     "chant": "Cantar",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "more": "Más",
+    "moreAria": "Más páginas",
+    "start": "Comenzar aquí",
+    "sadhana": "Mi sādhana",
+    "about": "Acerca de"
   },
   "tabs": {
     "home": "Inicio",
     "browse": "Explorar",
-    "search": "Buscar",
-    "library": "Biblioteca"
+    "library": "Biblioteca",
+    "chant": "Cantar",
+    "more": "Más"
   },
   "footer": {
     "tagline": "Morada eterna del amor divino. Un índice gratuito y centralizado de conferencias, kīrtanes y festivales de ISKCON de canales oficiales.",
@@ -45,7 +51,8 @@
     "primary": "Principal",
     "main": "Contenido principal",
     "footer": "Pie de página",
-    "language": "Idioma"
+    "language": "Idioma",
+    "skip": "Saltar al contenido"
   },
   "hero": {
     "watchNow": "Ver ahora",
@@ -101,7 +108,10 @@
     "continueWatching": "Continuar viendo",
     "forYou": "Para ti",
     "becauseYouWatched": "Porque viste {category}",
-    "inYourLanguage": "En tu idioma"
+    "inYourLanguage": "En tu idioma",
+    "movementToday": "Hoy en el templo",
+    "movementPath": "Tu camino",
+    "movementLibrary": "La biblioteca"
   },
   "watchPage": {
     "keepWatching": "Sigue viendo",
@@ -143,6 +153,8 @@
     "favourited": "En favoritos",
     "watchLater": "Ver más tarde",
     "saved": "Guardado",
+    "signInToFavourite": "Inicia sesión para guardarlo en tus favoritos",
+    "signInToWatchLater": "Inicia sesión para guardarlo para más tarde",
     "signOut": "Cerrar sesión",
     "dataSaver": "Ahorro de datos",
     "dataSaverHint": "Se activa automáticamente con conexiones lentas",
@@ -174,7 +186,8 @@
     "clear": "Borrar",
     "popular": "Populares",
     "browseByCategory": "Explorar por categoría",
-    "newestAdditions": "Novedades"
+    "newestAdditions": "Novedades",
+    "resultCount": "{count, plural, one {# resultado} other {# resultados}} para «{query}»"
   },
   "languagePicker": {
     "watchIn": "Ver en",
@@ -187,8 +200,9 @@
     "featuredTag": "Destacado"
   },
   "liteEmbed": {
-    "tapToLoad": "Toca para cargar el reproductor",
-    "tapToLoadAria": "Toca para cargar el reproductor: {title}"
+    "tapToLoadAria": "Comenzar a escuchar {title}",
+    "beginListening": "Comenzar a escuchar",
+    "curtain": "El telón está cerrado"
   },
   "topicChips": {
     "on": "Tema:"
@@ -357,5 +371,20 @@
     "newHint": "Empieza aquí — con calma",
     "chantLabel": "Canta el santo nombre",
     "chantHint": "Un lugar sereno para invocarlo"
+  },
+  "moreSheet": {
+    "title": "Más",
+    "close": "Cerrar"
+  },
+  "breadcrumb": {
+    "backTo": "Volver a {label}"
+  },
+  "vrindavan": {
+    "now": "En Vrindavan son las {time}.",
+    "mangala": "El maṅgala-ārati ha comenzado.",
+    "shringara": "Se está vistiendo a las deidades.",
+    "rajabhoga": "Se está haciendo la ofrenda del mediodía.",
+    "sandhya": "Se está ofreciendo el ārati de la tarde.",
+    "shayana": "El templo descansa."
   }
 }

@@ -82,7 +82,7 @@ function ShareCollectionButton({
         <button
           type="button"
           onClick={reset}
-          className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+          className="text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
         >
           {t("done")}
         </button>
@@ -108,14 +108,14 @@ function ShareCollectionButton({
         <button
           type="button"
           onClick={reset}
-          className="text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+          className="text-[13px] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
         >
           {t("cancel")}
         </button>
         {failed && (
-          // #E58A8A: the palette's "red on dark surfaces" shade (DESIGN.md
-          // #2 - live red is #E05B5B but reads too hot for small body text).
-          <span className="text-[13px] text-[#E58A8A]" role="alert">
+          // --live-soft: the palette's "red on dark surfaces" shade (DESIGN.md
+          // #2 - live red itself reads too hot for small body text).
+          <span className="text-[13px] text-live-soft" role="alert">
             {t("createFailed")}
           </span>
         )}
@@ -127,7 +127,7 @@ function ShareCollectionButton({
     <button
       type="button"
       onClick={() => setOpen(true)}
-      className="inline-flex items-center gap-1.5 text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+      className="inline-flex items-center gap-1.5 text-[13px] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
     >
       <Link2 className="size-3.5" />
       {t("shareAsLink")}
@@ -272,7 +272,7 @@ export function LibraryClient() {
                   <button
                     type="button"
                     onClick={() => handleDelete(collection.id)}
-                    className="text-[13px] text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                    className="text-[13px] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
                   >
                     {t("delete")}
                   </button>

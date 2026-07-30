@@ -319,7 +319,7 @@ export function SadhanaClient() {
   const months = yr?.months ?? null;
 
   const navButton =
-    "grid size-8 place-items-center rounded-full border border-hairline text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame disabled:opacity-30 disabled:hover:text-text-muted";
+    "grid size-8 place-items-center rounded-full border border-hairline text-text-muted transition-colors hover:text-flame focus-visible:text-flame disabled:opacity-30 disabled:hover:text-text-muted";
 
   return (
     <div>

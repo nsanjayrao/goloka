@@ -33,7 +33,7 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
     <Container className="page-top pb-20">
       {/* The invocation thread (DESIGN.md #9): met with Her name first,
           same as /chant and the 404 page. */}
-      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-marigold">Rādhe Rādhe</p>
+      <p className="text-center text-[13px] uppercase tracking-[0.24em] text-accent">Rādhe Rādhe</p>
       <EmptyState title={t("errorTitle")} message={t("errorMessage")}>
         <div className="mt-2 flex flex-wrap items-center justify-center gap-4">
           <button

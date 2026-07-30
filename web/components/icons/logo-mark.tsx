@@ -25,6 +25,28 @@
 const OUTER_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
 const INNER_ANGLES = [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5];
 
+// THE HUMILITY FLAW (2026-07-23). One outer petal is deliberately wrong:
+// rotated 0.9 degrees short of its place and set a hair lower. Indian and
+// Islamic craftsmen both leave a knowing imperfection in finished work,
+// because perfection belongs to God alone and a made thing should not claim
+// it. It is also the difference between something machined and something
+// somebody's hands made.
+//
+// It is far below the threshold of conscious notice at any size the mark is
+// used, and that is the intent - nobody sees it, everybody feels it. Do not
+// "fix" this. If the geometry is ever regenerated, carry the flaw across,
+// and keep it on the SAME petal in all three copies (this file,
+// app/icon.svg, public/icons/icon.svg).
+const FLAWED_PETAL = 315;
+const FLAW_ROTATION = 0.9;
+const FLAW_DROP = 0.35;
+
+function outerPetalTransform(angle: number): string {
+  return angle === FLAWED_PETAL
+    ? `rotate(${angle - FLAW_ROTATION} 32 32) translate(0 ${FLAW_DROP})`
+    : `rotate(${angle} 32 32)`;
+}
+
 export function LogoMark({
   className,
   style,
@@ -54,7 +76,7 @@ export function LogoMark({
       {/* Outer ring: 8 broad petals, deep gold. */}
       <g fill="url(#lotus-gold-deep)">
         {OUTER_ANGLES.map((angle) => (
-          <use key={angle} href="#lotus-petal-outer" transform={`rotate(${angle} 32 32)`} />
+          <use key={angle} href="#lotus-petal-outer" transform={outerPetalTransform(angle)} />
         ))}
       </g>
 

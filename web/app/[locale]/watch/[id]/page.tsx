@@ -3,6 +3,7 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { cache } from "react";
 
+import { Breadcrumb } from "@/components/breadcrumb";
 import { CategoryRow } from "@/components/category-row";
 import { Container } from "@/components/container";
 import { RecordWatch } from "@/components/record-watch";
@@ -139,6 +140,24 @@ export default async function WatchPage({ params }: Props) {
                 immediately or a tap-to-load facade, based on the visitor's
                 data-saver preference; UpNext adds the opt-in "continue to
                 the next video" toggle and end-of-video moment. */}
+            {/* One step up (2026-07-23). Most visits to this page arrive from
+                a link someone shared, not from browsing - so there was no
+                history to go back to and no way into the rest of the app
+                except the wordmark.
+                ABOVE the player, matching channel/topic/series where it is
+                the first thing in the container. It used to sit below UpNext,
+                so the same component meant "go up one level" on three pages
+                and appeared mid-page on the fourth, 20px from the series bar
+                with nothing to distinguish their roles. */}
+            {video.category && (
+              <div className="mb-5">
+                <Breadcrumb
+                  href={`/browse/${encodeURIComponent(video.category)}`}
+                  label={video.category}
+                />
+              </div>
+            )}
+
             <UpNext videoId={video.youtube_video_id} title={title} next={upNext} />
 
             {/* The series bar (2026-07-22): when this video is part of a
@@ -148,12 +167,12 @@ export default async function WatchPage({ params }: Props) {
                 except YouTube itself. */}
             {series && (
               <div className="mt-5 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-[13px]">
-                <span className="text-[11px] uppercase tracking-[0.18em] text-marigold">
+                <span className="text-[11px] uppercase tracking-[0.18em] text-accent">
                   {t("seriesKicker")}
                 </span>
                 <Link
                   href={`/series/${series.series.youtube_playlist_id}`}
-                  className="text-text underline-offset-4 outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                  className="text-text underline-offset-4 transition-colors hover:text-flame focus-visible:text-flame"
                   aria-label={t("seriesViewAria", { title: series.series.title })}
                 >
                   {t("seriesPart", {
@@ -165,7 +184,7 @@ export default async function WatchPage({ params }: Props) {
                 {series.prev && (
                   <Link
                     href={`/watch/${series.prev.youtube_video_id}`}
-                    className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                    className="text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
                   >
                     ← {t("seriesPrev")}
                   </Link>
@@ -173,7 +192,7 @@ export default async function WatchPage({ params }: Props) {
                 {series.next && (
                   <Link
                     href={`/watch/${series.next.youtube_video_id}`}
-                    className="text-text-muted outline-none transition-colors hover:text-flame focus-visible:text-flame"
+                    className="text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
                   >
                     {t("seriesNext")} →
                   </Link>
@@ -185,7 +204,12 @@ export default async function WatchPage({ params }: Props) {
               {title}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 pb-2 text-[13px] text-text-muted">
+            {/* Two lines, not one (2026-07-23). Six controls of six different
+                shapes - a channel pill, two bare text spans, and three
+                buttons - used to share a single wrapping row, which on a
+                phone broke into three ragged lines right under the title.
+                Identity first: who made this, when, how long. */}
+            <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-text-muted">
               {video.channel?.title &&
                 // Links to the channel page when the channel has a handle;
                 // otherwise plain text (handle is nullable in the schema).
@@ -203,9 +227,15 @@ export default async function WatchPage({ params }: Props) {
                 ))}
               {video.published_at && <span>{formatRelativeDate(video.published_at)}</span>}
               {video.duration_seconds != null && <span>{formatDuration(video.duration_seconds)}</span>}
+            </div>
+
+            {/* Then the things you can DO, on their own line above a hairline
+                so they read as one group of equals rather than as more
+                metadata. */}
+            <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-border pt-4 text-[13px] text-text-muted">
+              <SaveButtons youtubeVideoId={video.youtube_video_id} />
               <ShareButton title={title} path={`/watch/${video.youtube_video_id}`} />
               <WhatsAppShareButton title={title} path={`/watch/${video.youtube_video_id}`} />
-              <SaveButtons youtubeVideoId={video.youtube_video_id} />
             </div>
           </div>
         </Container>

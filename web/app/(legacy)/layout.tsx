@@ -5,8 +5,10 @@ import { NextIntlClientProvider } from "next-intl";
 import { BottomTabBar } from "@/components/bottom-tab-bar";
 import { Footer } from "@/components/footer";
 import { RegisterServiceWorker } from "@/components/register-service-worker";
+import { Feather } from "@/components/feather";
+import { Jali } from "@/components/jali";
+import { SkipLink } from "@/components/skip-link";
 import { TopBar } from "@/components/top-bar";
-import { Veil } from "@/components/veil";
 import { routing } from "@/i18n/routing";
 import { SITE_URL } from "@/lib/site";
 import enMessages from "@/messages/en.json";
@@ -34,20 +36,32 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0A0F26",
+  themeColor: "#0A0F26", // --midnight - keep in step with app/[locale]/layout.tsx
 };
 
 export default function LegacyLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={routing.defaultLocale} className={`${marcellus.variable} ${figtree.variable} ${tiro.variable}`}>
+    // This root layout is a SIBLING of app/[locale]/layout.tsx, not a child,
+    // so any theme choice must be set here too - otherwise /c/[id] and
+    // /share-target would be the only pages on a different theme from the
+    // rest of the app. Both are on Midnight now; to switch to Aruṇa, add
+    // data-theme="aruna" here AND in app/[locale]/layout.tsx.
+    <html
+      lang={routing.defaultLocale}
+      className={`${marcellus.variable} ${figtree.variable} ${tiro.variable}`}
+    >
       <body className="min-h-screen bg-bg text-text antialiased">
         <NextIntlClientProvider locale={routing.defaultLocale} messages={enMessages}>
-          <Veil />
+          <SkipLink />
+          <Jali />
           <div className="grain" aria-hidden="true" />
           <TopBar />
-          <main className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">{children}</main>
+          <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+            {children}
+          </main>
           <Footer />
           <BottomTabBar />
+          <Feather />
           <RegisterServiceWorker />
         </NextIntlClientProvider>
       </body>
