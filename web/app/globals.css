@@ -1198,7 +1198,13 @@
      it must not add its own on top. Both mechanisms are covered because the
      three movements genuinely use different ones - a section's padding, a
      div's margin, or a bare line of text. */
-  .movement-body > :first-child {
+  /* Two levels deep, because most movements open with a &lt;FadeUp&gt; wrapper and
+     the thing carrying the margin is INSIDE it. Measured on a 400px phone
+     before this: 0 / 44 / 0 px under the three labels - "Your path" opens
+     with HomeDoorways (margin-top: clamp(30px,5vh,54px)) nested in .reveal,
+     which the direct-child rule alone never reached. */
+  .movement-body > :first-child,
+  .movement-body > :first-child > :first-child {
     margin-top: 0;
   }
   .movement-body > :first-child.home-section,
