@@ -117,7 +117,6 @@
     "keepWatching": "Keep watching",
     "moreFrom": "More from {category}",
     "upNextToggle": "Continue to next video",
-    "upNextToggleAria": "When a video ends, continue to the next one automatically",
     "upNextKicker": "Up next",
     "upNextContinuing": "Continuing in {seconds}s",
     "upNextCancel": "Stay here",
@@ -153,8 +152,6 @@
     "favourited": "Favourited",
     "watchLater": "Watch later",
     "saved": "Saved",
-    "signInToFavourite": "Sign in to save this to your favourites",
-    "signInToWatchLater": "Sign in to save this for later",
     "signOut": "Sign out",
     "dataSaver": "Data saver",
     "dataSaverHint": "Auto-enabled on slow connections",
@@ -167,7 +164,8 @@
     "backToHome": "Back to Home",
     "watchOnYoutube": "Watch on YouTube ↗",
     "browseGoloka": "Browse Goloka →",
-    "tryAgain": "Try again"
+    "tryAgain": "Try again",
+    "signInTo": "{label} — sign in to save"
   },
   "push": {
     "title": "Notifications",

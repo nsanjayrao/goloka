@@ -2077,10 +2077,13 @@
     animation: chant-bloom 1.5s ease-out 1;
   }
   /* Voice mode's only visual tell, and a deliberately quiet one - no
-     waveform, no VU meter, just the same bowl breathing very slightly
-     slower and softer than the page's own lamp (6.5s). A devotee whose
-     eyes are closed shouldn't need to see this at all; it's here for the
-     rare over-the-shoulder glance, not as a thing to watch. */
+     waveform, no VU meter, just the same bowl breathing a little FASTER and
+     much dimmer than the page's own lamp (5.5s here against the lamp's
+     6.5s - this comment claimed "slower" for a while and was simply wrong).
+     A devotee whose eyes are closed shouldn't need to see this at all; it's
+     here for the rare over-the-shoulder glance, not as a thing to watch.
+     If it should actually breathe slower than the lamp, this is one number
+     and the prose is already written for it. */
   .chant-bowl.is-listening {
     animation: chant-listening-breathe 5.5s ease-in-out infinite;
   }

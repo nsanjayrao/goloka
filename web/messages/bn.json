@@ -117,7 +117,6 @@
     "keepWatching": "দেখতে থাকুন",
     "moreFrom": "{category} থেকে আরও",
     "upNextToggle": "পরের ভিডিওতে এগিয়ে যান",
-    "upNextToggleAria": "ভিডিও শেষ হলে পরেরটি নিজে থেকে চলবে",
     "upNextKicker": "এরপর",
     "upNextContinuing": "{seconds} সেকেন্ডে পরেরটি",
     "upNextCancel": "এখানেই থাকুন",
@@ -153,8 +152,6 @@
     "favourited": "প্রিয়তে যোগ হয়েছে",
     "watchLater": "পরে দেখুন",
     "saved": "সংরক্ষিত",
-    "signInToFavourite": "আপনার প্রিয় তালিকায় সংরক্ষণ করতে সাইন ইন করুন",
-    "signInToWatchLater": "পরে দেখার জন্য সংরক্ষণ করতে সাইন ইন করুন",
     "signOut": "সাইন আউট",
     "dataSaver": "ডেটা সেভার",
     "dataSaverHint": "ধীর সংযোগে স্বয়ংক্রিয়ভাবে সক্রিয়",
@@ -167,7 +164,8 @@
     "backToHome": "হোমে ফিরে যান",
     "watchOnYoutube": "ইউটিউবে দেখুন ↗",
     "browseGoloka": "গোলোক ব্রাউজ করুন →",
-    "tryAgain": "আবার চেষ্টা করুন"
+    "tryAgain": "আবার চেষ্টা করুন",
+    "signInTo": "{label} — সংরক্ষণ করতে সাইন ইন করুন"
   },
   "push": {
     "title": "বিজ্ঞপ্তি",

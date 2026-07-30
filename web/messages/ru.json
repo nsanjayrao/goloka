@@ -117,7 +117,6 @@
     "keepWatching": "Смотрите дальше",
     "moreFrom": "Ещё из категории «{category}»",
     "upNextToggle": "Продолжать со следующего видео",
-    "upNextToggleAria": "Когда видео закончится, автоматически перейти к следующему",
     "upNextKicker": "Далее",
     "upNextContinuing": "Продолжение через {seconds} с",
     "upNextCancel": "Остаться здесь",
@@ -153,8 +152,6 @@
     "favourited": "В избранном",
     "watchLater": "Смотреть позже",
     "saved": "Сохранено",
-    "signInToFavourite": "Войдите, чтобы добавить в избранное",
-    "signInToWatchLater": "Войдите, чтобы сохранить на потом",
     "signOut": "Выйти",
     "dataSaver": "Экономия трафика",
     "dataSaverHint": "Включается автоматически на медленном соединении",
@@ -167,7 +164,8 @@
     "backToHome": "На главную",
     "watchOnYoutube": "Смотреть на YouTube ↗",
     "browseGoloka": "Обзор Голоки →",
-    "tryAgain": "Попробовать снова"
+    "tryAgain": "Попробовать снова",
+    "signInTo": "{label} — войдите, чтобы сохранить"
   },
   "push": {
     "title": "Уведомления",

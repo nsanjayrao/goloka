@@ -117,7 +117,6 @@
     "keepWatching": "Sigue viendo",
     "moreFrom": "Más de {category}",
     "upNextToggle": "Continuar con el siguiente video",
-    "upNextToggleAria": "Al terminar un video, continuar automáticamente con el siguiente",
     "upNextKicker": "A continuación",
     "upNextContinuing": "Continuando en {seconds}s",
     "upNextCancel": "Quedarme aquí",
@@ -153,8 +152,6 @@
     "favourited": "En favoritos",
     "watchLater": "Ver más tarde",
     "saved": "Guardado",
-    "signInToFavourite": "Inicia sesión para guardarlo en tus favoritos",
-    "signInToWatchLater": "Inicia sesión para guardarlo para más tarde",
     "signOut": "Cerrar sesión",
     "dataSaver": "Ahorro de datos",
     "dataSaverHint": "Se activa automáticamente con conexiones lentas",
@@ -167,7 +164,8 @@
     "backToHome": "Volver al inicio",
     "watchOnYoutube": "Ver en YouTube ↗",
     "browseGoloka": "Explorar Goloka →",
-    "tryAgain": "Intentar de nuevo"
+    "tryAgain": "Intentar de nuevo",
+    "signInTo": "{label} — inicia sesión para guardar"
   },
   "push": {
     "title": "Notificaciones",

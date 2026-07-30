@@ -117,7 +117,6 @@
     "keepWatching": "देखते रहें",
     "moreFrom": "{category} से और अधिक",
     "upNextToggle": "अगला वीडियो अपने आप चलाएँ",
-    "upNextToggleAria": "वीडियो समाप्त होने पर अगला अपने आप चलेगा",
     "upNextKicker": "आगे",
     "upNextContinuing": "{seconds} सेकंड में आगे बढ़ेंगे",
     "upNextCancel": "यहीं रुकें",
@@ -153,8 +152,6 @@
     "favourited": "पसंदीदा में",
     "watchLater": "बाद में देखें",
     "saved": "सहेजा गया",
-    "signInToFavourite": "अपनी पसंद में सहेजने के लिए साइन इन करें",
-    "signInToWatchLater": "बाद में देखने के लिए सहेजने हेतु साइन इन करें",
     "signOut": "साइन आउट",
     "dataSaver": "डेटा सेवर",
     "dataSaverHint": "धीमे कनेक्शन पर स्वतः सक्रिय",
@@ -167,7 +164,8 @@
     "backToHome": "होम पर वापस जाएँ",
     "watchOnYoutube": "यूट्यूब पर देखें ↗",
     "browseGoloka": "गोलोक ब्राउज़ करें →",
-    "tryAgain": "फिर कोशिश करें"
+    "tryAgain": "फिर कोशिश करें",
+    "signInTo": "{label} — सहेजने के लिए साइन इन करें"
   },
   "push": {
     "title": "सूचनाएँ",

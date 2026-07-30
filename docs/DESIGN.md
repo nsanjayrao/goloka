@@ -451,15 +451,61 @@ DELETED that day — see §14.
 - Lighthouse mobile targets: Performance ≥ 90, Accessibility ≥ 95,
   CLS < 0.05. Measured 2026-07-18 (production, median of warm runs):
   Accessibility 100, Best-Practices 100, SEO 100, CLS 0, Performance 85
-  (watch page 81). **These numbers PREDATE the 2026-07-23 layer and must be
-  re-measured before they are quoted again.** Two things moved since: the page
-  preloader was deleted outright (so first-visit LCP no longer carries a
-  curtain at all — the old justification for the 85 is void), and the watch
-  page stopped mounting the YouTube iframe until the play tap, which removes
-  roughly 1.2–1.5 MB of player JS from every visitor's initial load and should
-  move the watch score up materially. What remains of the home gap is the
-  full-viewport hero artwork over simulated 4G — closing that would mean
-  cutting a signature element, which the owner declined.
+  (watch page 81).
+
+  **Re-measured 2026-07-30** against live production, Lighthouse 12.8.2,
+  mobile/simulated. Home is the median of four runs; the others single runs.
+
+  | route | Perf | A11y | BP | SEO | LCP | TBT | CLS |
+  |---|---|---|---|---|---|---|---|
+  | `/` | **74** (64–77) | 100 | 100 | 100 | 4.8s | 330ms | 0 |
+  | `/watch/[id]` | **83** | 100 | 100 | **92** | 3.2s | 320ms | 0.011 |
+  | `/browse` | **93** | 100 | 100 | 100 | 2.7s | 150ms | 0 |
+
+  Read these honestly. **Home's four runs spanned 64–77 — a 13-point spread —
+  so the gap against the old 85 cannot be called a regression**; the runs are
+  from a different machine and network than the 2026-07-18 figure, and single
+  Lighthouse runs on this box are noisy. Quote the median or nothing.
+
+  Two predictions made when the layer shipped turned out WRONG, and are
+  corrected here rather than quietly dropped:
+
+  - Moving the YouTube iframe behind the play tap was expected to move the
+    watch score "materially". It went 81 → 83. The player JS was never the
+    binding constraint.
+  - The home gap was blamed on the hero artwork over slow network. It is not
+    network-bound at all: the hero image finishes loading at ~950ms and then
+    is **not painted for 3.7 more seconds**. LCP is 79–87% *render* delay.
+
+  The real home cost is main-thread work — 3.0s total, of which
+  **styleLayout is 1246ms**, scriptEvaluation 986ms, with a 431ms hydration
+  long task and 300ms of render-blocking CSS (one ~89 kB stylesheet serving
+  every route). 1,167 DOM elements on a ~11,000px page. A scroll-reveal
+  hypothesis was tested by forcing `prefers-reduced-motion` (which makes the
+  CSS reveal everything immediately) and **disproved** — LCP moved only
+  4768ms → 4616ms. Do not re-litigate that one without new evidence.
+
+  **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
+  not "fix" it.** Next 16 streams metadata by default and serves *blocking*
+  metadata (tags inside `<head>`) only to user agents matching
+  `htmlLimitedBots`. Verified by request: `Chrome-Lighthouse` (what PageSpeed
+  Insights sends), `Twitterbot`, `facebookexternalhit`, `WhatsApp` and
+  `Google-InspectionTool` all receive the tags **in `<head>`**; a plain Chrome
+  UA — which local Lighthouse sends — gets them streamed into `<body>`, and
+  React does not hoist them. So social unfurling and PSI are correct, and the
+  only consumer that sees them in `<body>` is a JS-capable browser, which is
+  exactly the case Next streams for on purpose. The single lever if this is
+  ever revisited is the top-level `htmlLimitedBots` regex; there is no
+  `streamingMetadata: false` in this version.
+
+  One real defect this run surfaced, now fixed: `label-content-name-mismatch`
+  (WCAG 2.5.3 Label in Name) on two controls whose `aria-label` did not
+  CONTAIN their visible text — the up-next switch (label dropped; the visible
+  text is the accessible name now) and the signed-out save buttons, where the
+  sign-in label was introduced by the 2026-07-30 `aria-pressed` fix and now
+  interpolates the visible label instead of replacing it. The rule for this
+  codebase: an `aria-label` on a control with visible text must contain that
+  text verbatim, or a speech-input user cannot say what they see.
 
 ## 8. Known defects & alignment rules (override the prototype)
 

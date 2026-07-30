@@ -104,7 +104,12 @@ export function UpNext({
           type="button"
           role="switch"
           aria-checked={autoplayOn}
-          aria-label={t("upNextToggleAria")}
+          // No aria-label. The visible text IS the accessible name, which is
+          // what WCAG 2.5.3 (Label in Name) wants - the old label was a longer
+          // sentence that did not contain the visible words, so speech-input
+          // users saying "Continue to next video" could not activate it, and
+          // Lighthouse flagged label-content-name-mismatch. role="switch" plus
+          // aria-checked already carries the state.
           onClick={() => setAutoplay(!autoplayOn)}
           className="inline-flex items-center gap-2 text-[12px] uppercase tracking-[0.14em] text-text-muted transition-colors hover:text-flame focus-visible:text-flame"
         >

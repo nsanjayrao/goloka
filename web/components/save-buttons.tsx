@@ -63,18 +63,24 @@ export function SaveButtons({ youtubeVideoId }: { youtubeVideoId: string }) {
   // Favouriting lights a lamp; watch-later stays a bookmark. They are
   // genuinely different acts - one is an offering, the other is "not now" -
   // and giving them the same shape was flattening that.
+  // signInLabel INTERPOLATES the visible label rather than replacing it.
+  // WCAG 2.5.3 (Label in Name): the accessible name must contain the visible
+  // text, so a speech-input user saying "Watch later" can still activate the
+  // button. "Sign in to save this for later" did not contain "Watch later" -
+  // introduced while fixing the aria-pressed lie, and caught by Lighthouse's
+  // label-content-name-mismatch audit.
   const buttons: { kind: SavedKind; label: string; onLabel: string; signInLabel: string }[] = [
     {
       kind: "favourite",
       label: t("favourite"),
       onLabel: t("favourited"),
-      signInLabel: t("signInToFavourite"),
+      signInLabel: t("signInTo", { label: t("favourite") }),
     },
     {
       kind: "watch_later",
       label: t("watchLater"),
       onLabel: t("saved"),
-      signInLabel: t("signInToWatchLater"),
+      signInLabel: t("signInTo", { label: t("watchLater") }),
     },
   ];
 
