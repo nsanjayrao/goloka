@@ -16,10 +16,10 @@
 // result rather than throwing. That matters more than usual here - the table
 // does not exist until the owner runs the SQL, and until then a signed-in
 // devotee simply keeps seeing their local history.
+import type { SupabaseClient } from "@supabase/supabase-js";
 import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { useSession } from "@/lib/auth";
-import { supabase } from "@/lib/supabase";
 import {
   getRecentlyWatchedServerSnapshot,
   getRecentlyWatchedSnapshot,
@@ -32,10 +32,21 @@ import {
  * depth of history, and keeps the read bounded (free-tier discipline). */
 const MAX_ENTRIES = 12;
 
-async function safely<T>(run: () => Promise<T>, fallback: T): Promise<T> {
+// The Supabase client is imported on demand for the same reason lib/auth.ts
+// does it: ContinueWatchingShelf renders on the HOME page, so a static import
+// here puts ~225 kB of SDK (GoTrue + a Realtime websocket client this app
+// never opens) into home's initial JS. Nothing here runs before mount anyway.
+let clientPromise: Promise<SupabaseClient | null> | null = null;
+function getClient(): Promise<SupabaseClient | null> {
+  clientPromise ??= import("@/lib/supabase").then((m) => m.supabase);
+  return clientPromise;
+}
+
+async function safely<T>(run: (supabase: SupabaseClient) => Promise<T>, fallback: T): Promise<T> {
+  const supabase = await getClient();
   if (!supabase) return fallback;
   try {
-    return await run();
+    return await run(supabase);
   } catch (error) {
     console.error("Watch history query failed:", error);
     return fallback;
@@ -46,8 +57,8 @@ async function safely<T>(run: () => Promise<T>, fallback: T): Promise<T> {
  * front of the history rather than appending a second row, which mirrors
  * recordWatched()'s local behaviour exactly. */
 export async function recordWatchRemote(userId: string, youtubeVideoId: string): Promise<void> {
-  await safely(async () => {
-    const { error } = await supabase!
+  await safely(async (supabase) => {
+    const { error } = await supabase
       .from("watch_history")
       .upsert(
         { user_id: userId, youtube_video_id: youtubeVideoId, watched_at: new Date().toISOString() },
@@ -62,8 +73,8 @@ export async function recordWatchRemote(userId: string, youtubeVideoId: string):
  * local store uses, so ContinueWatchingShelf and lib/affinity.ts consume one
  * type regardless of where the history came from. */
 export async function getRemoteHistory(userId: string): Promise<RecentlyWatchedEntry[]> {
-  return safely(async () => {
-    const { data, error } = await supabase!
+  return safely(async (supabase) => {
+    const { data, error } = await supabase
       .from("watch_history")
       .select(
         "youtube_video_id, watched_at, videos!inner(title, thumbnail_url, duration_seconds, category, channels(title))"
@@ -111,7 +122,7 @@ export async function mergeLocalHistory(
   local: RecentlyWatchedEntry[]
 ): Promise<void> {
   if (local.length === 0) return;
-  await safely(async () => {
+  await safely(async (supabase) => {
     const rows = local.slice(0, MAX_ENTRIES).map((entry) => ({
       user_id: userId,
       youtube_video_id: entry.youtube_video_id,
@@ -120,7 +131,7 @@ export async function mergeLocalHistory(
     // ignoreDuplicates: a video already in the account keeps its server
     // timestamp, because that reflects a real watch on some device; the local
     // copy is only being offered to fill gaps.
-    const { error } = await supabase!
+    const { error } = await supabase
       .from("watch_history")
       .upsert(rows, { onConflict: "user_id,youtube_video_id", ignoreDuplicates: true });
     if (error) throw error;
