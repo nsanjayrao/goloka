@@ -532,8 +532,33 @@ DELETED that day — see §14.
     HTML, CSS and JS that first paint actually depends on. The late relayouts
     are genuine, but they happen after paint and cost less than delaying
     paint. **Conclusion: the 1385ms of font relayout is NOT worth attacking
-    with preload.** If it is ever attacked, `font-display` is the lever — and
-    that is an owner decision about first-visit typography, not a perf tweak.
+    with preload.**
+  - *`font-display: optional` is the real lever, then.* **It is not. Tested
+    2026-07-31 and it changes nothing measurable.** `optional` was applied to
+    Marcellus and Figtree (Tiro deliberately left on `swap`, because §3
+    requires Devanagari to never fall back to system), verified `optional` in
+    the built `@font-face` rules, and measured as a clean A/B on identical
+    code, four runs each:
+
+    | | LCP runs | median |
+    |---|---|---|
+    | `swap` | 4565, 4545, 5038, 4667 | **4667ms** |
+    | `optional` | 4348, 4716, 4815, 4508 | **4716ms** |
+
+    +49ms, against a control spread of ~500ms. Noise. Reverted.
+
+    **The error worth remembering:** the trace correctly showed 1385ms of
+    font relayout occurring before LCP, and it was inferred that removing it
+    would recover that time. That does not follow. LCP here is the hero
+    IMAGE, and FCP sits at ~4.3s in both arms — first paint is gated by
+    shipping ~273 kB of HTML and ~90 kB of CSS over throttled 4G, not by
+    fonts. Work happening *before* a metric is not necessarily work the
+    metric is *waiting on*.
+
+  **So home's first paint is a PAYLOAD problem, not a font problem.** The
+  untested levers are the 273 kB of HTML (1,527 elements, ~14,000px, fourteen
+  sections rendered before one is visible) and the single ~90 kB stylesheet
+  that serves every route. Nothing else has survived measurement.
 
   **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
   not "fix" it.** Next 16 streams metadata by default and serves *blocking*
