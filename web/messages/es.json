@@ -383,5 +383,14 @@
     "rajabhoga": "Se está haciendo la ofrenda del mediodía.",
     "sandhya": "Se está ofreciendo el ārati de la tarde.",
     "shayana": "El templo descansa."
+  },
+  "account": {
+    "signIn": "Iniciar sesión",
+    "signOut": "Cerrar sesión",
+    "myLibrary": "Mi biblioteca",
+    "signedInAs": "Sesión iniciada como {name}: abrir mi biblioteca",
+    "continueWithGoogle": "Continuar con Google",
+    "why": "Inicia sesión para conservar tus favoritos, tu lista para más tarde y tu cuenta de japa.",
+    "privacyNote": "Solo inicio de sesión con Google. Tu historial de reproducción permanece en este dispositivo."
   }
 }

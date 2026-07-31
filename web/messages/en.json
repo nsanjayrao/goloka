@@ -383,5 +383,14 @@
     "rajabhoga": "The midday offering is being made.",
     "sandhya": "The evening ārati is being offered.",
     "shayana": "The temple is resting."
+  },
+  "account": {
+    "signIn": "Sign in",
+    "signOut": "Sign out",
+    "myLibrary": "My library",
+    "signedInAs": "Signed in as {name} — open my library",
+    "continueWithGoogle": "Continue with Google",
+    "why": "Sign in to keep your favourites, your watch-later list and your japa count with you.",
+    "privacyNote": "Google sign-in only. Your watch history stays on this device."
   }
 }

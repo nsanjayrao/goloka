@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useState } from "react";
 
 import { LogoMark } from "@/components/icons/logo-mark";
+import { AccountControl } from "@/components/account-control";
 import { MORE_HREFS, MoreSheet } from "@/components/more-sheet";
 import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
@@ -88,6 +89,11 @@ export function TopBar() {
           </svg>
           {t("search")}
         </Link>
+
+        {/* Sits OUTSIDE the .nav-link family on purpose: those hide under
+            40rem, and the one thing that must never be unreachable on a phone
+            is the way back into your own account. */}
+        <AccountControl />
       </nav>
     </header>
   );

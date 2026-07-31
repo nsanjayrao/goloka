@@ -657,6 +657,56 @@
     justify-content: space-between;
     gap: 16px;
   }
+  /* The account block, separated from the link list by a hairline rather than
+     a heading - it is a different KIND of thing, not another destination. */
+  .account-row {
+    border-top: 1px solid var(--border);
+    padding-top: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .account-row-why {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  .account-row-fine {
+    font-size: 12px;
+    color: var(--text-muted);
+    opacity: 0.8;
+    line-height: 1.45;
+  }
+  .account-who {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+  .account-who-name {
+    font-family: var(--display);
+    font-size: 17px;
+    color: var(--text);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .account-who-mail {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .account-row-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .account-signout {
+    text-align: left;
+    color: var(--text-muted);
+  }
   .more-close {
     display: grid;
     place-items: center;
@@ -724,6 +774,67 @@
     border-color: var(--accent);
     color: var(--flame);
     box-shadow: 0 0 20px rgb(var(--glow-rgb) / 0.18);
+  }
+
+  /* ---------- the account control ---------- */
+  /* Same pill family as the search control beside it, deliberately: the
+     account is chrome, not a campaign. Sized 36px so it clears WCAG 2.5.8's
+     24x24 on its own, and the empty pre-hydration slot is the SAME width as
+     the signed-out state, so the header never reflows when the session
+     resolves. */
+  .account-slot {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 999px;
+    color: var(--chandan);
+    transition: border-color 0.25s var(--ease-spring), color 0.25s var(--ease-spring),
+      box-shadow 0.25s var(--ease-spring);
+  }
+  .account-signin {
+    padding: 0 16px;
+    border: 1px solid rgb(var(--chandan-rgb) / 0.22);
+  }
+  .account-signin svg {
+    width: 15px;
+    height: 15px;
+    stroke: currentColor;
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+  .account-signin:hover,
+  .account-avatar:hover {
+    border-color: var(--accent);
+    color: var(--flame);
+    box-shadow: 0 0 20px rgb(var(--glow-rgb) / 0.18);
+  }
+  /* Signed in: one letter in a gold ring. A lit initial rather than a
+     photograph - no third-party request, nothing that can fail to load. */
+  .account-avatar {
+    width: 36px;
+    padding: 0;
+    border: 1px solid var(--hairline);
+    background: var(--surface-2);
+    font-family: var(--display);
+    font-size: 15px;
+    color: var(--accent);
+  }
+  /* Under 40rem the label goes and the icon stays - the same breakpoint the
+     nav links use, so the header collapses as ONE decision. The control
+     itself never hides: signing in must be reachable from a phone. */
+  @media (width < 40rem) {
+    .account-signin {
+      padding: 0;
+      width: 36px;
+    }
+    .account-label {
+      display: none;
+    }
   }
 
   /* ---------- hero ---------- */

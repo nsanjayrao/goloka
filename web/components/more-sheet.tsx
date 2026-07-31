@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useId, useRef, useState } from "react";
 
+import { AccountRow } from "@/components/account-row";
 import { Link, usePathname } from "@/i18n/navigation";
 
 // Everything that used to be reachable only from the footer (or, on a phone,
@@ -127,6 +128,12 @@ export function MoreSheet({
               </Link>
             ))}
           </nav>
+
+          {/* The account, at the foot of the one sheet reachable from every
+              page on every screen size. The header control can offer sign-IN,
+              but sign-out needs somewhere to live that isn't buried inside
+              /library or /sadhana - which is exactly where it was. */}
+          <AccountRow onNavigate={() => dialog.current?.close()} />
         </div>
       </dialog>
     </>
