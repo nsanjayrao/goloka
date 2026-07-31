@@ -510,6 +510,30 @@ DELETED that day — see §14.
     is at **7741ms** — zero frames before LCP. Innocent.
   - *Rasterisation is the cost.* 384 RasterTasks before LCP total **15ms**.
     High count, trivial cost.
+  - *Preloading the late fonts will fix it.* **Tested and it made things
+    materially WORSE — do not retry.** The two late files are the `latin-ext`
+    subsets of Marcellus and Figtree, which carry the IAST diacritics this
+    site is built on (ā ī ū ṛ ṇ ś ṣ ṁ — *Śrīla Prabhupāda*, *Vṛndāvana*,
+    *sādhana*, and the *Rādhe Rādhe* invocation; 206 such characters on the
+    home page alone). `next/font` preloads only the subsets you DECLARE, so
+    adding `"latin-ext"` to `subsets` does pull them from ~2.9s forward to
+    ~680ms — verified, 4 preload links became 6, and all six fonts then
+    requested inside 692ms. But measured like-for-like on one machine with
+    real throttling:
+
+    | | LCP | Layout before LCP | TBT |
+    |---|---|---|---|
+    | 4 preloads (shipped) | **4069–4265ms** (4 runs) | 7 events, 1123ms | 832ms |
+    | 6 preloads (latin-ext) | **5882ms** | 19 events, 1454ms | 945ms |
+
+    Baseline variance was only ~200ms, so a +1.6s LCP is real. `rel=preload`
+    is a PRIORITY instruction, not just an earlier fetch: promoting two more
+    fonts makes the browser contend for a throttled connection ahead of the
+    HTML, CSS and JS that first paint actually depends on. The late relayouts
+    are genuine, but they happen after paint and cost less than delaying
+    paint. **Conclusion: the 1385ms of font relayout is NOT worth attacking
+    with preload.** If it is ever attacked, `font-display` is the lever — and
+    that is an owner decision about first-visit typography, not a perf tweak.
 
   **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
   not "fix" it.** Next 16 streams metadata by default and serves *blocking*
