@@ -21,9 +21,12 @@ function shrinkSizes(sizes: string): string {
 // pop, zero layout shift. Kept as its own tiny client boundary so VideoCard
 // (and a grid of hundreds of them) stays a server component.
 //
-// It's also the client island that reads the data-saver preference for
-// every thumbnail on the site: a smaller `sizes` request plus quality=35
-// when it's on, the exact current behaviour when it's off.
+// useDataSaver() reads CONTEXT, not the store. That distinction was worth
+// ~300ms of TBT on the home page: this component renders 56 times there, and
+// while the hook subscribed per instance that was 56 useSyncExternalStore
+// subscriptions. Ablation showed the subscriptions cost essentially all of it
+// and the fade below cost nothing measurable - so the fade stays and the
+// subscription moved up to DataSaverProvider in the root layouts.
 export function Thumbnail({
   src,
   alt,

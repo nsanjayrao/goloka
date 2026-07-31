@@ -12,6 +12,7 @@ import { Jali } from "@/components/jali";
 import { SkipLink } from "@/components/skip-link";
 import { TopBar } from "@/components/top-bar";
 import { routing } from "@/i18n/routing";
+import { DataSaverProvider } from "@/lib/data-saver";
 import { SITE_URL } from "@/lib/site";
 import "../globals.css";
 
@@ -101,23 +102,28 @@ export default async function LocaleLayout({ children, params }: Props) {
     >
       <body className="min-h-screen bg-bg text-text antialiased">
         <NextIntlClientProvider messages={messages}>
-          {/* The jālī throws the hour's light across the page and the grain
+          {/* Subscribes to the data-saver store ONCE for the whole tree.
+              Thumbnail reads it, and home renders 56 of those - as a
+              per-instance subscription that was measured at ~300ms of TBT. */}
+          <DataSaverProvider>
+            {/* The jālī throws the hour's light across the page and the grain
               is the paper it lands on - both sit BEHIND content and never
               catch pointer events. The darshan curtain used to be here as a
               page preloader; it now belongs to the player
               (components/lite-embed.tsx), because a curtain parts for
               darshan, not for a page load. */}
-          <SkipLink />
-          <Jali />
-          <div className="grain" aria-hidden="true" />
-          <TopBar />
-          <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
-            {children}
-          </main>
-          <Footer />
-          <BottomTabBar />
-          <Feather />
-          <RegisterServiceWorker />
+            <SkipLink />
+            <Jali />
+            <div className="grain" aria-hidden="true" />
+            <TopBar />
+            <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+              {children}
+            </main>
+            <Footer />
+            <BottomTabBar />
+            <Feather />
+            <RegisterServiceWorker />
+          </DataSaverProvider>
         </NextIntlClientProvider>
       </body>
     </html>

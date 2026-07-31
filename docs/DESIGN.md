@@ -564,10 +564,48 @@ DELETED that day — see §14.
     fonts. Work happening *before* a metric is not necessarily work the
     metric is *waiting on*.
 
-  **So home's first paint is a PAYLOAD problem, not a font problem.** The
-  untested levers are the 273 kB of HTML (1,527 elements, ~14,000px, fourteen
-  sections rendered before one is visible) and the single ~90 kB stylesheet
-  that serves every route. Nothing else has survived measurement.
+  **Home's first paint is NOT a payload problem either — that was wrong too
+  (2026-07-31).** Three measurements killed it: 269 kB of HTML is 35 kB
+  gzipped (~0.27s on slow 4G), parsing all of it costs 218ms, and cutting 38%
+  of the DOM (1,180 → 734 elements) moved FCP by 50ms. The control that
+  settled it, on the live site:
+
+  | route | DOM | FCP |
+  |---|---|---|
+  | `/offline` | 226 elements | **4865ms** |
+  | `/` | 1,180 elements | **4813ms** |
+
+  **A near-empty page paints no faster than home.** FCP is a fixed floor
+  shared by every route — network round trips plus one render-blocking
+  stylesheet — and home's fourteen sections contribute nothing to it. Removing
+  225 kB of JS from the initial bundle did not move it either (async/defer
+  scripts never blocked paint). Do not attack FCP by cutting home's content.
+
+  ### 7b. What home's content DOES cost: interactivity, not paint
+
+  The same run shows TBT 829ms on `/offline` against **1610ms on home**. Home
+  paints at the same instant as an empty page and then takes twice as long to
+  respond — a tap on a card in that window does nothing. That is the real
+  cost of the client tree, and it is measurable and fixable.
+
+  Attribution (local, real throttling, three-way ablation of `Thumbnail`,
+  which home renders **56 times**):
+
+  | variant | TBT median |
+  |---|---|
+  | client + fade + per-instance `useDataSaver()` | **1330ms** |
+  | fade only, no data-saver | 973ms |
+  | plain server component, no client at all | 1032ms |
+
+  The fade cost **nothing measurable**; 56 `useSyncExternalStore`
+  subscriptions cost ~300ms. Fixed by `DataSaverProvider` in both root
+  layouts — one subscription for the tree, `useDataSaver()` now reads context.
+  Both features kept; all four post-fix runs landed below the pre-fix minimum.
+
+  **The rule this establishes: a hook that subscribes to a store must not be
+  called from a component that renders dozens of times.** Read it once high in
+  the tree and pass it down. Check this before adding any store-reading hook
+  to `Thumbnail`, `VideoCard` or anything else inside a row.
 
   **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
   not "fix" it.** Next 16 streams metadata by default and serves *blocking*

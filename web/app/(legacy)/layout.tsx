@@ -10,6 +10,7 @@ import { Jali } from "@/components/jali";
 import { SkipLink } from "@/components/skip-link";
 import { TopBar } from "@/components/top-bar";
 import { routing } from "@/i18n/routing";
+import { DataSaverProvider } from "@/lib/data-saver";
 import { SITE_URL } from "@/lib/site";
 import enMessages from "@/messages/en.json";
 import "../globals.css";
@@ -23,9 +24,21 @@ import "../globals.css";
 // default locale) just lets them reuse the same TopBar/Footer/BottomTabBar
 // components - which now call useTranslations - without a parallel
 // unlocalized copy of each.
-const marcellus = Marcellus({ subsets: ["latin"], weight: "400", variable: "--font-marcellus" });
-const figtree = Figtree({ subsets: ["latin"], weight: ["400", "500", "600"], variable: "--font-figtree" });
-const tiro = Tiro_Devanagari_Hindi({ subsets: ["latin", "devanagari"], weight: "400", variable: "--font-tiro" });
+const marcellus = Marcellus({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-marcellus",
+});
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-figtree",
+});
+const tiro = Tiro_Devanagari_Hindi({
+  subsets: ["latin", "devanagari"],
+  weight: "400",
+  variable: "--font-tiro",
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -52,17 +65,20 @@ export default function LegacyLayout({ children }: { children: React.ReactNode }
     >
       <body className="min-h-screen bg-bg text-text antialiased">
         <NextIntlClientProvider locale={routing.defaultLocale} messages={enMessages}>
-          <SkipLink />
-          <Jali />
-          <div className="grain" aria-hidden="true" />
-          <TopBar />
-          <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
-            {children}
-          </main>
-          <Footer />
-          <BottomTabBar />
-          <Feather />
-          <RegisterServiceWorker />
+          {/* One data-saver subscription for the tree - see [locale]/layout.tsx. */}
+          <DataSaverProvider>
+            <SkipLink />
+            <Jali />
+            <div className="grain" aria-hidden="true" />
+            <TopBar />
+            <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+              {children}
+            </main>
+            <Footer />
+            <BottomTabBar />
+            <Feather />
+            <RegisterServiceWorker />
+          </DataSaverProvider>
         </NextIntlClientProvider>
       </body>
     </html>

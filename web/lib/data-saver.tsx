@@ -1,4 +1,8 @@
-import { useSyncExternalStore } from "react";
+"use client"; // holds browser state and provides it to the tree.
+
+import { createContext, useContext, useSyncExternalStore } from "react";
+
+const DataSaverContext = createContext(false);
 
 // "Data saver" mode: a visitor-controlled preference that trims real
 // kilobytes off every page load - the watch page's YouTube player becomes
@@ -100,12 +104,35 @@ export function setDataSaver(on: boolean): void {
   }
 }
 
+/** Subscribes to the store ONCE, for the whole tree.
+ *
+ * This exists because of a measurement. useDataSaver() used to subscribe per
+ * caller, and Thumbnail calls it - so a home page with 56 thumbnails opened 56
+ * useSyncExternalStore subscriptions. Isolated by ablation (2026-07-31), that
+ * alone was worth ~300ms of Total Blocking Time: TBT median 1330ms with the
+ * per-instance subscription, 973ms without it, and 1032ms with Thumbnail
+ * reduced to a plain server component - i.e. the subscriptions cost roughly
+ * everything, and the load-fade cost nothing measurable.
+ *
+ * Mounted in both root layouts. */
+export function DataSaverProvider({ children }: { children: React.ReactNode }) {
+  const raw = useSyncExternalStore(subscribe, getDataSaverSnapshot, getDataSaverServerSnapshot);
+  return (
+    <DataSaverContext.Provider value={parseDataSaverSnapshot(raw)}>
+      {children}
+    </DataSaverContext.Provider>
+  );
+}
+
 /** Reads the current data-saver state: the visitor's explicit choice if
  * they've ever touched the footer switch, otherwise auto-detected from
  * `navigator.connection` (never sent anywhere - see the file banner).
  * Every consumer (LiteEmbed, Thumbnail, HeroImage, DataSaverToggle) calls
- * this rather than reading localStorage itself, so they all agree. */
+ * this rather than reading localStorage itself, so they all agree.
+ *
+ * Reads CONTEXT, not the store - see DataSaverProvider. The default is false,
+ * which is also the server snapshot, so a subtree rendered without the
+ * provider behaves exactly as it did before hydration rather than breaking. */
 export function useDataSaver(): boolean {
-  const raw = useSyncExternalStore(subscribe, getDataSaverSnapshot, getDataSaverServerSnapshot);
-  return parseDataSaverSnapshot(raw);
+  return useContext(DataSaverContext);
 }
