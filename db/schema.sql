@@ -430,3 +430,52 @@ create policy "public read playlists" on playlists for select using (true);
 alter table playlist_videos enable row level security;
 drop policy if exists "public read playlist videos" on playlist_videos;
 create policy "public read playlist videos" on playlist_videos for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Watch history (direction B, 2026-07-31)
+-- ---------------------------------------------------------------------------
+-- This table REVERSES a promise the site used to make, and that is a
+-- deliberate owner decision, not an oversight. Watch history was localStorage
+-- only, "never sent to or read by the server" - which meant a devotee who
+-- signed in on their phone and opened Goloka on a laptop carried nothing
+-- across but two save lists and a japa count. An account that forgets you is
+-- not an account. The About page and the account copy were rewritten in the
+-- same change; behaviour and promise must never drift apart again.
+--
+-- Signed OUT nothing changes: history stays in localStorage exactly as
+-- before, and this table is never touched. Signed IN, a watch is recorded
+-- here TOO, which is what lets Continue Watching follow a devotee between
+-- devices. Same shape as japa_rounds: the local store remains the source of
+-- truth for the anonymous case, and this is its signed-in counterpart.
+--
+-- Only the video ID and when it was watched. Titles, thumbnails and channels
+-- are JOINed from `videos` at read time, so the row cannot go stale and this
+-- table never becomes a second copy of the catalogue.
+create table if not exists watch_history (
+  user_id uuid not null references auth.users(id) on delete cascade,
+  youtube_video_id text not null,
+  watched_at timestamptz not null default now(),
+  -- One row per video per devotee: re-watching UPDATES watched_at rather than
+  -- appending, so the list is a history of what you have seen, not of every
+  -- time you pressed play.
+  primary key (user_id, youtube_video_id)
+);
+create index if not exists watch_history_user_recent_idx
+  on watch_history (user_id, watched_at desc);
+
+-- RLS: a devotee sees and edits ONLY their own history; the anon role sees
+-- nothing. Deleting the account deletes all of it (on delete cascade above),
+-- which is what "delete = gone" has to mean once history lives here.
+alter table watch_history enable row level security;
+drop policy if exists "select own history" on watch_history;
+create policy "select own history" on watch_history
+  for select using (auth.uid() = user_id);
+drop policy if exists "insert own history" on watch_history;
+create policy "insert own history" on watch_history
+  for insert with check (auth.uid() = user_id);
+drop policy if exists "update own history" on watch_history;
+create policy "update own history" on watch_history
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+drop policy if exists "delete own history" on watch_history;
+create policy "delete own history" on watch_history
+  for delete using (auth.uid() = user_id);

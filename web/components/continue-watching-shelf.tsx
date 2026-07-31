@@ -2,10 +2,11 @@
 // client-only, and per-visitor, so it can't be server-rendered.
 
 import { useTranslations } from "next-intl";
-import { useMemo, useSyncExternalStore } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { CategoryRow } from "@/components/category-row";
 import { FadeUp } from "@/components/fade-up";
+import { useSession } from "@/lib/auth";
 import {
   getRecentlyWatchedServerSnapshot,
   getRecentlyWatchedSnapshot,
@@ -14,6 +15,7 @@ import {
   type RecentlyWatchedEntry,
 } from "@/lib/recently-watched";
 import type { Video } from "@/lib/types";
+import { getRemoteHistory, mergeLocalHistory } from "@/lib/watch-history";
 
 // VideoCard (via CategoryRow) only ever reads title, duration_seconds,
 // thumbnail_url, youtube_video_id, channel?.title, published_at and
@@ -53,7 +55,60 @@ export function ContinueWatchingShelf() {
     getRecentlyWatchedSnapshot,
     getRecentlyWatchedServerSnapshot
   );
-  const videos = useMemo(() => parseRecentlyWatchedSnapshot(raw).map(toVideoShape), [raw]);
+  const local = useMemo(() => parseRecentlyWatchedSnapshot(raw), [raw]);
+
+  const { session } = useSession();
+  const userId = session?.user.id ?? null;
+  // Keyed by the user it was fetched FOR, not a bare array - the same idiom
+  // LanguageShelf uses. Signing out then needs no reset-in-effect (which the
+  // react-hooks lint rightly rejects): `remoteEntries` below simply stops
+  // matching and falls back to an empty list.
+  const [remote, setRemote] = useState<{ userId: string; entries: RecentlyWatchedEntry[] } | null>(
+    null
+  );
+  // One merge per signed-in devotee. Without it, someone who used Goloka
+  // anonymously for months would sign in and watch their history apparently
+  // vanish - the account would be empty until they watched something new.
+  const merged = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void (async () => {
+      if (merged.current !== userId) {
+        merged.current = userId;
+        await mergeLocalHistory(userId, local);
+      }
+      const entries = await getRemoteHistory(userId);
+      if (!cancelled) setRemote({ userId, entries });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // `local` is deliberately NOT a dependency: it changes on every watch, and
+    // re-running the merge on each one would be pointless write traffic. The
+    // merge is a one-time reconciliation at sign-in; ongoing watches are
+    // recorded by RecordWatch on both sides already.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  // The device and the account are both real histories - a devotee may have
+  // watched on a laptop this morning and on this phone last night. Union
+  // them, keep the newer timestamp per video, and show the most recent.
+  const videos = useMemo(() => {
+    // Resolved inside the memo: as a bare `const` above it, the `: []` branch
+    // built a fresh array every render and the memo could never hold.
+    const remoteEntries = userId && remote?.userId === userId ? remote.entries : [];
+    const byId = new Map<string, RecentlyWatchedEntry>();
+    for (const entry of [...local, ...remoteEntries]) {
+      const seen = byId.get(entry.youtube_video_id);
+      if (!seen || entry.watched_at > seen.watched_at) byId.set(entry.youtube_video_id, entry);
+    }
+    return [...byId.values()]
+      .sort((a, b) => b.watched_at - a.watched_at)
+      .slice(0, 12)
+      .map(toVideoShape);
+  }, [local, remote, userId]);
 
   // Rendering nothing at all (not even the FadeUp/motion.div wrapper) when
   // empty matters here: the home page lays sections out with `flex gap-10`,

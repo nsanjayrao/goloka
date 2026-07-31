@@ -391,7 +391,16 @@ DELETED that day — see §14.
   data is two lists (favourite / watch_later in `saved_videos`,
   RLS-scoped). Auth is entirely client-side — server components stay
   anonymous, shared pages identical for everyone. Watch HISTORY stays in
-  localStorage forever (the privacy line). Surfaces: a lit-lamp favourite
+  localStorage when signed OUT — but as of 2026-07-31 (direction B, owner
+  decision) a signed-IN devotee's watch history is ALSO written to
+  `watch_history`, so Continue Watching follows them between devices. This
+  reverses the old "history never leaves your device, signed in or not"
+  promise, deliberately: an account that forgets you is not an account. The
+  About page, the library note and the account note were rewritten in the same
+  commit. **Behaviour and promise change together or not at all** — there are
+  four copy strings stating this position (`account.privacyNote`,
+  `library.privacyNote`, `pages.about.privacyBody1/2`) and any future change
+  to what an account stores must update all four. Surfaces: a lit-lamp favourite
   (§5.17) + a watch-later bookmark on the watch page (a tap while signed
   out starts Google sign-in and returns to the same page), /library with
   two grids, Library in the header/footer and as the 4th mobile tab. About

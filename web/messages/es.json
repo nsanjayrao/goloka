@@ -208,7 +208,7 @@
     "title": "Mi biblioteca",
     "signInPrompt": "Inicia sesión para conservar tus favoritos y tu lista de ver más tarde en todos tus dispositivos.",
     "continueWithGoogle": "Continuar con Google",
-    "privacyNote": "Tu cuenta solo guarda estas dos listas — lo que ves nunca se envía al servidor, hayas iniciado sesión o no. Eliminar tu cuenta elimina todo.",
+    "privacyNote": "Tu cuenta guarda tus dos listas, tu registro de japa y tu historial, para que te acompañen entre dispositivos. Solo tú puedes verlos, y eliminar tu cuenta lo elimina todo. Sin sesión, nada sale de tu navegador.",
     "favouritesTitle": "Favoritos",
     "watchLaterTitle": "Ver más tarde",
     "shareAsLink": "Compartir como enlace",
@@ -267,8 +267,8 @@
       "belongsTitle": "Todo el contenido pertenece a sus creadores",
       "belongsBody": "Cada video enlaza de vuelta a su canal de origen. Goloka no realoja, reedita ni monetiza el contenido de nadie — es simplemente un directorio que señala hacia el trabajo que ya pertenece a los templos y oradores que lo crearon.",
       "privacyTitle": "Privacidad, con honestidad",
-      "privacyBody1": "Goloka nunca rastrea lo que ves. \"Continuar viendo\" vive solo en tu propio navegador y nunca se envía a ningún sitio — borrar los datos de tu navegador lo elimina por completo, hayas iniciado sesión o no. Cantar con la sesión cerrada es igual: tus rondas permanecen solo en tu dispositivo y se reinician cada día, sin guardarse en ningún otro lugar.",
-      "privacyBody2": "Iniciar sesión es opcional y existe para dos cosas serenas: mantener tu lista de favoritos y de ver más tarde contigo en todos tus dispositivos y — si cantas con la sesión iniciada — mantener tu propio registro de las rondas que completas, por día, mes y año. Eso es todo lo que guarda una cuenta: dos listas de enlaces de video y tu propio registro de japa. Es solo tuyo, nunca se comparte ni se compara con nadie. Sin historial de visualización, sin perfil de análisis, nada se vende ni se comparte. Elimina tu cuenta y todo lo que contenía — tanto las listas como el registro de japa — se elimina con ella.",
+      "privacyBody1": "Sin sesión, Goloka no guarda nada sobre ti. \"Continuar viendo\" vive solo en tu navegador y no se envía a ninguna parte: borrar los datos del navegador lo borra por completo. Cantar sin sesión es igual: tus rondas permanecen solo en tu dispositivo y se reinician cada día.",
+      "privacyBody2": "Iniciar sesión es opcional y existe para que tu práctica te acompañe: tus favoritos y tu lista para más tarde, tu registro de japa por día, mes y año, y —nuevo en julio de 2026— tu historial, para que \"Continuar viendo\" pase de tu teléfono a tu portátil. Eso es todo lo que guarda una cuenta. Es solo tuyo: nunca se comparte, nunca se compara, nunca se vende y nunca se usa para crear un perfil publicitario. Elimina tu cuenta y todo lo que contenía se elimina con ella.",
       "independentTitle": "Un proyecto independiente",
       "independentBody": "Goloka es un proyecto independiente y sin fines de lucro — no es un sitio web oficial de ISKCON, ni está afiliado a un templo en particular. Funciona enteramente sobre infraestructura de nivel gratuito, sin publicidad y sin nada a la venta.",
       "helpTitle": "Ayuda a mejorarlo",
@@ -391,6 +391,6 @@
     "signedInAs": "Sesión iniciada como {name}: abrir mi biblioteca",
     "continueWithGoogle": "Continuar con Google",
     "why": "Inicia sesión para conservar tus favoritos, tu lista para más tarde y tu cuenta de japa.",
-    "privacyNote": "Solo inicio de sesión con Google. Tu historial de reproducción permanece en este dispositivo."
+    "privacyNote": "Solo inicio de sesión con Google. Con la sesión iniciada, tu historial te acompaña entre dispositivos: solo tuyo y se elimina con tu cuenta. Sin sesión, nunca sale de este dispositivo."
   }
 }
