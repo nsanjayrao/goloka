@@ -607,6 +607,30 @@ DELETED that day — see §14.
   the tree and pass it down. Check this before adding any store-reading hook
   to `Thumbnail`, `VideoCard` or anything else inside a row.
 
+  ### 7c. The remaining TBT is distributed, and individually unattackable
+
+  Removing EVERY optional island at once — `FadeUp`, `Shelf`, the jālī, the
+  feather, the embers, the Vrindavan hour — gives TBT 509/537/545/656, median
+  **541ms**, against **1062ms** with them all present. So the islands are
+  collectively worth ~520ms and that headroom is real.
+
+  But no single one of them is measurable. **The run-to-run noise floor on
+  this page is ~300ms** (a single unchanged build spans 923–1249ms), and each
+  island costs well under that. Two attempts, both measured and both reverted:
+
+  - *14 `IntersectionObserver`s → one shared observer.* No separation from
+    baseline; median moved the wrong way.
+  - *Deferring the ember loop to `requestIdleCallback`.* Also nothing — and
+    predictably so, because the loop's first `requestAnimationFrame` was
+    already measured at **7741ms**, long after the TBT window closes. Work
+    outside the window cannot be moved further outside it.
+
+  So: **do not micro-optimise individual islands for TBT.** Either measure a
+  change with clean separation across ≥4 runs, or leave it. The only way to
+  claim the remaining ~520ms is to render fewer islands — which is a product
+  decision about what home should contain, not a performance tweak, and the
+  jālī, embers and reveals are all signature elements (§5).
+
   **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
   not "fix" it.** Next 16 streams metadata by default and serves *blocking*
   metadata (tags inside `<head>`) only to user agents matching
