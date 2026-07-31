@@ -1254,12 +1254,22 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 560px;
   }
+  /* The kicker sits OUTSIDE the flex row now, and that is the whole point.
+     While it lived inside the <h2>, the h2's first line box was the kicker -
+     and a flex item's baseline is its FIRST line box - so "View all →" was
+     baseline-aligned to the 12px kicker, roughly 32-45px above the serif
+     title it is supposed to sit beside. DESIGN.md §4 asks for it aligned with
+     the title; this is what makes that true. (It also stops the kicker
+     polluting the heading's accessible name: the h2 announced "FRESH FROM THE
+     TEMPLES Arrived today".) */
   .section-head {
+    padding: 0 var(--pad);
+    margin-bottom: 22px;
+  }
+  .section-head-row {
     display: flex;
     align-items: baseline;
     justify-content: space-between;
-    padding: 0 var(--pad);
-    margin-bottom: 22px;
     gap: 16px;
   }
   .section-head h2 {

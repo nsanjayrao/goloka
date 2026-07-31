@@ -24,16 +24,18 @@ export function LiveStrip({ videos }: { videos: Video[] }) {
 
   return (
     <section id="live" className="home-section">
+      {/* Same shape as SectionHeader - kicker outside the row, so the heading
+          announces only its own title. */}
       <div className="section-head">
-        <h2>
-          <span className="kicker live-kicker">{t("streamingNow")}</span>
-          <span>
+        <span className="kicker live-kicker">{t("streamingNow")}</span>
+        <div className="section-head-row">
+          <h2>
             <span className="mark" aria-hidden="true">
               ❋
             </span>
             {t("liveFromDhama")}
-          </span>
-        </h2>
+          </h2>
+        </div>
       </div>
       <div className="live-grid gutter">
         {videos.map((video) => {

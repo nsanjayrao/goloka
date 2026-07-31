@@ -20,20 +20,24 @@ export function SectionHeader({
   const t = useTranslations("sectionHeader");
   return (
     <div className="section-head">
-      <h2>
-        {kicker && <span className="kicker">{kicker}</span>}
-        <span>
+      {/* The kicker is a SIBLING of the row, not a child of the <h2>. Inside
+          the heading it made the h2's first baseline its own, so "View all →"
+          aligned to the kicker instead of the title - and it became part of
+          the heading's accessible name. */}
+      {kicker && <span className="kicker">{kicker}</span>}
+      <div className="section-head-row">
+        <h2>
           <span className="mark" aria-hidden="true">
             ❋
           </span>
           {title}
-        </span>
-      </h2>
-      {href && (
-        <Link href={href} className="view-all">
-          {t("viewAll")}
-        </Link>
-      )}
+        </h2>
+        {href && (
+          <Link href={href} className="view-all">
+            {t("viewAll")}
+          </Link>
+        )}
+      </div>
     </div>
   );
 }
