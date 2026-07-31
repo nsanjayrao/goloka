@@ -473,17 +473,43 @@ DELETED that day — see §14.
   - Moving the YouTube iframe behind the play tap was expected to move the
     watch score "materially". It went 81 → 83. The player JS was never the
     binding constraint.
-  - The home gap was blamed on the hero artwork over slow network. It is not
-    network-bound at all: the hero image finishes loading at ~950ms and then
-    is **not painted for 3.7 more seconds**. LCP is 79–87% *render* delay.
+  - The home gap was blamed on the hero artwork over slow network, and then
+    (2026-07-30, by me) on a 3.7s "render delay" holding the loaded hero
+    image. **Both are wrong.** The 3.7s figure came from Lighthouse's DEFAULT
+    *simulated* throttling, whose timings cannot be correlated with the trace
+    — the trace is recorded unthrottled and the metrics are modelled from it.
 
-  The real home cost is main-thread work — 3.0s total, of which
-  **styleLayout is 1246ms**, scriptEvaluation 986ms, with a 431ms hydration
-  long task and 300ms of render-blocking CSS (one ~89 kB stylesheet serving
-  every route). 1,167 DOM elements on a ~11,000px page. A scroll-reveal
-  hypothesis was tested by forcing `prefers-reduced-motion` (which makes the
-  CSS reveal everything immediately) and **disproved** — LCP moved only
-  4768ms → 4616ms. Do not re-litigate that one without new evidence.
+  **Re-run with `--throttling-method=devtools` (real 4× CPU + slow 4G), which
+  is the only mode whose trace timings mean anything:** Perf 41, FCP 4948ms,
+  LCP 5382ms, TBT 1217ms. LCP is only **434ms after FCP** — the hero is not
+  waiting on anything; *nothing at all* paints for five seconds.
+
+  **The cause is font loading, and it is worth 1385ms of it.** Eight Layout
+  events fire before LCP, totalling 1390ms, four of them near-whole-document:
+
+  | when | cost | dirty objects |
+  |---|---|---|
+  | 2937ms | **702ms** | 344 / 344 |
+  | 3656ms | **439ms** | 220 / 552 |
+  | 4230ms | **161ms** | 551 / 552 |
+  | 5218ms | **83ms** | 551 / 552 |
+
+  They line up with font arrivals: `RemoteFontLoaded` fires **nine** times,
+  **14 `@font-face` rules** ship, all at `font-display: swap`, and two font
+  files are not even requested until 2938ms and 3091ms. Every arrival
+  re-lays-out a 14,222px document of 1,527 elements. Style recalc across the
+  same window is only 237ms, so this is **layout, not style** — the
+  "styleLayout" label misleads.
+
+  Three hypotheses were tested and **disproved** — do not re-litigate without
+  new evidence:
+
+  - *Scroll reveals gate paint.* Forced `prefers-reduced-motion` (which makes
+    the CSS reveal everything immediately): LCP moved 4768ms → 4616ms.
+  - *The ember canvas competes with load.* Its first `requestAnimationFrame`
+    is at **7741ms** — zero frames before LCP. Innocent.
+  - *Rasterisation is the cost.* 384 RasterTasks before LCP total **15ms**.
+    High count, trivial cost.
 
   **The SEO 92 on `/watch/[id]` is a MEASUREMENT ARTEFACT, not a defect — do
   not "fix" it.** Next 16 streams metadata by default and serves *blocking*
