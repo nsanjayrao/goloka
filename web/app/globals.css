@@ -178,6 +178,10 @@
 
   /* The ONE motion character (prototype easing). */
   --ease-spring: cubic-bezier(0.2, 0.7, 0.2, 1);
+  /* Prāṇa. The āratī lamp and the lit diya breathe on this ONE cycle because
+     DESIGN.md §5.17 says they are the same flame - so it is a token, not a
+     number written twice that a later edit could quietly pull apart. */
+  --breath: 6.5s;
 
   /* shadcn primitive tokens, wired to the brand tokens above so Button /
      Sheet / Skeleton / Badge pick up the midnight palette automatically. */
@@ -595,18 +599,33 @@
     height: 100%;
     margin: 0;
   }
-  /* Fades in over the same 0.32s the panel takes to rise. Without this the
-     scrim and its 6px blur slammed on in one frame while the panel glided -
-     two halves of one gesture moving at different speeds. */
+  /* Transitions, not keyframes, and that is the point: an `animation` only
+     ever plays on the way IN, so the sheet used to open over 0.32s of grace
+     and vanish in a single frame. Asymmetry is the defect, not the speed.
+     `allow-discrete` plus @starting-style lets a native <dialog> animate in
+     BOTH directions with no JS - the browser keeps `display` and the top
+     layer alive for the duration of the exit. Where it is unsupported the
+     sheet simply appears and disappears instantly, which is exactly today's
+     behaviour, so this degrades to what it replaces. */
+  .more-sheet,
+  .more-sheet::backdrop {
+    transition: opacity 0.32s var(--ease-spring), display 0.32s allow-discrete,
+      overlay 0.32s allow-discrete;
+    opacity: 0;
+  }
+  .more-sheet[open],
+  .more-sheet[open]::backdrop {
+    opacity: 1;
+  }
+  @starting-style {
+    .more-sheet[open],
+    .more-sheet[open]::backdrop {
+      opacity: 0;
+    }
+  }
   .more-sheet::backdrop {
     background: rgb(var(--scrim-rgb) / 0.6);
     backdrop-filter: blur(6px);
-    animation: sheet-fade 0.32s var(--ease-spring);
-  }
-  @keyframes sheet-fade {
-    from {
-      opacity: 0;
-    }
   }
   .more-panel {
     position: fixed;
@@ -619,12 +638,17 @@
     flex-direction: column;
     gap: 14px;
     box-shadow: 0 -18px 50px rgb(var(--shadow-rgb) / 0.5);
-    animation: sheet-up 0.32s var(--ease-spring);
+    transition: translate 0.32s var(--ease-spring);
+    translate: 0 0;
   }
-  @keyframes sheet-up {
-    from {
-      transform: translateY(14px);
-      opacity: 0;
+  /* The panel slides as well as fades, on `translate` rather than `transform`
+     so nothing here can clobber a transform elsewhere on the element. */
+  .more-sheet:not([open]) .more-panel {
+    translate: 0 14px;
+  }
+  @starting-style {
+    .more-sheet[open] .more-panel {
+      translate: 0 14px;
     }
   }
   .more-head {
@@ -768,7 +792,7 @@
       color-mix(in srgb, var(--lamp-outer) calc(5% * var(--lamp-mult)), transparent) 58%,
       transparent 75%
     );
-    animation: lamp-light 2.2s ease-out both, breathe 6.5s ease-in-out 2.2s infinite;
+    animation: lamp-light 2.2s ease-out both, breathe var(--breath) ease-in-out 2.2s infinite;
     pointer-events: none;
   }
   .lamp[data-period="mangala"] { --lamp-mult: 0.6; }   /* pre-dawn - dim, the day hasn't broken yet */
@@ -916,21 +940,43 @@
   .hero-progress {
     display: flex;
     gap: 10px;
-    margin-top: 34px;
+    /* Was 34px. The buttons grew from 3px tall to a 24px hit area, so this
+       comes back by half the difference and the hero's spacing is unchanged. */
+    margin-top: 23px;
   }
+  /* 52 x 24 of TARGET, around a 3px rail that looks exactly as it did.
+     WCAG 2.5.8 asks for 24x24 minimum; these were 52x3 and survived only on
+     the spacing exception, which is a thin defence for the control that
+     drives the hero. The bar is now ::before so the button itself can be
+     invisible padding. */
   .hero-progress button {
     width: 52px;
+    height: 24px;
+    position: relative;
+    background: none;
+  }
+  .hero-progress button::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    /* Centred with `top`, never `transform` - @keyframes fill animates
+       transform: scaleX() on the sibling below, and a transform here would be
+       clobbered by it. */
+    top: calc(50% - 1.5px);
     height: 3px;
     border-radius: 2px;
     background: rgb(var(--chandan-rgb) / 0.18);
-    position: relative;
-    overflow: hidden;
     transition: background 0.3s var(--ease-spring);
   }
   .hero-progress button.active::after {
     content: "";
     position: absolute;
-    inset: 0;
+    left: 0;
+    right: 0;
+    top: calc(50% - 1.5px);
+    height: 3px;
+    border-radius: 2px;
     background: var(--marigold);
     transform-origin: left;
     animation: fill 8s linear forwards;
@@ -1217,7 +1263,7 @@
      it is lit, and it stays lit. */
   .diya.lit {
     filter: drop-shadow(0 0 4px rgb(var(--glow-rgb) / 0.5));
-    animation: diya-breath 6.5s ease-in-out infinite;
+    animation: diya-breath var(--breath) ease-in-out infinite;
   }
   /* The flame kindles rather than appearing. Both properties are animatable
      on an SVG path, unlike the fill/stroke ATTRIBUTES this used to swap. */

@@ -120,18 +120,25 @@ export function Hero({ features }: { features: HeroFeature[] }) {
         </Link>
       </div>
 
+      {/* NOT a tablist. These carried role="tablist"/role="tab" with no
+          tabpanel and no aria-controls, so a screen reader announced "tab 1
+          of 3, selected" for controls that, as far as the accessibility tree
+          could tell, controlled nothing - and the ARIA tab pattern also
+          promises arrow-key navigation with a single tab stop, which was
+          never implemented, so all three sat in the tab order anyway.
+          They are what they look like: buttons that choose a slide, with
+          aria-current carrying which one is showing. */}
       {!single && (
         <div
           className={`hero-progress rise d3${paused ? " paused" : ""}`}
-          role="tablist"
+          role="group"
           aria-label={t("featuredAria")}
         >
           {features.map((f, index) => (
             <button
               key={index === active ? `${index}-${generation}` : index}
               type="button"
-              role="tab"
-              aria-selected={index === active}
+              aria-current={index === active ? "true" : undefined}
               aria-label={t("featuredItemAria", { index: index + 1, total: features.length, title: f.title })}
               className={index === active ? "active" : undefined}
               onClick={() => show(index)}
