@@ -3,6 +3,8 @@
 // browser (localStorage), never sent to or read by the server. This is what
 // keeps it consistent with the site's no-user-data stance (see About) while
 // still giving a real returning-visitor convenience.
+import type { Video } from "@/lib/types";
+
 const STORAGE_KEY = "goloka:recently-watched";
 const MAX_ENTRIES = 12;
 
@@ -77,6 +79,37 @@ export function getRecentlyWatchedSnapshot(): string {
  * no watch history yet, so no special-casing is needed where it's used. */
 export function getRecentlyWatchedServerSnapshot(): string {
   return "";
+}
+
+/** A history entry rendered as a Video, so VideoCard/CategoryRow can show it
+ * without a second card component to maintain. Lives here (beside the type it
+ * converts) because BOTH the home shelf and /library need it.
+ *
+ * VideoCard only ever reads title, duration_seconds, thumbnail_url,
+ * youtube_video_id, channel?.title, published_at and view_count - the other
+ * fields are placeholders. published_at/view_count stay null on purpose:
+ * showing a fabricated date or view count would be dishonest, so the card
+ * simply omits them. */
+export function historyEntryToVideo(entry: RecentlyWatchedEntry): Video {
+  return {
+    id: 0,
+    channel_id: 0,
+    category: "",
+    language: null,
+    tags: [],
+    featured: false,
+    created_at: "",
+    description: null,
+    published_at: null,
+    view_count: null,
+    youtube_video_id: entry.youtube_video_id,
+    title: entry.title,
+    thumbnail_url: entry.thumbnail_url,
+    duration_seconds: entry.duration_seconds,
+    channel: entry.channel_title
+      ? { title: entry.channel_title, handle: null, thumbnail_url: null }
+      : null,
+  };
 }
 
 export function parseRecentlyWatchedSnapshot(raw: string): RecentlyWatchedEntry[] {

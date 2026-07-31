@@ -16,8 +16,17 @@
 // result rather than throwing. That matters more than usual here - the table
 // does not exist until the owner runs the SQL, and until then a signed-in
 // devotee simply keeps seeing their local history.
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
+
+import { useSession } from "@/lib/auth";
 import { supabase } from "@/lib/supabase";
-import type { RecentlyWatchedEntry } from "@/lib/recently-watched";
+import {
+  getRecentlyWatchedServerSnapshot,
+  getRecentlyWatchedSnapshot,
+  parseRecentlyWatchedSnapshot,
+  subscribeToRecentlyWatched,
+  type RecentlyWatchedEntry,
+} from "@/lib/recently-watched";
 
 /** Matches MAX_ENTRIES in recently-watched.ts so both halves show the same
  * depth of history, and keeps the read bounded (free-tier discipline). */
@@ -116,4 +125,64 @@ export async function mergeLocalHistory(
       .upsert(rows, { onConflict: "user_id,youtube_video_id", ignoreDuplicates: true });
     if (error) throw error;
   }, undefined);
+}
+
+/** The devotee's watch history from BOTH halves - this device and, when
+ * signed in, their account - unioned newest-first, and the one place the
+ * sign-in merge is performed.
+ *
+ * It exists as a hook rather than living inside ContinueWatchingShelf because
+ * the merge must happen wherever a signed-in devotee lands. While it was in
+ * the shelf, someone who signed in and went straight to /library never had
+ * their on-device history uploaded at all.
+ */
+export function useWatchHistory(): RecentlyWatchedEntry[] {
+  const raw = useSyncExternalStore(
+    subscribeToRecentlyWatched,
+    getRecentlyWatchedSnapshot,
+    getRecentlyWatchedServerSnapshot
+  );
+  const local = useMemo(() => parseRecentlyWatchedSnapshot(raw), [raw]);
+
+  const { session } = useSession();
+  const userId = session?.user.id ?? null;
+  // Keyed by the devotee it was fetched FOR, so signing out needs no
+  // reset-in-effect: the derivation below simply stops matching.
+  const [remote, setRemote] = useState<{ userId: string; entries: RecentlyWatchedEntry[] } | null>(
+    null
+  );
+  const merged = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void (async () => {
+      if (merged.current !== userId) {
+        merged.current = userId;
+        await mergeLocalHistory(userId, local);
+      }
+      const entries = await getRemoteHistory(userId);
+      if (!cancelled) setRemote({ userId, entries });
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // `local` is deliberately not a dependency: it changes on every watch, and
+    // re-merging on each one would be pointless write traffic. The merge is a
+    // one-time reconciliation at sign-in; ongoing watches are already recorded
+    // on both sides by RecordWatch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  return useMemo(() => {
+    const remoteEntries = userId && remote?.userId === userId ? remote.entries : [];
+    // Both are real histories - a devotee may have watched on a laptop this
+    // morning and on this phone last night. Union them, newest wins per video.
+    const byId = new Map<string, RecentlyWatchedEntry>();
+    for (const entry of [...local, ...remoteEntries]) {
+      const seen = byId.get(entry.youtube_video_id);
+      if (!seen || entry.watched_at > seen.watched_at) byId.set(entry.youtube_video_id, entry);
+    }
+    return [...byId.values()].sort((a, b) => b.watched_at - a.watched_at).slice(0, MAX_ENTRIES);
+  }, [local, remote, userId]);
 }

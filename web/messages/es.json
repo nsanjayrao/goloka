@@ -140,7 +140,8 @@
     "notIndexedTitle": "No está en el índice de Goloka",
     "notIndexedMessage": "Este video no está en el índice de Goloka — indexamos un conjunto seleccionado de canales oficiales de ISKCON. Aún puedes verlo en YouTube, o explorar lo que hay aquí.",
     "errorTitle": "Algo salió mal",
-    "errorMessage": "Esta página tropezó al cargar — inténtalo de nuevo, o vuelve al inicio. No se ha perdido nada de lo que hacías."
+    "errorMessage": "Esta página tropezó al cargar — inténtalo de nuevo, o vuelve al inicio. No se ha perdido nada de lo que hacías.",
+    "noHistory": "Aún no has visto nada: lo que reproduzcas aparecerá aquí."
   },
   "buttons": {
     "share": "Compartir",
@@ -224,7 +225,8 @@
     "titleInputAria": "Título para este enlace compartido",
     "shareCollection": "Compartir esta colección",
     "seriesKicker": "Series",
-    "seriesParts": "{count} partes"
+    "seriesParts": "{count} partes",
+    "historyTitle": "Visto recientemente"
   },
   "seriesPage": {
     "kicker": "Serie",
@@ -390,7 +392,7 @@
     "myLibrary": "Mi biblioteca",
     "signedInAs": "Sesión iniciada como {name}: abrir mi biblioteca",
     "continueWithGoogle": "Continuar con Google",
-    "why": "Inicia sesión para conservar tus favoritos, tu lista para más tarde y tu cuenta de japa.",
+    "why": "Inicia sesión y tu práctica te acompaña: tus favoritos, tu lista para más tarde, tu registro de japa y dónde lo dejaste, en todos tus dispositivos.",
     "privacyNote": "Solo inicio de sesión con Google. Con la sesión iniciada, tu historial te acompaña entre dispositivos: solo tuyo y se elimina con tu cuenta. Sin sesión, nunca sale de este dispositivo."
   }
 }

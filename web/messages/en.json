@@ -140,7 +140,8 @@
     "notIndexedTitle": "Not in Goloka's index",
     "notIndexedMessage": "This video isn't in Goloka's index — we index a curated set of official ISKCON channels. You can still watch it on YouTube, or explore what's here.",
     "errorTitle": "Something went wrong",
-    "errorMessage": "This page stumbled loading — try again, or head back home. Nothing you were doing has been lost."
+    "errorMessage": "This page stumbled loading — try again, or head back home. Nothing you were doing has been lost.",
+    "noHistory": "Nothing watched yet — what you play will appear here."
   },
   "buttons": {
     "share": "Share",
@@ -224,7 +225,8 @@
     "titleInputAria": "Title for this shared link",
     "shareCollection": "Share this collection",
     "seriesKicker": "Series",
-    "seriesParts": "{count} parts"
+    "seriesParts": "{count} parts",
+    "historyTitle": "Recently watched"
   },
   "seriesPage": {
     "kicker": "Series",
@@ -390,7 +392,7 @@
     "myLibrary": "My library",
     "signedInAs": "Signed in as {name} — open my library",
     "continueWithGoogle": "Continue with Google",
-    "why": "Sign in to keep your favourites, your watch-later list and your japa count with you.",
+    "why": "Sign in and your practice follows you: your favourites, your watch-later list, your japa record and where you left off, on every device.",
     "privacyNote": "Google sign-in only. Signed in, your history follows you between devices — yours alone, deleted with your account. Signed out, it never leaves this device."
   }
 }

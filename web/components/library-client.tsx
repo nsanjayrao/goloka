@@ -2,7 +2,7 @@
 
 import { Link2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
@@ -16,8 +16,10 @@ import {
   type SharedCollectionSummary,
 } from "@/lib/collections";
 import { formatRelativeDate } from "@/lib/format";
+import { historyEntryToVideo } from "@/lib/recently-watched";
 import { getSavedVideos } from "@/lib/saved";
 import type { Video } from "@/lib/types";
+import { useWatchHistory } from "@/lib/watch-history";
 
 type LibraryData = {
   userId: string;
@@ -161,6 +163,12 @@ export function LibraryClient() {
     };
   }, [session]);
 
+  // Same hook the home shelf uses, so the two can never disagree about what a
+  // devotee has watched - and so the one-time sign-in merge happens even for
+  // someone who signs in and comes straight here.
+  const history = useWatchHistory();
+  const historyVideos = useMemo(() => history.map(historyEntryToVideo), [history]);
+
   const current = session && data?.userId === session.user.id ? data : null;
   const loaded = current !== null;
   const favourites = current?.favourites ?? [];
@@ -199,9 +207,33 @@ export function LibraryClient() {
     );
   }
 
-  const grids: { title: string; videos: Video[]; empty: string }[] = [
-    { title: t("favouritesTitle"), videos: favourites, empty: tEmpty("noFavourites") },
-    { title: t("watchLaterTitle"), videos: watchLater, empty: tEmpty("noWatchLater") },
+  // Watch history is the third thing an account holds (direction B) and the
+  // one a devotee accumulates without ever choosing to - so the library, which
+  // is the page that answers "what does Goloka know about me", has to show it
+  // rather than leave it implied by a shelf on the home page.
+  const grids: { title: string; videos: Video[]; empty: string; shareable: boolean }[] = [
+    {
+      title: t("favouritesTitle"),
+      videos: favourites,
+      empty: tEmpty("noFavourites"),
+      shareable: true,
+    },
+    {
+      title: t("watchLaterTitle"),
+      videos: watchLater,
+      empty: tEmpty("noWatchLater"),
+      shareable: true,
+    },
+    {
+      title: t("historyTitle"),
+      videos: historyVideos,
+      empty: tEmpty("noHistory"),
+      // Deliberately NOT shareable. The two saved lists are things a devotee
+      // chose to gather; history is simply what they happened to watch, and
+      // turning that into a public link by the same one-tap control would be
+      // a very different act wearing the same button.
+      shareable: false,
+    },
   ];
 
   return (
@@ -218,14 +250,14 @@ export function LibraryClient() {
         </button>
       </div>
 
-      {loaded && favourites.length === 0 && watchLater.length === 0 ? (
+      {loaded && favourites.length === 0 && watchLater.length === 0 && historyVideos.length === 0 ? (
         <EmptyState message={tEmpty("libraryEmpty")} />
       ) : (
-        grids.map(({ title, videos, empty }) => (
+        grids.map(({ title, videos, empty, shareable }) => (
           <section key={title} className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-heading text-2xl text-text">{title}</h2>
-              {videos.length > 0 && (
+              {shareable && videos.length > 0 && (
                 <ShareCollectionButton
                   userId={session.user.id}
                   videos={videos}
