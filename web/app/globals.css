@@ -545,7 +545,7 @@
   }
   .site-nav .nav-link {
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
     padding: 6px 0;
     letter-spacing: inherit;
     text-transform: inherit;
@@ -641,7 +641,7 @@
     border-radius: 999px;
     border: 1px solid var(--border);
     color: var(--muted);
-    transition: color 0.25s, border-color 0.25s;
+    transition: color 0.25s var(--ease-spring), border-color 0.25s var(--ease-spring);
   }
   .more-close:hover {
     color: var(--flame);
@@ -657,7 +657,7 @@
     border-radius: 12px;
     color: var(--text);
     font-size: 15px;
-    transition: background 0.25s, color 0.25s;
+    transition: background 0.25s var(--ease-spring), color 0.25s var(--ease-spring);
   }
   .more-link:hover {
     background: var(--surface-2);
@@ -686,7 +686,7 @@
     border: 1px solid rgb(var(--chandan-rgb) / 0.22);
     padding: 9px 18px;
     border-radius: 999px;
-    transition: border-color 0.25s, color 0.25s, box-shadow 0.25s;
+    transition: border-color 0.25s var(--ease-spring), color 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-spring);
   }
   .search-pill svg {
     width: 14px;
@@ -817,7 +817,7 @@
     color: var(--muted);
     text-transform: none;
     letter-spacing: 0.02em;
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .eyebrow:hover .eyebrow-hint,
   .eyebrow:focus-visible .eyebrow-hint {
@@ -870,8 +870,8 @@
     font-size: 15px;
     letter-spacing: 0.02em;
     border: 1px solid transparent;
-    transition: transform 0.25s, box-shadow 0.25s, background 0.25s, border-color 0.25s,
-      color 0.25s;
+    transition: transform 0.25s var(--ease-spring), box-shadow 0.25s var(--ease-spring), background 0.25s var(--ease-spring), border-color 0.25s var(--ease-spring),
+      color 0.25s var(--ease-spring);
   }
   .btn.gold {
     background: var(--marigold);
@@ -925,7 +925,7 @@
     background: rgb(var(--chandan-rgb) / 0.18);
     position: relative;
     overflow: hidden;
-    transition: background 0.3s;
+    transition: background 0.3s var(--ease-spring);
   }
   .hero-progress button.active::after {
     content: "";
@@ -996,7 +996,7 @@
     background: linear-gradient(120deg, rgb(var(--live-rgb) / 0.07), rgb(var(--shyama-rgb) / 0.6));
     border-radius: 14px;
     padding: 12px 16px;
-    transition: border-color 0.3s, transform 0.3s, background 0.3s;
+    transition: border-color 0.3s var(--ease-spring), transform 0.3s var(--ease-spring), background 0.3s var(--ease-spring);
   }
   .live-card:hover {
     border-color: rgb(var(--live-rgb) / 0.55);
@@ -1053,7 +1053,7 @@
     aspect-ratio: 16 / 10;
     display: flex;
     align-items: flex-end;
-    transition: border-color 0.35s, box-shadow 0.35s;
+    transition: border-color 0.35s var(--ease-spring), box-shadow 0.35s var(--ease-spring);
   }
   .split .feature .bg {
     position: absolute;
@@ -1061,7 +1061,7 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: transform 0.6s;
+    transition: transform 0.6s var(--ease-spring);
   }
   .split .feature::after {
     content: "";
@@ -1118,7 +1118,7 @@
     border-radius: 14px;
     padding: 10px;
     background: rgb(var(--shyama-rgb) / 0.4);
-    transition: border-color 0.3s, transform 0.3s;
+    transition: border-color 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
     flex: 1;
   }
   .mini:hover {
@@ -1293,7 +1293,7 @@
     color: var(--accent);
     white-space: nowrap;
     border-bottom: 1px solid transparent;
-    transition: border-color 0.25s;
+    transition: border-color 0.25s var(--ease-spring);
     padding-bottom: 2px;
   }
   .view-all:hover {
@@ -1344,7 +1344,7 @@
     align-items: center;
     justify-content: center;
     color: var(--flame);
-    transition: background 0.25s, transform 0.25s, opacity 0.3s;
+    transition: background 0.25s var(--ease-spring), transform 0.25s var(--ease-spring), opacity 0.3s var(--ease-spring);
     opacity: 0;
   }
   .row-arrow svg {
@@ -1392,8 +1392,8 @@
     background: var(--shyama);
     aspect-ratio: 16 / 9;
     border: 1px solid rgb(var(--chandan-rgb) / 0.06);
-    transition: transform 0.35s var(--ease-spring), border-color 0.35s,
-      box-shadow 0.35s;
+    transition: transform 0.35s var(--ease-spring), border-color 0.35s var(--ease-spring),
+      box-shadow 0.35s var(--ease-spring);
   }
   .thumb img {
     width: 100%;
@@ -1401,7 +1401,7 @@
     object-fit: cover;
     /* opacity included so the Thumbnail fade-in keeps working (its Tailwind
        transition utility loses to this selector's higher specificity). */
-    transition: transform 0.5s, opacity 0.3s ease-out;
+    transition: transform 0.5s var(--ease-spring), opacity 0.3s ease-out;
   }
   .thumb .play {
     position: absolute;
@@ -1410,7 +1410,7 @@
     place-items: center;
     background: rgb(var(--scrim-rgb) / 0.28);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s var(--ease-spring);
   }
   .thumb .play span {
     width: 52px;
@@ -1527,7 +1527,7 @@
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .card:hover h3,
   .card:focus-visible h3 {
@@ -1663,7 +1663,7 @@
     border-radius: 16px;
     padding: 26px 20px 22px;
     background: linear-gradient(160deg, var(--shyama) 0%, var(--midnight) 100%);
-    transition: border-color 0.3s, transform 0.3s;
+    transition: border-color 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
     overflow: hidden;
   }
   .cat::after {
@@ -1673,7 +1673,7 @@
     height: 2px;
     background: linear-gradient(90deg, transparent, var(--marigold), transparent);
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity 0.3s var(--ease-spring);
   }
   .cat:hover {
     border-color: var(--hairline);
@@ -1688,7 +1688,7 @@
     height: 34px;
     margin-bottom: 16px;
     color: var(--marigold);
-    transition: color 0.3s, transform 0.3s;
+    transition: color 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
     overflow: visible;
   }
   .cat:hover .icon {
@@ -1780,7 +1780,7 @@
   }
   .foot-links a {
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .foot-links a:hover {
     color: var(--flame);
@@ -1817,7 +1817,7 @@
   }
   .lang-link {
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .lang-link:hover {
     color: var(--flame);
@@ -1837,7 +1837,7 @@
     border-top: 1px solid var(--hairline);
     border-bottom: 1px solid var(--hairline);
     background: linear-gradient(120deg, rgb(var(--glow-rgb) / 0.05), transparent 60%);
-    transition: background 0.3s, border-color 0.3s;
+    transition: background 0.3s var(--ease-spring), border-color 0.3s var(--ease-spring);
   }
   .cal-strip.is-today {
     border-color: var(--flame);
@@ -1873,7 +1873,7 @@
     font-weight: 400;
     font-size: clamp(16px, 2vw, 20px);
     color: var(--chandan);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .cal-strip-main:hover .cal-strip-name,
   .cal-strip-main:focus-visible .cal-strip-name {
@@ -1889,7 +1889,7 @@
     letter-spacing: 0.1em;
     text-transform: uppercase;
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .cal-strip-state:hover,
   .cal-strip-state:focus-visible {
@@ -1914,7 +1914,7 @@
     font-size: 12px;
     letter-spacing: 0.06em;
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .cal-strip-ics:hover,
   .cal-strip-ics:focus-visible {
@@ -1948,7 +1948,7 @@
     border: 1px solid var(--hairline);
     border-radius: 16px;
     background: linear-gradient(160deg, var(--shyama) 0%, var(--midnight) 100%);
-    transition: border-color 0.3s, transform 0.3s;
+    transition: border-color 0.3s var(--ease-spring), transform 0.3s var(--ease-spring);
   }
   .doorway:hover {
     border-color: var(--accent);
@@ -1962,7 +1962,7 @@
   .doorway-hint {
     font-size: 13px;
     color: var(--muted);
-    transition: color 0.25s;
+    transition: color 0.25s var(--ease-spring);
   }
   .doorway:hover .doorway-hint {
     color: var(--flame);
@@ -2563,4 +2563,10 @@
 :root[data-theme="aruna"] .quote::before,
 :root[data-theme="aruna"] .cat .icon {
   color: var(--gold-ink);
+}
+/* The lit diya's flame (components/icons/diya.tsx) is a fill, not a color, so
+   it needs its own token rather than riding the rule above. Undefined under
+   Midnight, where the component's own fallback keeps it marigold. */
+:root[data-theme="aruna"] {
+  --flame-ink: var(--gold-ink);
 }

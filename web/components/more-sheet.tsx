@@ -3,7 +3,7 @@
 
 import { X } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 
 import { Link, usePathname } from "@/i18n/navigation";
 
@@ -42,6 +42,10 @@ export function MoreSheet({
   const tSheet = useTranslations("moreSheet");
   const dialog = useRef<HTMLDialogElement>(null);
   const pathname = usePathname();
+  // useId, because this component mounts TWICE (header trigger + mobile tab),
+  // so a hard-coded id would collide and aria-labelledby would resolve to
+  // whichever came first in the document.
+  const titleId = useId();
   // Mirrors the dialog's own open/closed state into React. The <dialog>
   // element handles Escape and the backdrop itself WITHOUT telling React, so
   // `onClose` is the only reliable way to learn it shut - without it the
@@ -82,7 +86,10 @@ export function MoreSheet({
 
       <dialog
         ref={dialog}
-        aria-label={t("moreAria")}
+        // Named by the visible <h2>, not by a separate aria-label. The label
+        // said "More pages" while the heading on screen said "More" - two
+        // different names for one thing, and the one nobody could see won.
+        aria-labelledby={titleId}
         onClose={() => setOpen(false)}
         className="more-sheet"
         // The dialog element itself fills the viewport; its backdrop is the
@@ -94,7 +101,9 @@ export function MoreSheet({
       >
         <div className="more-panel">
           <div className="more-head">
-            <h2 className="font-heading text-[22px] text-text">{tSheet("title")}</h2>
+            <h2 id={titleId} className="font-heading text-[22px] text-text">
+              {tSheet("title")}
+            </h2>
             <button
               type="button"
               onClick={() => dialog.current?.close()}

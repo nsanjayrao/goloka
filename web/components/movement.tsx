@@ -14,10 +14,21 @@
 // Server component - it renders a heading and passes children straight
 // through (the RSC children-as-props pattern the rest of the app uses).
 export function Movement({ label, children }: { label: string; children: React.ReactNode }) {
+  // aria-labelledby, NOT aria-label. The label is already on screen, so
+  // aria-label duplicated it: a screen reader announced "Today at the temple,
+  // region" and then read "Today at the temple" again as the section's first
+  // content. Pointing at the visible element names the region once, and keeps
+  // the accessible name and the visible text from ever drifting apart.
+  // The id is derived from the label rather than useId() so this stays a
+  // server component - three movements, three stable distinct ids.
+  const labelId = `movement-${label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "")}`;
+
   return (
-    <section className="movement" aria-label={label}>
+    <section className="movement" aria-labelledby={labelId}>
       <div className="movement-head gutter">
-        <span className="movement-label">{label}</span>
+        <span className="movement-label" id={labelId}>
+          {label}
+        </span>
         <span className="movement-rule" aria-hidden="true" />
       </div>
       {/* The body wrapper exists so the spacing rule in globals.css can key

@@ -19,7 +19,12 @@ export function Diya({ lit, className }: { lit: boolean; className?: string }) {
       <path
         d="M8 1.6c1.9 2.1 2.9 3.6 2.9 5a2.9 2.9 0 1 1-5.8 0c0-1.4 1-2.9 2.9-5z"
         className="diya-flame"
-        fill="var(--marigold)"
+        // --flame-ink, falling back to marigold: this is the app's signature
+        // piece of gold artwork, and raw marigold measures 1.97:1 on Aruṇa's
+        // candana ground - it would wash out entirely if that theme were ever
+        // switched on. Every other gold ornament (§5.8) already deepens via
+        // --gold-ink there; the diya was the one that didn't.
+        fill="var(--flame-ink, var(--marigold))"
         stroke="currentColor"
         strokeWidth="1.2"
         strokeLinejoin="round"
