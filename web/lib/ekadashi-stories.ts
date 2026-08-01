@@ -29,10 +29,19 @@ import { distinctEkadashis, ekadashiSlug } from "@/lib/vaishnava-calendar";
 //
 // Two things changed as a result. `kind` now records what the source actually
 // is, so a `glories` day renders the māhātmya's own comparisons instead of a
-// fabricated plot. And WITHDRAWN below holds the ekādaśīs whose invented
-// stories were pulled from the site and are being rewritten from source -
-// they render no page at all, and /calendar falls back to /topic/ekadashi
-// for them, which is worse than a real story and far better than a false one.
+// fabricated plot - and those turned out to be the BETTER panels: one Tulasī
+// leaf outweighing a treasury, thirty generations delivered by one fast, an
+// axe taken to a full-grown forest of sinful deeds. And WITHDRAWN below is
+// where a fabrication goes the moment it is found - unpublished, not left
+// standing while it is fixed. It is empty again; all four were rewritten
+// from source the same day.
+//
+// AND A CORRECTION TO THE CORRECTION. The audit that found this compared
+// ASCII proper nouns exactly, and so reported Putradā as fabricated too -
+// it searched for "Suketuman"/"Saibya" against a source that spells them
+// "Suketumaan"/"Shaibyaa". That story was right all along and has been
+// restored. Transliteration varies wildly across these texts; fold doubled
+// vowels and sh/s, th/t, v/w before concluding a name is absent.
 //
 // ART. Panels carry `art: true` when an illustration exists at
 // public/ekadashi/<slug>/panel-N.webp - the path is DERIVED from position, so
@@ -290,6 +299,45 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
+    slug: "pasankusa",
+    name: "Pāśāṅkuśā Ekādaśī",
+    occasion: "Āśvina, śukla-pakṣa",
+    purana: "Brahma-vaivarta Purāṇa",
+    kind: "glories",
+    sourceSlug: "pasankusa-ekadasi",
+    summary:
+      "No story is told for this day — only what one fast outweighs, and how far back through a family its mercy reaches.",
+    aliases: ["Papankusha", "Pashankusha", "Pasankusha"],
+    panels: [
+      {
+        caption:
+          "Yudhiṣṭhira asked what falls in the bright fortnight of Āśvina. Kṛṣṇa named it Pāśāṅkuśā — some call it Pāpāṅkuśā, the goad that drives sin — and said the Lord to worship on it is Padmanābha, from whose navel the lotus grew.",
+      },
+      {
+        caption:
+          "A thousand horse sacrifices. A hundred Rājasūya sacrifices. Set against this one day of fasting, Kṛṣṇa said, they do not amount to a sixteenth part of it. There is no piety in the world equal to the piety of an ekādaśī kept.",
+      },
+      {
+        caption:
+          "And it does not stop at the one who keeps it. Ten generations of his mother's family, ten of his father's, ten of his wife's — thirty lines of the dead, delivered by one living person who went without food for a day.",
+        span: "full",
+      },
+      {
+        caption:
+          "However fallen a soul may be, Kṛṣṇa said, if he takes shelter at the feet of Hari — who is expert at delivering the fallen — hell has no claim on him. Then a warning in the same breath: the Vaiṣṇava who criticises Śiva and the Śaivite who criticises Viṣṇu go there alike.",
+      },
+      {
+        caption:
+          "Anyone who spends his day without a single pious act is a dead man who happens to be breathing. His breath, Kṛṣṇa said, is the bellows of a blacksmith — moving air, and nothing living in it.",
+      },
+      {
+        caption:
+          "Dig a well. Sink a lake for other people to drink from. Give away gold, sesame, land, a cow, grain, water, an umbrella, a pair of shoes. And know which way round it runs: the direct fruit of this day is devotional service to Kṛṣṇa, and every good thing that comes with it is only the indirect one.",
+        span: "full",
+      },
+    ],
+  },
+  {
     slug: "rama",
     name: "Rāmā Ekādaśī",
     occasion: "Kārtika, kṛṣṇa-pakṣa",
@@ -435,6 +483,45 @@ const STORIES: EkadashiStory[] = [
       {
         caption:
           "Something in him turned. He went home, was received by his father, ruled well, and gave the kingdom to his own son in time. Saphalā means fruitful — and the fruit came to a man who had not even planted it on purpose.",
+      },
+    ],
+  },
+  {
+    slug: "putrada",
+    name: "Putradā Ekādaśī",
+    occasion: "Pauṣa, śukla-pakṣa",
+    purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "putrada-ekadasi",
+    summary:
+      "A king rides into the forest meaning never to come back, and finds ten sages bathing at a lotus lake.",
+    aliases: ["Pausha Putrada", "Pausa Putrada"],
+    panels: [
+      {
+        caption:
+          "King Suketumān of Bhadrāvatī and Queen Śaibyā had no child. The grief had a particular shape: without a son there would be no one to offer tarpaṇa, so their own forefathers were said to be anxious too — the sorrow ran backwards as well as forwards.",
+      },
+      {
+        caption:
+          "Nothing consoled him. Not his ministers, not his friends, not his elephants and horses. The thought of ending his own life came and was put away again, because he knew where it led. So he mounted his horse and rode alone into the deep forest, and told nobody — not even the priests of his palace — where he had gone.",
+      },
+      {
+        caption:
+          "He wandered among fig and bel and jackfruit and śāla, past deer and tigers and boar, past cow elephants with their calves close beside them. Everything in that forest had its young with it. By midday he was lost, and hungry, and asking what sin of his this was.",
+        span: "full",
+      },
+      {
+        caption:
+          "Then he came on a pond like Lake Mānasarovara, lotuses open to the sun, swans and cranes on the water, āśramas along the shore. His right arm and right eye began to quiver — the old sign that something auspicious is about to happen.",
+      },
+      {
+        caption:
+          "Ten sages sat at the water chanting on their beads. They were the Viśvadevas, come there to bathe; they had not come for him at all. When he had bowed and praised them, they asked what was on his heart — and told him that today, as it happened, was Putradā Ekādaśī.",
+      },
+      {
+        caption:
+          "He fasted there among them and went home. A son was born to Bhadrāvatī who grew into everything the kingdom needed. The king had ridden out to die, and was met on the road by a day.",
+        span: "full",
       },
     ],
   },
@@ -617,6 +704,44 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
+    slug: "varuthini",
+    name: "Varūthinī Ekādaśī",
+    occasion: "Vaiśākha, kṛṣṇa-pakṣa",
+    purana: "Bhaviṣya Purāṇa",
+    kind: "glories",
+    sourceSlug: "varuthini-ekadasi",
+    summary:
+      "No story is told for this day — only a ladder of charities, each outdone by the next, and all of them by one fast.",
+    panels: [
+      {
+        caption:
+          "Varūthinī means armour. Kṛṣṇa told Yudhiṣṭhira that a complete fast on this day removes sin, gives happiness that does not stop, and makes even an unfortunate woman fortunate — enjoyment in this life and liberation at the end of it.",
+      },
+      {
+        caption:
+          "Two names are given, and no stories with them. King Māndhātā was liberated by observing this day. Dhundhumāra of the Ikṣvāku line was freed by it from the leprosy Lord Śiva's curse had laid on him. That is all the Purāṇa says of either man.",
+      },
+      {
+        caption:
+          "Then the ladder. Better than giving horses is giving elephants; better than elephants, land; better than land, sesame seeds; better than sesame, gold. Better than gold is giving grain — because forefathers, devas and human beings are all alike satisfied by eating. There is no greater charity, past, present or future.",
+        span: "full",
+      },
+      {
+        caption:
+          "And a hard turn. A man who lives off his daughter's wealth, or sells her, or takes money from the man he gave her to, becomes a cat in his next life. But one who gives a daughter in marriage with her dowry earns merit that Citragupta himself cannot write down.",
+      },
+      {
+        caption:
+          "The fast is three days wide. On the tenth: no bell-metal plates, no urad dāl or lentils or chickpeas, no honey, no eating twice, no eating in another's house. On the eleventh: no gambling, no daytime sleep, no rumour, no faultfinding, no anger, no lying. On the twelfth, the restraint is loosened slowly rather than dropped.",
+      },
+      {
+        caption:
+          "Every one of those charities — the gold, the grain, the daughter given well — is obtained by one who simply fasts on Varūthinī. And merely to hear this said, Kṛṣṇa told him, carries the merit of giving away a thousand cows.",
+        span: "full",
+      },
+    ],
+  },
+  {
     slug: "mohini",
     name: "Mohinī Ekādaśī",
     occasion: "Vaiśākha, śukla-pakṣa",
@@ -643,6 +768,45 @@ const STORIES: EkadashiStory[] = [
         caption:
           "Observe Mohinī Ekādaśī. He did, and everything he had done fell away from him. The day is named for a form the Lord took to bewilder — and it is kept by people who need to be un-bewildered.",
         span: "full",
+      },
+    ],
+  },
+  {
+    slug: "apara",
+    name: "Aparā Ekādaśī",
+    occasion: "Jyeṣṭha, kṛṣṇa-pakṣa",
+    purana: "Brahmāṇḍa Purāṇa",
+    kind: "glories",
+    sourceSlug: "apara-ekadasi",
+    summary:
+      "No story is told for this day — only a list of who is forgiven, and four images of how thoroughly.",
+    aliases: ["Achala", "Achhala"],
+    panels: [
+      {
+        caption:
+          "Aparā means limitless. Kṛṣṇa told Yudhiṣṭhira that one who fasts on it becomes known throughout the universe, and that it erases even the killing of a brāhmaṇa, of a cow, of a child in the womb.",
+      },
+      {
+        caption:
+          "Then the list turns to smaller, more ordinary crimes, and is longer for them. The man who bears false witness. Who praises another sarcastically. Who cheats at the scales. Who invents his own scripture. The charlatan astrologer, the cheating accountant, the physician who is not one. All of them, the Purāṇa says, are bound for hell — and all of them are freed by this day.",
+        span: "full",
+      },
+      {
+        caption:
+          "The soldier who runs from the battlefield goes to a ferocious hell; even he is freed. And the worst named here is not a murderer at all — it is the student who takes a full spiritual education from his guru and then blasphemes him. Even that one, Kṛṣṇa said. Even him.",
+      },
+      {
+        caption:
+          "What it equals, laid end to end: bathing three times a day at Puṣkara through Kārtika; at Prayāga in Māgha; serving Śiva at Vārāṇasī on Śiva-rātri; offering to the forefathers at Gayā; darśana at Kedāranātha and at Badrīnātha; Kurukṣetra under a solar eclipse, with cows and elephants and gold given away there.",
+      },
+      {
+        caption:
+          "Then the Purāṇa stops arguing and starts seeing. This day is an axe to a full-grown forest of sinful deeds. A forest fire, with the sins as kindling. The sun coming up in front of everything done in the dark. A lion, and impiety the meek deer it is walking toward.",
+        span: "full",
+      },
+      {
+        caption:
+          "And the one who lets it pass? Born again as one bubble among millions on the water, or as an ant among all the species there are. So worship Trivikrama, who crossed the worlds in three steps, and keep the day.",
       },
     ],
   },
@@ -716,30 +880,10 @@ const STORIES: EkadashiStory[] = [
  * from a fact rather than from the same guess twice. Empty this array by
  * rewriting them, never by deleting the check. */
 export const WITHDRAWN: { slug: string; name: string; sourceIs: string }[] = [
-  {
-    slug: "pasankusa",
-    name: "Pāśāṅkuśā Ekādaśī",
-    sourceIs:
-      "Glorification. No hunter named Krodhana, no sage Aṅgirā, no Vindhya hills - those were invented.",
-  },
-  {
-    slug: "putrada",
-    name: "Putradā Ekādaśī",
-    sourceIs:
-      "Glorification. No King Suketumān, no Queen Śaibyā, no Bhadrāvatī in the fetched text.",
-  },
-  {
-    slug: "varuthini",
-    name: "Varūthinī Ekādaśī",
-    sourceIs:
-      "Glorification, naming King Māndhātā in a single clause ('was liberated') and Dhundhumāra's leprosy. The bear, the gnawed foot and the Lord's disc were built on top of that clause.",
-  },
-  {
-    slug: "apara",
-    name: "Aparā Ekādaśī",
-    sourceIs:
-      "Glorification - a list of sins erased, including false witness and fleeing the battlefield. No King Mahīdhvaja, no ghost in a pipal tree, no sage Dhaumya.",
-  },
+  // Empty as of 2026-08-01: all four withdrawn stories have been rewritten
+  // from source, and Putradā - which the first audit flagged wrongly - has
+  // been restored. Kept, with its tests, because the next fabrication
+  // should land here rather than stay on the site.
 ];
 
 const BY_SLUG = new Map(STORIES.map((story) => [story.slug, story]));
