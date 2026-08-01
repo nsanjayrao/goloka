@@ -16,6 +16,19 @@ export function ContinueWatchingShelf() {
   // see lib/watch-history.ts.
   const history = useWatchHistory();
   const videos = useMemo(() => history.map(historyEntryToVideo), [history]);
+  // The visible half of resume: without this the row looks identical to any
+  // other, and a devotee only discovers the app remembered after pressing
+  // play. Unfiltered by the resume thresholds on purpose - the BAR is honest
+  // about five seconds watched even where resuming from there would not be.
+  const resumeBy = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of history) {
+      if (e.position_seconds != null && e.position_seconds > 0) {
+        map[e.youtube_video_id] = e.position_seconds;
+      }
+    }
+    return map;
+  }, [history]);
 
   // Rendering nothing at all (not even the FadeUp wrapper) when empty matters:
   // the home page lays sections out with `flex gap-10`, so a wrapper with null
@@ -24,7 +37,7 @@ export function ContinueWatchingShelf() {
   if (videos.length === 0) return null;
   return (
     <FadeUp>
-      <CategoryRow title={t("continueWatching")} videos={videos} />
+      <CategoryRow title={t("continueWatching")} videos={videos} resumeBy={resumeBy} />
     </FadeUp>
   );
 }

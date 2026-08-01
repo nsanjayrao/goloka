@@ -192,7 +192,8 @@
     "all": "All"
   },
   "videoCard": {
-    "live": "Live"
+    "live": "Live",
+    "minLeft": "{minutes} min left"
   },
   "splitFeature": {
     "featuredTag": "Featured"

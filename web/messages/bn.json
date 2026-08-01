@@ -192,7 +192,8 @@
     "all": "সব"
   },
   "videoCard": {
-    "live": "সরাসরি"
+    "live": "সরাসরি",
+    "minLeft": "{minutes} মিনিট বাকি"
   },
   "splitFeature": {
     "featuredTag": "নির্বাচিত"

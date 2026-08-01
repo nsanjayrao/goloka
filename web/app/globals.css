@@ -1618,6 +1618,26 @@
   .card:hover .play span {
     transform: scale(1);
   }
+  /* How far into a lecture a devotee already is, on the foot of the thumb.
+     Deliberately a hairline, not a bar: this is a quiet answer to "where was
+     I", not a completion metric, and DESIGN.md §9's restraint applies to
+     progress indicators as much as to ornament. It sits ON the artwork, so
+     the track uses --scrim (pinned dark in every theme) rather than --glass. */
+  .card-progress {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 3px;
+    background: rgb(var(--scrim-rgb) / 0.55);
+    border-radius: 0 0 var(--radius-card) var(--radius-card);
+    overflow: hidden;
+  }
+  .card-progress > span {
+    display: block;
+    height: 100%;
+    background: var(--marigold);
+  }
   .dur {
     position: absolute;
     right: 8px;

@@ -13,6 +13,7 @@ export function CategoryRow({
   title,
   kicker,
   href,
+  resumeBy,
 }: {
   /** The category this row links its "View all →" to. Omit it (e.g. the
       curated "Featured" shelf, which has no browse page) and the link is
@@ -25,6 +26,10 @@ export function CategoryRow({
   kicker?: string;
   /** Overrides where "View all →" points - used by topic shelves. */
   href?: string;
+  /** Seconds watched, keyed by youtube_video_id. Supplied only by Continue
+   * Watching and the library's history grid; every other row omits it and its
+   * cards render exactly as before. */
+  resumeBy?: Record<string, number>;
 }) {
   if (videos.length === 0) return null;
 
@@ -39,7 +44,11 @@ export function CategoryRow({
         {/* Keyed by the YouTube id, not the row id: Continue Watching
             entries are synthesized with id 0, which would collide. */}
         {videos.map((video) => (
-          <VideoCard key={video.youtube_video_id} video={video} />
+          <VideoCard
+            key={video.youtube_video_id}
+            video={video}
+            resumeAt={resumeBy?.[video.youtube_video_id]}
+          />
         ))}
       </Shelf>
     </section>

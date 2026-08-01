@@ -168,6 +168,17 @@ export function LibraryClient() {
   // someone who signs in and comes straight here.
   const history = useWatchHistory();
   const historyVideos = useMemo(() => history.map(historyEntryToVideo), [history]);
+  // Only the history grid carries progress - the two saved lists are things a
+  // devotee chose to keep, not things they are partway through.
+  const resumeBy = useMemo(() => {
+    const map: Record<string, number> = {};
+    for (const e of history) {
+      if (e.position_seconds != null && e.position_seconds > 0) {
+        map[e.youtube_video_id] = e.position_seconds;
+      }
+    }
+    return map;
+  }, [history]);
 
   const current = session && data?.userId === session.user.id ? data : null;
   const loaded = current !== null;
@@ -211,7 +222,13 @@ export function LibraryClient() {
   // one a devotee accumulates without ever choosing to - so the library, which
   // is the page that answers "what does Goloka know about me", has to show it
   // rather than leave it implied by a shelf on the home page.
-  const grids: { title: string; videos: Video[]; empty: string; shareable: boolean }[] = [
+  const grids: {
+    title: string;
+    videos: Video[];
+    empty: string;
+    shareable: boolean;
+    withProgress?: boolean;
+  }[] = [
     {
       title: t("favouritesTitle"),
       videos: favourites,
@@ -228,6 +245,7 @@ export function LibraryClient() {
       title: t("historyTitle"),
       videos: historyVideos,
       empty: tEmpty("noHistory"),
+      withProgress: true,
       // Deliberately NOT shareable. The two saved lists are things a devotee
       // chose to gather; history is simply what they happened to watch, and
       // turning that into a public link by the same one-tap control would be
@@ -253,7 +271,7 @@ export function LibraryClient() {
       {loaded && favourites.length === 0 && watchLater.length === 0 && historyVideos.length === 0 ? (
         <EmptyState message={tEmpty("libraryEmpty")} />
       ) : (
-        grids.map(({ title, videos, empty, shareable }) => (
+        grids.map(({ title, videos, empty, shareable, withProgress }) => (
           <section key={title} className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h2 className="font-heading text-2xl text-text">{title}</h2>
@@ -270,7 +288,11 @@ export function LibraryClient() {
             ) : (
               <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
                 {videos.map((video) => (
-                  <VideoCard key={video.youtube_video_id} video={video} />
+                  <VideoCard
+                    key={video.youtube_video_id}
+                    video={video}
+                    resumeAt={withProgress ? resumeBy[video.youtube_video_id] : undefined}
+                  />
                 ))}
               </div>
             )}
