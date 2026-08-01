@@ -163,27 +163,33 @@ const STORIES: EkadashiStory[] = [
       {
         caption:
           "Yudhiṣṭhira asked which ekādaśī falls in the dark fortnight of Śrāvaṇa, and what it gives. Kṛṣṇa answered by repeating an older conversation still: what Brahmā, seated on his lotus, once told his son Nārada. No story follows. What follows is a reckoning.",
+        art: true,
       },
       {
         caption:
           "Merely to hear these glories, Brahmā said, carries the merit of a horse sacrifice. To worship the four-armed Lord — conch, disc, club and lotus — on this day gives more than bathing in the Gaṅgā at Kāśī, more than Naimiṣāraṇya, more than Puṣkara, the one place where Brahmā himself is worshipped.",
+        art: true,
       },
       {
         caption:
           "More, He said, than the darśana of Kedāranātha in the Himālayas. More than bathing at Kurukṣetra during a solar eclipse. More than giving away the entire earth with its forests and its oceans. The list goes on being outweighed, and the thing outweighing it is one day of fasting.",
+        art: true,
         span: "full",
       },
       {
         caption:
           "Then the measure narrows to something a poor devotee can actually hold. A single leaf of Tulasī offered to the Lord pleases Him more than pearls, rubies, topaz, diamonds, lapis lazuli, sapphires and coral together. One leaf, against the contents of a treasury.",
+        art: true,
       },
       {
         caption:
           "To see Tulasī-devī on this day removes sin; to touch her and pray removes disease. One who waters her need never fear Yamarāja. One who plants her will live with Kṛṣṇa. Not even Citragupta, who keeps the record of every deed, can total the merit of a ghee lamp offered before her.",
+        art: true,
       },
       {
         caption:
           "And this day, Brahmā said, erases even the killing of a brāhmaṇa. Then he added the warning that belongs with it: no one may plan on that. To sin knowingly, intending to be cleared afterwards, is an abomination. The mercy is real, and it is not a loophole.",
+        art: true,
         span: "full",
       },
     ],
