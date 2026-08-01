@@ -289,7 +289,11 @@
     },
     "browse": {
       "h1": "Browse",
-      "byLeader": "Browse by Spiritual Leader →"
+      "byLeader": "Browse by Spiritual Leader →",
+      "kicker": "From the whole library",
+      "newest": "Newest additions",
+      "byTheme": "By theme",
+      "byThemeBlurb": "Categories say what a video is. These say what it is about — collections gathered across every channel."
     },
     "leaders": {
       "h1": "Spiritual Leaders",

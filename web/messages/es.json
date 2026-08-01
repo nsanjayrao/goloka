@@ -289,7 +289,11 @@
     },
     "browse": {
       "h1": "Explorar",
-      "byLeader": "Explorar por maestro espiritual →"
+      "byLeader": "Explorar por maestro espiritual →",
+      "kicker": "De toda la biblioteca",
+      "newest": "Novedades",
+      "byTheme": "Por tema",
+      "byThemeBlurb": "Las categorías dicen qué es un video. Estas dicen de qué trata: colecciones reunidas de todos los canales."
     },
     "leaders": {
       "h1": "Maestros espirituales",
