@@ -31,4 +31,12 @@ export const SPEAKER_HANDLES = [
   "@hdgoswami",
   "@nitaisevinimatajiofficial",
   "@punyamkrsnakathamritam",
+  // Telugu teachers (added 2026-08-01 with the Telugu channels). Only the
+  // two individuals NEW to the catalogue are here: the sixth Telugu channel,
+  // @gaurangadarshandas.telugu, is Gauranga Darshan Das - who already appears
+  // above as @gaurangadas_official - and listing both would show one teacher
+  // twice in a directory of people. If you'd rather the directory be per
+  // CHANNEL than per PERSON, add it; that's an editorial call, not a bug.
+  "@chaitanyakrishnadasa",
+  "@nityamuktadasa1524",
 ];

@@ -4,10 +4,10 @@ import { defineRouting } from "next-intl/routing";
 // reflects them. `localePrefix: "as-needed"` is the load-bearing choice: the
 // default locale ("en") gets NO prefix at all, so every existing English
 // URL (/, /browse, /watch/[id], every share link already in the wild) keeps
-// working byte-for-byte. Only the four translated locales are prefixed
-// (/hi, /bn, /ru, /es).
+// working byte-for-byte. Only the five translated locales are prefixed
+// (/hi, /bn, /ru, /es, /te).
 export const routing = defineRouting({
-  locales: ["en", "hi", "bn", "ru", "es"],
+  locales: ["en", "hi", "bn", "ru", "es", "te"],
   defaultLocale: "en",
   localePrefix: "as-needed",
   // Never auto-redirect based on the browser's Accept-Language header.
@@ -29,4 +29,5 @@ export const LOCALE_LABELS: Record<AppLocale, string> = {
   bn: "বাংলা",
   ru: "Русский",
   es: "Español",
+  te: "తెలుగు",
 };
