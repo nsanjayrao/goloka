@@ -429,19 +429,23 @@ const STORIES: EkadashiStory[] = [
       {
         caption:
           "The demon Mura had driven the devas out of heaven. He could not be killed by any weapon in the hands of anyone awake — and he had made very sure of it.",
+        art: true,
       },
       {
         caption:
           "Lord Viṣṇu fought him for a long age, and then withdrew into a cave on Badarikāśrama to sleep. Mura followed, raised his weapon over the sleeping Lord, and thought the war was over.",
+        art: true,
       },
       {
         caption:
           "From the Lord's own body a goddess stepped out — luminous, armed, and entirely unexpected — and destroyed Mura where he stood.",
+        art: true,
         span: "full",
       },
       {
         caption:
           "When He woke, the Lord asked her name. You were born of Me on the eleventh day, He said: you are Ekādaśī. Ask for a benediction. She asked that whoever fasts on her day be freed from sin — and this is that day, the day Ekādaśī herself appeared.",
+        art: true,
       },
     ],
   },
