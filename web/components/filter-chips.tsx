@@ -31,7 +31,7 @@ const DURATION_OPTIONS: { value: DurationBucket; label: string }[] = [
 // Every control here is still a plain link that sets/clears a URL search
 // param - the server re-renders in the new order/filter, same as before.
 export function FilterChips({
-  category,
+  basePath,
   channels,
   languages,
   activeChannelId,
@@ -39,9 +39,14 @@ export function FilterChips({
   activeLanguage,
   activeSort = "recent",
 }: {
-  category: string;
+  /** Where the chips link. Was hardcoded to `/browse/${category}`, which is
+   * the only reason this could not be used on /topic or /channel - pages that
+   * are far bigger walls than a category and had no controls at all
+   * (/topic/ekadashi is 278 videos; /channel/@hdgoswami is 999). lib/data.ts
+   * already supported every filter these expose; only the URL was stuck. */
+  basePath: string;
   channels: { id: number; title: string }[];
-  /** Languages present in this category (lib/data.ts's getLanguagesInCategory) -
+  /** Languages present in this scope (lib/data.ts's getLanguagesIn) -
    * omitted (empty array) until the worker's Groq classification has
    * populated `language` for enough videos to be worth a filter row. */
   languages: string[];
@@ -55,7 +60,6 @@ export function FilterChips({
     { value: "recent", label: t("newest") },
     { value: "popular", label: t("mostWatched") },
   ];
-  const basePath = `/browse/${encodeURIComponent(category)}`;
   const activeChannel = channels.find((c) => c.id === activeChannelId);
   const hasRefinements = channels.length > 0 || languages.length > 0;
 

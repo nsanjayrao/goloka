@@ -289,7 +289,7 @@ export type VideoPageFilters = {
   category?: string;
   channelId?: number;
   duration?: DurationBucket;
-  /** Exact match on the `language` column (see getLanguagesInCategory). */
+  /** Exact match on the `language` column (see getLanguagesIn). */
   language?: string;
   /** Match videos whose TITLE contains any of these keywords (OR of ILIKEs).
    * Legacy topic mechanism - substring matching false-positives (e.g.
@@ -339,15 +339,28 @@ export async function getVideosPage(
 /** Languages present in `category` (its videos' `language` column, populated
  * by the worker's Groq classification - see worker/sync.py's
  * normalize_language), for filter chips. Bounded client-side dedup rather
- * than a Postgres RPC (same approach as getChannelsInCategory below) - the
+ * than a Postgres RPC (same approach as getChannelsIn below) - the
  * language set is small (a couple dozen real-world languages at most), so a
  * few thousand rows comfortably covers it without a schema change. */
-export async function getLanguagesInCategory(category: string): Promise<string[]> {
+export type FilterScope = { category?: string; topicSlug?: string; channelId?: number };
+
+/** Applies a scope to a query. One place, so the chip lists can never filter
+ * by something different from the grid they sit above. */
+function applyScope<T>(query: T, scope: FilterScope): T {
+  let q = query as never;
+  if (scope.category) q = (q as { eq: (c: string, v: string) => never }).eq("category", scope.category);
+  if (scope.channelId) q = (q as { eq: (c: string, v: number) => never }).eq("channel_id", scope.channelId);
+  if (scope.topicSlug)
+    q = (q as { contains: (c: string, v: string) => never }).contains("tags", JSON.stringify([scope.topicSlug]));
+  return q as T;
+}
+
+export async function getLanguagesIn(scope: FilterScope): Promise<string[]> {
   return safely(async () => {
-    const { data, error } = await supabase!
-      .from("videos")
-      .select("language")
-      .eq("category", category)
+    const { data, error } = await applyScope(
+      supabase!.from("videos").select("language"),
+      scope
+    )
       .not("language", "is", null)
       .limit(3000);
     if (error) throw error;
@@ -364,16 +377,15 @@ export async function getLanguagesInCategory(category: string): Promise<string[]
   }, []);
 }
 
-/** Channels that have at least one video in `category`, for filter chips. */
-export async function getChannelsInCategory(
-  category: string
+/** Channels with at least one video in this scope, for filter chips. */
+export async function getChannelsIn(
+  scope: FilterScope
 ): Promise<{ id: number; title: string }[]> {
   return safely(async () => {
-    const { data, error } = await supabase!
-      .from("videos")
-      .select("channel:channels(id, title)")
-      .eq("category", category)
-      .limit(500);
+    const { data, error } = await applyScope(
+      supabase!.from("videos").select("channel:channels(id, title)"),
+      scope
+    ).limit(500);
     if (error) throw error;
 
     const byId = new Map<number, string>();

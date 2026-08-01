@@ -10,8 +10,8 @@ import { VideoGrid } from "@/components/video-grid";
 import { Link } from "@/i18n/navigation";
 import {
   CATEGORY_PAGE_SIZE,
-  getChannelsInCategory,
-  getLanguagesInCategory,
+  getChannelsIn,
+  getLanguagesIn,
   getVideoCount,
   getVideosPage,
 } from "@/lib/data";
@@ -75,8 +75,8 @@ export default async function CategoryPage({ params, searchParams }: Props) {
   // visible.
   const [categoryCount, channels, languages, videos] = await Promise.all([
     getVideoCount({ category }),
-    getChannelsInCategory(category),
-    getLanguagesInCategory(category),
+    getChannelsIn({ category }),
+    getLanguagesIn({ category }),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
   ]);
   const filteredCount = hasActiveFilters ? await getVideoCount(filters) : categoryCount;
@@ -97,7 +97,7 @@ export default async function CategoryPage({ params, searchParams }: Props) {
       {(channels.length > 0 || languages.length > 0) && (
         <div className="mt-6">
           <FilterChips
-            category={category}
+            basePath={`/browse/${encodeURIComponent(category)}`}
             channels={channels}
             languages={languages}
             activeChannelId={channelId}
