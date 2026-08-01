@@ -86,9 +86,10 @@ NVIDIA_MODEL = os.environ.get("NVIDIA_MODEL", "meta/llama-3.1-8b-instruct")
 # per REQUEST with a non-retryable 413 when prompt + max_tokens exceed it.
 LLM_BATCH = 30
 # `--no-llm` skips the Groq classifier (regex + fallback only). Use it for a
-# fast enrich pass that fills view_count + regex categories without fighting
-# Groq's per-minute free-tier limit; run plain `--enrich` later for the LLM
-# pass once you can pace it.
+# fast enrich pass that fills view_count, LANGUAGE (YouTube's declared tag +
+# script detection, neither of which needs a model) and regex categories
+# without fighting Groq's per-minute free-tier limit; run plain `--enrich`
+# later for the LLM pass once you can pace it.
 USE_LLM = "--no-llm" not in sys.argv
 
 CATEGORIES = [
@@ -358,17 +359,32 @@ def parse_iso_duration(iso: str) -> int | None:
 
 
 def fetch_video_details(video_ids: list[str]) -> dict[str, dict]:
-    """Duration + view count for each id, from the videos endpoint (one call
-    per 50 ids). Returns {id: {"duration": int|None, "view_count": int|None}}."""
+    """Duration, view count and the uploader's DECLARED language for each id,
+    from the videos endpoint (one call per 50 ids). Returns
+    {id: {"duration": int|None, "view_count": int|None, "language": str|None}}.
+
+    `snippet` rides along for free: videos.list costs 1 quota unit per CALL
+    no matter how many parts it asks for, so the language the uploader
+    themselves declared costs nothing on top of the duration lookup this
+    function already made. Until 2026-08-01 `language` came ONLY from the LLM
+    - the one stage that rate-limits - which is why 59% of the catalogue sat
+    at NULL and the language filter had nothing to render."""
     details: dict[str, dict] = {}
     for i in range(0, len(video_ids), 50):
         batch = video_ids[i:i + 50]
-        data = yt_get("videos", part="contentDetails,statistics", id=",".join(batch), maxResults=50)
+        data = yt_get("videos", part="snippet,contentDetails,statistics",
+                      id=",".join(batch), maxResults=50)
         for item in data.get("items", []):
             views = item.get("statistics", {}).get("viewCount")
+            snippet = item.get("snippet", {})
             details[item["id"]] = {
                 "duration": parse_iso_duration(item.get("contentDetails", {}).get("duration", "")),
                 "view_count": int(views) if views is not None and str(views).isdigit() else None,
+                # defaultAudioLanguage is what is SPOKEN; defaultLanguage only
+                # describes the title/description text. Prefer the former.
+                "language": normalize_language(
+                    snippet.get("defaultAudioLanguage") or snippet.get("defaultLanguage")
+                ),
             }
     return details
 
@@ -517,10 +533,11 @@ def candidate_topics(title: str, description: str) -> set[str]:
     }
 
 
-# Groq returns the spoken language as free text ("English", "en", "Hindi",
-# "hindi", "hi", even typos like "Bangali") - normalizing at write time is what
-# makes a language FILTER usable later; without this, "English" and "en" would
-# show up as two separate filter chips for the same language.
+# Two sources feed this: Groq returns the spoken language as free text
+# ("English", "en", "Hindi", "hindi", "hi", even typos like "Bangali"), and
+# YouTube returns a BCP-47 tag ("en", "en-US", "pt-BR"). Normalizing at write
+# time is what makes a language FILTER usable later; without this, "English"
+# and "en" would show up as two separate filter chips for the same language.
 LANGUAGE_ALIASES = {
     "en": "English", "eng": "English", "english": "English",
     "hi": "Hindi", "hin": "Hindi", "hindi": "Hindi",
@@ -552,6 +569,47 @@ LANGUAGE_ALIASES = {
     "nl": "Dutch", "dutch": "Dutch",
     "pl": "Polish", "polish": "Polish",
     "rus": "Russian", "rusian": "Russian",
+    # Codes YouTube actually returned on this catalogue that the LLM never
+    # produced, so the table never needed them before (2026-08-01 backfill:
+    # 398 Korean, 5 Malay, 2 Indonesian rows had landed as "Ko"/"Ms"/"Id").
+    "ko": "Korean", "kor": "Korean", "korean": "Korean",
+    "ms": "Malay", "msa": "Malay", "malay": "Malay",
+    "id": "Indonesian", "ind": "Indonesian", "indonesian": "Indonesian",
+    # Plausible on a global catalogue; cheap to have waiting rather than
+    # discover as junk after the next channel is added.
+    "ja": "Japanese", "jpn": "Japanese", "japanese": "Japanese",
+    "th": "Thai", "tha": "Thai", "thai": "Thai",
+    "vi": "Vietnamese", "vie": "Vietnamese", "vietnamese": "Vietnamese",
+    "ar": "Arabic", "ara": "Arabic", "arabic": "Arabic",
+    "fa": "Persian", "fas": "Persian", "persian": "Persian", "farsi": "Persian",
+    "ur": "Urdu", "urd": "Urdu", "urdu": "Urdu",
+    "ne": "Nepali", "nep": "Nepali", "nepali": "Nepali",
+    "si": "Sinhala", "sin": "Sinhala", "sinhala": "Sinhala",
+    "as": "Assamese", "asm": "Assamese", "assamese": "Assamese",
+    "sv": "Swedish", "swedish": "Swedish",
+    "da": "Danish", "danish": "Danish",
+    "fi": "Finnish", "finnish": "Finnish",
+    "no": "Norwegian", "nb": "Norwegian", "norwegian": "Norwegian",
+    "cs": "Czech", "czech": "Czech",
+    "sk": "Slovak", "slovak": "Slovak",
+    "sl": "Slovenian", "slovenian": "Slovenian",
+    "ro": "Romanian", "romanian": "Romanian",
+    "bg": "Bulgarian", "bulgarian": "Bulgarian",
+    "sr": "Serbian", "serbian": "Serbian",
+    "hr": "Croatian", "croatian": "Croatian",
+    "el": "Greek", "greek": "Greek",
+    "he": "Hebrew", "hebrew": "Hebrew",
+    "af": "Afrikaans", "afrikaans": "Afrikaans",
+    "sw": "Swahili", "swahili": "Swahili",
+    "tl": "Filipino", "fil": "Filipino", "filipino": "Filipino", "tagalog": "Filipino",
+    "ca": "Catalan", "catalan": "Catalan",
+    "lv": "Latvian", "latvian": "Latvian",
+    "et": "Estonian", "estonian": "Estonian",
+    "ka": "Georgian", "georgian": "Georgian",
+    "hy": "Armenian", "armenian": "Armenian",
+    "az": "Azerbaijani", "azerbaijani": "Azerbaijani",
+    "kk": "Kazakh", "kazakh": "Kazakh",
+    "mn": "Mongolian", "mongolian": "Mongolian",
 }
 
 
@@ -561,6 +619,16 @@ def normalize_language(lang: str | None) -> str | None:
     key = re.sub(r"\s+", " ", lang.strip().lower())
     if key in ("null", "none", "n/a", "unknown", ""):
         return None
+    # YouTube's own three ways of saying "no language here".
+    if key in ("und", "zxx", "mul"):
+        return None
+    # BCP-47 region/script subtags ("en-US", "pt-BR", "zh-Hans") reduce to the
+    # primary tag. Guarded to codes we actually know, so free text that merely
+    # contains a hyphen ("hindi-english") falls through to the bilingual
+    # splitter below instead of being truncated to its FIRST language.
+    primary = key.split("-", 1)[0]
+    if primary != key and re.fullmatch(r"[a-z]{2,3}", primary) and primary in LANGUAGE_ALIASES:
+        key = primary
     if key in LANGUAGE_ALIASES:
         return LANGUAGE_ALIASES[key]
 
@@ -577,14 +645,89 @@ def normalize_language(lang: str | None) -> str | None:
         key = dubbed.group(1).strip()
     if key in LANGUAGE_ALIASES:
         return LANGUAGE_ALIASES[key]
-    parts = [p.strip() for p in re.split(r"[/&+,]|\band\b", key) if p.strip()]
+    # Hyphen is in here too ("hindi-english"). Safe despite BCP-47 sharing the
+    # separator: a real tag was already reduced to its primary subtag above and
+    # returned, so anything still hyphenated at this point is free text.
+    parts = [p.strip() for p in re.split(r"[/&+,-]|\band\b", key) if p.strip()]
     if len(parts) > 1 and parts[-1] in LANGUAGE_ALIASES:
         return LANGUAGE_ALIASES[parts[-1]]
 
-    # Fall back to title-casing whatever the model returned, so even a
-    # language missing from the alias table above still gets consistent
-    # casing instead of a raw, unpredictable string.
+    # An UNRECOGNISED bare 2-3 letter code is a language TAG, not a language
+    # NAME, and title-casing it yields junk like "Ko"/"Ms"/"Id" - unreadable
+    # in a filter chip, and silently dropped by web/lib/data.ts's `length > 2`
+    # guard, which hides those videos from the filter rather than showing
+    # nonsense. NULL is the honest answer; add the code to the table above
+    # when one turns up in the data. (Only reachable since 2026-08-01, when
+    # YouTube's raw tags started feeding this function alongside LLM prose.)
+    if re.fullmatch(r"[a-z]{2,3}", key):
+        return None
+
+    # Otherwise title-case whatever the model returned, so even a language
+    # missing from the alias table above still gets consistent casing
+    # instead of a raw, unpredictable string.
     return lang.strip().title()
+
+
+# Unicode blocks -> the language a channel writing in that script is speaking.
+# Devanagari is shared by Hindi, Marathi and Sanskrit; Hindi is overwhelmingly
+# the common case in this catalogue, and a Sanskrit verse quoted inside an
+# otherwise-English title never reaches the threshold below.
+SCRIPT_RANGES: list[tuple[int, int, str]] = [
+    (0x0900, 0x097F, "Hindi"),      # Devanagari
+    (0x0980, 0x09FF, "Bengali"),
+    (0x0A00, 0x0A7F, "Punjabi"),    # Gurmukhi
+    (0x0A80, 0x0AFF, "Gujarati"),
+    (0x0B00, 0x0B7F, "Odia"),
+    (0x0B80, 0x0BFF, "Tamil"),
+    (0x0C00, 0x0C7F, "Telugu"),
+    (0x0C80, 0x0CFF, "Kannada"),
+    (0x0D00, 0x0D7F, "Malayalam"),
+    (0x0400, 0x04FF, "Russian"),    # Cyrillic
+]
+
+# A title has to be MOSTLY in a script before that script names the video's
+# language. Devotional titles routinely sprinkle a few non-Latin characters
+# into an English line ("The Glories of Radha - राधे राधे") and those are
+# English videos; a genuinely Hindi title runs in Devanagari end to end.
+SCRIPT_SHARE = 0.30
+
+
+def language_from_script(title: str) -> str | None:
+    """The language implied by the script a title is WRITTEN in, or None.
+
+    Free and offline, which is the whole point: it fills the rows where the
+    uploader declared nothing at all."""
+    counts: dict[str, int] = {}
+    letters = 0
+    for ch in title or "":
+        if not ch.isalpha():
+            continue
+        letters += 1
+        code = ord(ch)
+        for lo, hi, language in SCRIPT_RANGES:
+            if lo <= code <= hi:
+                counts[language] = counts.get(language, 0) + 1
+                break
+    if not letters or not counts:
+        return None
+    language, count = max(counts.items(), key=lambda kv: kv[1])
+    return language if count / letters >= SCRIPT_SHARE else None
+
+
+def resolve_language(declared: str | None, title: str,
+                     llm: str | None, existing: str | None = None) -> str | None:
+    """Settle one video's language from every source, most-trusted first.
+
+    SCRIPT wins over the uploader's own declaration on purpose: channels that
+    upload in Hindi very often leave `defaultAudioLanguage` at the account
+    default of "en", so trusting the declaration over the evidence in front of
+    us would file thousands of plainly Devanagari lectures under English. A
+    script verdict only fires when a title is ~entirely non-Latin, which no
+    English video is.
+
+    Then the declaration, then the LLM's guess, then whatever the row already
+    held - so a re-run can only ever improve a value, never blank one."""
+    return language_from_script(title) or declared or llm or existing
 
 
 # The LLM providers, tried in order. Both speak the OpenAI chat-completions
@@ -813,15 +956,21 @@ def classify_videos(videos: list[dict], fallbacks: list[str]) -> list[dict]:
 
 
 def enrich(db) -> None:
-    """One-time (resumable) pass over EXISTING rows: refresh view_count and
-    re-run the improved classification. Never downgrades a category it can't
-    improve, and keeps an existing language if it can't produce a new one.
-    Idempotent - safe to re-run / resume if Groq's daily cap is hit."""
+    """One-time (resumable) pass over EXISTING rows: refresh view_count +
+    language and re-run the improved classification. Never downgrades a
+    category it can't improve, and keeps an existing language if it can't
+    produce a better one. Idempotent - safe to re-run / resume if Groq's
+    daily cap is hit.
+
+    With `--no-llm` this is the LANGUAGE BACKFILL: resolve_language's two
+    free sources need no model at all, so the whole catalogue costs ~1 YouTube
+    quota unit per 50 rows and finishes in minutes."""
     page_size = 500
     offset, total = 0, 0
     while True:
         page = (db.table("videos")
-                .select("id, youtube_video_id, title, description, category, language, tags")
+                .select("id, youtube_video_id, title, description, category, "
+                        "language, tags, view_count")
                 .order("id")
                 .range(offset, offset + page_size - 1)
                 .execute())
@@ -855,8 +1004,15 @@ def enrich(db) -> None:
                 "title": r["title"],
                 "youtube_video_id": r["youtube_video_id"],
                 "category": tag["category"],
-                "language": tag["language"] or r.get("language"),
-                "view_count": d.get("view_count"),
+                "language": resolve_language(
+                    d.get("language"), r["title"], tag["language"], r.get("language")
+                ),
+                # `or r.get(...)`: a video that YouTube no longer returns
+                # (deleted, private, region-locked) is simply absent from
+                # `details`, and writing the resulting None would BLANK a
+                # perfectly good view count on every enrich pass. Keep what
+                # the row has unless the API actually gave us a newer number.
+                "view_count": d.get("view_count") or r.get("view_count"),
                 "tags": new_tags,
             })
         db.table("videos").upsert(updates, on_conflict="youtube_video_id").execute()
@@ -1237,7 +1393,7 @@ def main() -> None:
                     "duration_seconds": d.get("duration"),
                     "view_count": d.get("view_count"),
                     "category": tag["category"],
-                    "language": tag["language"],
+                    "language": resolve_language(d.get("language"), v["title"], tag["language"]),
                     "tags": tag["topics"],
                 })
 

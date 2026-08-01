@@ -47,8 +47,13 @@ export function FilterChips({
   basePath: string;
   channels: { id: number; title: string }[];
   /** Languages present in this scope (lib/data.ts's getLanguagesIn) -
-   * omitted (empty array) until the worker's Groq classification has
-   * populated `language` for enough videos to be worth a filter row. */
+   * omitted (empty array) when a scope has no classified languages to offer.
+   * This used to be the common case: `language` came only from the Groq
+   * classifier, which rate-limits, so 59% of rows were NULL and the row
+   * rarely rendered. Since 2026-08-01 the worker fills it from YouTube's
+   * declared audio language plus title-script detection (both free), so a
+   * scope of any size normally has real chips here. Arati/kirtan streams
+   * stay absent on purpose - YouTube marks them "no linguistic content". */
   languages: string[];
   activeChannelId?: number;
   activeDuration?: DurationBucket;
