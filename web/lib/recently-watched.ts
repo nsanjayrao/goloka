@@ -59,6 +59,34 @@ export function resumeFromEntry(entry: RecentlyWatchedEntry | undefined): number
   return Math.floor(at);
 }
 
+/** What a card should show for a partly-watched video, or null for none.
+ *
+ * Shares RESUME_END_MARGIN_SECONDS with resumeFromEntry deliberately: a
+ * lecture left in its final minute is FINISHED, and a card reading "1 min
+ * left" under a bar pinned at 99% - forever, because nothing will ever move
+ * it - is worse than a card showing nothing. That is the bug this replaces:
+ * the guard was `position < duration`, which every one of those cases passes.
+ *
+ * It does NOT share RESUME_MIN_SECONDS, and the asymmetry is the point. The
+ * bar is honest about five seconds watched; RESUMING from five seconds in is
+ * merely unhelpful. Different questions, different thresholds.
+ */
+export function cardProgress(
+  positionSeconds: number | null | undefined,
+  durationSeconds: number | null | undefined
+): { percent: number; minutesLeft: number } | null {
+  const at = positionSeconds;
+  const total = durationSeconds;
+  if (at == null || at <= 0) return null;
+  if (total == null || total <= 0) return null;
+  if (at > total - RESUME_END_MARGIN_SECONDS) return null;
+  return {
+    percent: Math.min(100, (at / total) * 100),
+    // Floored at 1: "0 min left" on something still playing reads as broken.
+    minutesLeft: Math.max(1, Math.round((total - at) / 60)),
+  };
+}
+
 /** Updates just the position of an existing entry, in place. Deliberately
  * does NOT reorder the list or create an entry: position updates fire every
  * few seconds while a video plays, and each one moving the video to the front

@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import {
+  cardProgress,
   getRecentlyWatched,
   getRecentlyWatchedServerSnapshot,
   parseRecentlyWatchedSnapshot,
@@ -172,5 +173,49 @@ describe("recordPosition", () => {
     const all = getRecentlyWatched();
     expect(all).toHaveLength(1);
     expect(all[0].youtube_video_id).toBe("a");
+  });
+});
+
+describe("cardProgress", () => {
+  const hour = 3600;
+
+  it("shows nothing without a usable position or duration", () => {
+    expect(cardProgress(null, hour)).toBeNull();
+    expect(cardProgress(undefined, hour)).toBeNull();
+    expect(cardProgress(0, hour)).toBeNull();
+    expect(cardProgress(600, null)).toBeNull();
+    expect(cardProgress(600, 0)).toBeNull();
+  });
+
+  // THE REGRESSION. The original guard was `position < duration`, so a lecture
+  // abandoned five seconds from the end passed it and the card read
+  // "1 min left" under a 99% bar - forever, since nothing would move it again.
+  it("treats a lecture left in its final minute as finished, not as 1 min left", () => {
+    expect(cardProgress(hour - 5, hour)).toBeNull();
+    expect(cardProgress(hour - 1, hour)).toBeNull();
+    expect(cardProgress(hour - RESUME_END_MARGIN_SECONDS + 1, hour)).toBeNull();
+  });
+
+  it("still shows progress right up to that margin", () => {
+    const at = hour - RESUME_END_MARGIN_SECONDS;
+    expect(cardProgress(at, hour)).toEqual({ percent: (at / hour) * 100, minutesLeft: 1 });
+  });
+
+  // Deliberately NOT sharing RESUME_MIN_SECONDS with resumeFromEntry: the bar
+  // is honest about a few seconds watched even where resuming there is not.
+  it("shows a sliver for a barely-started lecture, unlike resumeFromEntry", () => {
+    expect(resumeFromEntry({
+      youtube_video_id: "a", title: "t", thumbnail_url: null, channel_title: null,
+      duration_seconds: hour, watched_at: 1, position_seconds: 5,
+    })).toBeNull();
+    expect(cardProgress(5, hour)?.percent).toBeCloseTo((5 / hour) * 100);
+  });
+
+  it("floors the remaining minutes at 1 - '0 min left' reads as broken", () => {
+    expect(cardProgress(hour - 70, hour)?.minutesLeft).toBe(1);
+  });
+
+  it("reports a real midpoint", () => {
+    expect(cardProgress(hour / 2, hour)).toEqual({ percent: 50, minutesLeft: 30 });
   });
 });

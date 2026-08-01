@@ -3,6 +3,7 @@ import { useTranslations } from "next-intl";
 import { Thumbnail } from "@/components/thumbnail";
 import { Link } from "@/i18n/navigation";
 import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
+import { cardProgress } from "@/lib/recently-watched";
 import { languageCode } from "@/lib/language-codes";
 import type { Video } from "@/lib/types";
 
@@ -35,16 +36,11 @@ export function VideoCard({
   const title = cleanTitle(video.title);
   const duration = formatDuration(video.duration_seconds);
 
-  // Guarded hard, because a bar stuck at 100% on a finished lecture, or at 0%
-  // on one barely started, is worse than no bar at all.
-  const total = video.duration_seconds;
-  const watched =
-    resumeAt != null && resumeAt > 0 && total != null && total > 0 && resumeAt < total
-      ? resumeAt
-      : null;
-  const percent = watched != null && total != null ? Math.min(100, (watched / total) * 100) : null;
-  const minutesLeft =
-    watched != null && total != null ? Math.max(1, Math.round((total - watched) / 60)) : null;
+  // One guarded, tested decision (lib/recently-watched.ts) rather than an
+  // inline condition. The inline version compared `resumeAt < total`, which a
+  // lecture abandoned five seconds from the end passes - leaving "1 min left"
+  // under a full bar on that card permanently.
+  const progress = cardProgress(resumeAt, video.duration_seconds);
   const isLive = video.is_live === true;
   // English is the catalog's default - badging it on every card would be
   // noise. Only non-English audio is the signal a devotee needs at a
@@ -85,18 +81,19 @@ export function VideoCard({
         {/* "22 min left" replaces the runtime once a devotee is partway in:
             at that point how much is LEFT is the useful number, and the total
             runtime is something they already know. */}
-        {!isLive && (minutesLeft != null ? (
-          <span className="dur">{t("minLeft", { minutes: minutesLeft })}</span>
-        ) : (
-          duration && <span className="dur">{duration}</span>
-        ))}
+        {!isLive &&
+          (progress ? (
+            <span className="dur">{t("minLeft", { minutes: progress.minutesLeft })}</span>
+          ) : (
+            duration && <span className="dur">{duration}</span>
+          ))}
         {/* The progress line. aria-hidden because the "N min left" chip above
             already says this in words - a progressbar role here would make a
             screen reader announce the same fact twice per card, across a row
             of twelve. */}
-        {percent != null && (
+        {progress && (
           <span className="card-progress" aria-hidden="true">
-            <span style={{ width: `${percent}%` }} />
+            <span style={{ width: `${progress.percent}%` }} />
           </span>
         )}
       </div>
