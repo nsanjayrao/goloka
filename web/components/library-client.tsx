@@ -207,13 +207,41 @@ export function LibraryClient() {
 
   if (!session) {
     return (
-      <div className="mx-auto max-w-md py-14 text-center">
-        <h1 className="font-heading text-3xl text-text">{t("title")}</h1>
-        <p className="mt-3 text-text-muted">{t("signInPrompt")}</p>
-        <button type="button" onClick={signInWithGoogle} className="btn gold mt-6">
-          {t("continueWithGoogle")}
-        </button>
-        <p className="mt-6 text-[13px] leading-relaxed text-text-muted/80">{t("privacyNote")}</p>
+      <div>
+        <div className="mx-auto max-w-md py-14 text-center">
+          <h1 className="font-heading text-3xl text-text">{t("title")}</h1>
+          <p className="mt-3 text-text-muted">{t("signInPrompt")}</p>
+          <button type="button" onClick={signInWithGoogle} className="btn gold mt-6">
+            {t("continueWithGoogle")}
+          </button>
+          <p className="mt-6 text-[13px] leading-relaxed text-text-muted/80">{t("privacyNote")}</p>
+        </div>
+
+        {/* The library already HOLDS this. useWatchHistory() is called above
+            and works perfectly signed out - it is the same on-device history
+            the home page is at that moment showing as "Continue watching" -
+            and the page used to return before rendering any of it. So a
+            devotee who had watched twelve lectures opened the tab labelled
+            "Library" and was told it was empty and should sign in.
+            Signing in is what makes it FOLLOW you; it was never what makes it
+            exist. */}
+        {historyVideos.length > 0 && (
+          <section className="mt-4">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="font-heading text-2xl text-text">{t("historyTitle")}</h2>
+              <span className="text-[13px] text-text-muted">{t("onThisDevice")}</span>
+            </div>
+            <div className="mt-5 grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 lg:grid-cols-4">
+              {historyVideos.map((video) => (
+                <VideoCard
+                  key={video.youtube_video_id}
+                  video={video}
+                  resumeAt={resumeBy[video.youtube_video_id]}
+                />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
     );
   }
@@ -258,13 +286,26 @@ export function LibraryClient() {
     <div>
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <h1 className="font-heading text-3xl text-text sm:text-4xl">{t("title")}</h1>
+        {/* The full email address used to be printed here, at the top of a
+            page a devotee might open in front of others - in a temple room, on
+            a shared laptop. AccountControl already settled this pattern: an
+            initial identifies you to YOURSELF without announcing you to the
+            room. The address is still available to a screen reader via the
+            accessible name, which is a private channel. */}
         <button
           type="button"
           onClick={signOut}
-          className="text-sm text-text-muted transition-colors hover:text-flame"
+          aria-label={
+            session.user.email
+              ? tButtons("signOutOf", { account: session.user.email })
+              : undefined
+          }
+          className="inline-flex items-center gap-2 text-sm text-text-muted transition-colors hover:text-flame"
         >
+          <span aria-hidden="true" className="account-initial">
+            {(session.user.email ?? "•").trim()[0]?.toUpperCase()}
+          </span>
           {tButtons("signOut")}
-          {session.user.email ? ` (${session.user.email})` : ""}
         </button>
       </div>
 
@@ -274,7 +315,18 @@ export function LibraryClient() {
         grids.map(({ title, videos, empty, shareable, withProgress }) => (
           <section key={title} className="mt-10">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h2 className="font-heading text-2xl text-text">{title}</h2>
+              {/* The count is the cheapest orientation there is: three
+                  identical grids with no numbers read as one undifferentiated
+                  pile. It also makes the ceilings visible - saved lists cap at
+                  60, history at 12. */}
+              <h2 className="font-heading text-2xl text-text">
+                {title}
+                {videos.length > 0 && (
+                  <span className="ml-3 align-middle text-[13px] font-normal tracking-[0.14em] text-text-muted">
+                    {videos.length}
+                  </span>
+                )}
+              </h2>
               {shareable && videos.length > 0 && (
                 <ShareCollectionButton
                   userId={session.user.id}

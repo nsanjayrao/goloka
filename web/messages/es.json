@@ -165,7 +165,8 @@
     "watchOnYoutube": "Ver en YouTube ↗",
     "browseGoloka": "Explorar Goloka →",
     "tryAgain": "Intentar de nuevo",
-    "signInTo": "{label} — inicia sesión para guardar"
+    "signInTo": "{label} — inicia sesión para guardar",
+    "signOutOf": "Cerrar sesión de {account}"
   },
   "push": {
     "title": "Notificaciones",
@@ -208,7 +209,7 @@
   },
   "library": {
     "title": "Mi biblioteca",
-    "signInPrompt": "Inicia sesión para conservar tus favoritos y tu lista de ver más tarde en todos tus dispositivos.",
+    "signInPrompt": "Inicia sesión y tu biblioteca te acompaña entre dispositivos: tus favoritos, tu lista para más tarde, tu registro de japa y todo lo que has estado viendo.",
     "continueWithGoogle": "Continuar con Google",
     "privacyNote": "Tu cuenta guarda tus dos listas, tu registro de japa y tu historial, para que te acompañen entre dispositivos. Solo tú puedes verlos, y eliminar tu cuenta lo elimina todo. Sin sesión, nada sale de tu navegador.",
     "favouritesTitle": "Favoritos",
@@ -227,7 +228,8 @@
     "shareCollection": "Compartir esta colección",
     "seriesKicker": "Series",
     "seriesParts": "{count} partes",
-    "historyTitle": "Visto recientemente"
+    "historyTitle": "Visto recientemente",
+    "onThisDevice": "En este dispositivo"
   },
   "seriesPage": {
     "kicker": "Serie",

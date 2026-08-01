@@ -11,7 +11,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale } = await params;
   return {
     title: "My Library",
-    description: "Your favourites and watch-later list.",
+    description: "Your favourites, your watch-later list and everything you have been watching.",
     alternates: localizedAlternates(locale, "/library"),
     // A personal page - nothing here for a crawler.
     robots: { index: false },

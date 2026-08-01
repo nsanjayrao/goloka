@@ -813,6 +813,21 @@
     color: var(--flame);
     box-shadow: 0 0 20px rgb(var(--glow-rgb) / 0.18);
   }
+  /* The same initial the header uses, at list scale - see .account-avatar.
+     Identifies a devotee to themselves without printing their address on a
+     screen someone else can see. */
+  .account-initial {
+    display: inline-grid;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 999px;
+    border: 1px solid var(--hairline);
+    background: var(--surface-2);
+    font-family: var(--display);
+    font-size: 12px;
+    color: var(--accent);
+  }
   /* Signed in: one letter in a gold ring. A lit initial rather than a
      photograph - no third-party request, nothing that can fail to load. */
   .account-avatar {

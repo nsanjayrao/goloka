@@ -165,7 +165,8 @@
     "watchOnYoutube": "Watch on YouTube ↗",
     "browseGoloka": "Browse Goloka →",
     "tryAgain": "Try again",
-    "signInTo": "{label} — sign in to save"
+    "signInTo": "{label} — sign in to save",
+    "signOutOf": "Sign out of {account}"
   },
   "push": {
     "title": "Notifications",
@@ -208,7 +209,7 @@
   },
   "library": {
     "title": "My Library",
-    "signInPrompt": "Sign in to keep favourites and a watch-later list that follow you across devices.",
+    "signInPrompt": "Sign in and your library follows you between devices — your favourites, your watch-later list, your japa record and everything you have been watching.",
     "continueWithGoogle": "Continue with Google",
     "privacyNote": "Your account holds your two lists, your japa record and your watch history, so they follow you between devices. Only you can see them, and deleting your account deletes everything. Signed out, nothing leaves your browser.",
     "favouritesTitle": "Favourites",
@@ -227,7 +228,8 @@
     "shareCollection": "Share this collection",
     "seriesKicker": "Series",
     "seriesParts": "{count} parts",
-    "historyTitle": "Recently watched"
+    "historyTitle": "Recently watched",
+    "onThisDevice": "On this device"
   },
   "seriesPage": {
     "kicker": "Series",
