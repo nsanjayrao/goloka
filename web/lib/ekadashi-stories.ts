@@ -65,7 +65,20 @@ export type EkadashiStory = {
   name: string;
   /** Lunar occasion, e.g. "Śrāvaṇa, kṛṣṇa-pakṣa". */
   occasion: string;
-  /** The Purāṇa this māhātmya is recorded in. */
+  /** The Purāṇa this māhātmya is recorded in.
+   *
+   * CHECKED AGAINST EACH SOURCE'S OWN CLOSING LINE, 2026-08-01, and 6 of the
+   * 19 that state one were wrong: Mokṣadā is Brahmāṇḍa (not Brahma-vaivarta),
+   * Saphalā and Bhaimī are Bhaviṣya-uttara (not Brahma-vaivarta and Padma),
+   * and Śayanī, Utpannā and Ṣaṭ-tilā are Bhaviṣya-UTTARA, not Bhaviṣya. A
+   * third of them wrong is the measure of how little a confident recollection
+   * is worth here.
+   *
+   * FIVE ARE STILL UNVERIFIED because their source page states no attribution
+   * at all: annada, pasankusa, papamocani, varuthini, pandava-nirjala. Those
+   * five are my own best knowledge and, on the above hit rate, roughly one or
+   * two of them are probably wrong. Check them against a printed Purāṇa
+   * before treating them as settled. */
   purana: string;
   /** WHAT THE SOURCE ACTUALLY IS - added 2026-08-01 after an audit found
    * five stories here that scripture does not tell.
@@ -111,7 +124,7 @@ const STORIES: EkadashiStory[] = [
     slug: "sayani",
     name: "Śayanī Ekādaśī",
     occasion: "Āṣāḍha, śukla-pakṣa",
-    purana: "Bhaviṣya Purāṇa",
+    purana: "Bhaviṣya-uttara Purāṇa",
     kind: "narrative",
     sourceSlug: "sayana-ekadasi",
     summary:
@@ -400,7 +413,7 @@ const STORIES: EkadashiStory[] = [
     slug: "utpanna",
     name: "Utpannā Ekādaśī",
     occasion: "Mārgaśīrṣa, kṛṣṇa-pakṣa",
-    purana: "Bhaviṣya Purāṇa",
+    purana: "Bhaviṣya-uttara Purāṇa",
     kind: "narrative",
     sourceSlug: "utpanna-ekadasi",
     summary:
@@ -430,7 +443,7 @@ const STORIES: EkadashiStory[] = [
     slug: "moksada",
     name: "Mokṣadā Ekādaśī",
     occasion: "Mārgaśīrṣa, śukla-pakṣa",
-    purana: "Brahma-vaivarta Purāṇa",
+    purana: "Brahmāṇḍa Purāṇa",
     kind: "narrative",
     sourceSlug: "mokshada-ekadasi",
     summary:
@@ -439,15 +452,15 @@ const STORIES: EkadashiStory[] = [
     panels: [
       {
         caption:
-          "On this day, between two armies that had not yet moved, Kṛṣṇa spoke the Bhagavad-gītā to Arjuna. Every year this ekādaśī carries that anniversary — Gītā-jayantī.",
+          "On this day, between two armies that had not yet moved, Kṛṣṇa spoke the Bhagavad-gītā to Arjuna at Kurukṣetra — at the spot now called Jyotiṣa-tīrtha. Every year this ekādaśī carries that anniversary, and to give a Gītā away on it is said to draw the Lord's own blessing.",
       },
       {
         caption:
-          "King Vaikhānasa dreamt of his father in a place of suffering, calling to him. He woke and could not put it down, and asked the brāhmaṇas what a son could do for a father already gone.",
+          "In Campaka-nagara, King Vaikhānasa dreamt of his father in a hellish place, crying out to him to be delivered. He woke and could not put it down. His kingdom, his treasury, his own wife and sons all became unbearable to him — what use is a powerful son, he asked, if his father suffers?",
       },
       {
         caption:
-          "The sage Parvata told him: observe Mokṣadā Ekādaśī and give the merit to your father. Mokṣadā — the giver of liberation — is named for exactly this.",
+          "The brāhmaṇas sent him to Parvata Muni, who knows past, present and future alike. Observe Mokṣadā Ekādaśī, the sage told him, and give its merit to your father. Mokṣadā — the giver of liberation — is named for exactly this.",
         span: "full",
       },
       {
@@ -460,7 +473,7 @@ const STORIES: EkadashiStory[] = [
     slug: "saphala",
     name: "Saphalā Ekādaśī",
     occasion: "Pauṣa, kṛṣṇa-pakṣa",
-    purana: "Brahma-vaivarta Purāṇa",
+    purana: "Bhaviṣya-uttara Purāṇa",
     kind: "narrative",
     sourceSlug: "saphala-ekadasi",
     summary:
@@ -529,7 +542,7 @@ const STORIES: EkadashiStory[] = [
     slug: "sat-tila",
     name: "Ṣaṭ-tilā Ekādaśī",
     occasion: "Māgha, kṛṣṇa-pakṣa",
-    purana: "Bhaviṣya Purāṇa",
+    purana: "Bhaviṣya-uttara Purāṇa",
     kind: "narrative",
     sourceSlug: "sattila-ekadasi",
     summary:
@@ -559,7 +572,7 @@ const STORIES: EkadashiStory[] = [
     slug: "bhaimi",
     name: "Bhaimī Ekādaśī",
     occasion: "Māgha, śukla-pakṣa",
-    purana: "Padma Purāṇa",
+    purana: "Bhaviṣya-uttara Purāṇa",
     kind: "narrative",
     sourceSlug: "bhaimi-ekadasi",
     summary:
@@ -682,23 +695,32 @@ const STORIES: EkadashiStory[] = [
     kind: "narrative",
     sourceSlug: "kamada-ekadasi",
     summary:
-      "A wife fasts to turn her husband back from the monster a curse has made of him.",
+      "A wife fasts to turn her husband back from the man-eater a king's curse has made of him.",
     panels: [
       {
         caption:
-          "The Gandharva Lalita sang in the court of King Puṇḍarīka, and while he sang he thought of his wife Lalitā, and the words came out wrong.",
+          "Kṛṣṇa told this to Yudhiṣṭhira as an old history — one Vasiṣṭha Muni had told King Dilīpa, the great-grandfather of Rāmacandra. It begins in Ratnapura, a city of gold and jewels where Gandharvas, Kinnaras and Apsarās lived under King Puṇḍarīka.",
       },
       {
         caption:
-          "The king's curse turned him into a rākṣasa — enormous, terrible and hungry — and he wandered the forests of the Vindhya hills in that shape, no longer able to speak to anyone.",
+          "Among the Gandharvas were the singer Lalit and his wife Lalitā, a dancer, who loved each other past all sense. One day Lalit sang at court without her, thinking of her as he sang — and lost the metre, and finished the song wrongly.",
       },
       {
         caption:
-          "Lalitā followed him. She did not leave, and she did not accept it; she went to the sage Śṛṅgi on Mount Vindhyācala and asked what a wife could do.",
+          "An envious snake in attendance carried it to the king: he was thinking of a woman, not of you. Puṇḍarīka's eyes went crimson. For preferring a wife to your sovereign, he said, become a cannibal — and Lalit became one, arms eight miles long, his neck a mountain, sixty-four miles high.",
+        span: "full",
       },
       {
         caption:
-          "Observe Kāmadā Ekādaśī, he said, and give your husband the merit. She fasted, offered it to him, and the rākṣasa fell away — he stood there as a Gandharva again, and they returned to the heavens together.",
+          "Lalitā did not leave. She followed the thing her husband had become through the deep jungle while it did what such creatures do, and wept, and kept following.",
+      },
+      {
+        caption:
+          "On the peak of Vindhyācala she found the sage Śṛṅgi. She told him whose daughter she was and what had been done, and asked the only question she had: what act can I perform on his behalf? Kāmadā Ekādaśī is coming, he said. Keep it, and give him what you earn.",
+      },
+      {
+        caption:
+          "She kept it, and on the dvādaśī stood before the sage and the Deity of Vāsudeva and gave the merit away to her husband. The curse lifted where he stood. Lalit was a Gandharva again, ornaments and all, and the two of them went up to heaven together.",
         span: "full",
       },
     ],
