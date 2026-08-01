@@ -56,16 +56,49 @@ async function safely<T>(run: (supabase: SupabaseClient) => Promise<T>, fallback
 /** Record a watch. Upsert, not insert: re-watching moves the video to the
  * front of the history rather than appending a second row, which mirrors
  * recordWatched()'s local behaviour exactly. */
-export async function recordWatchRemote(userId: string, youtubeVideoId: string): Promise<void> {
+export async function recordWatchRemote(
+  userId: string,
+  youtubeVideoId: string,
+  positionSeconds?: number
+): Promise<void> {
   await safely(async (supabase) => {
+    const row: Record<string, unknown> = {
+      user_id: userId,
+      youtube_video_id: youtubeVideoId,
+      watched_at: new Date().toISOString(),
+    };
+    // Only sent when we actually know it. Writing null would ERASE a position
+    // recorded on another device the moment this one opened the video.
+    if (positionSeconds != null) row.position_seconds = Math.floor(positionSeconds);
     const { error } = await supabase
       .from("watch_history")
-      .upsert(
-        { user_id: userId, youtube_video_id: youtubeVideoId, watched_at: new Date().toISOString() },
-        { onConflict: "user_id,youtube_video_id" }
-      );
+      .upsert(row, { onConflict: "user_id,youtube_video_id" });
     if (error) throw error;
   }, undefined);
+}
+
+/** The account's resume position for one video, or null. Used when a devotee
+ * opens a video on a DIFFERENT device from the one they were watching on -
+ * the local store knows nothing there. Cheap: one row, one column.
+ *
+ * The click-to-play curtain is what makes this practical. The iframe does not
+ * mount until "Begin listening" is pressed, so there is a whole page-load
+ * window in which to fetch this before a start position is needed. */
+export async function getRemotePosition(
+  userId: string,
+  youtubeVideoId: string
+): Promise<number | null> {
+  return safely(async (supabase) => {
+    const { data, error } = await supabase
+      .from("watch_history")
+      .select("position_seconds")
+      .eq("user_id", userId)
+      .eq("youtube_video_id", youtubeVideoId)
+      .maybeSingle();
+    if (error) throw error;
+    const at = (data as { position_seconds: number | null } | null)?.position_seconds;
+    return at == null ? null : Math.floor(at);
+  }, null);
 }
 
 /** The devotee's recent history, newest first, with video metadata JOINed
@@ -77,7 +110,7 @@ export async function getRemoteHistory(userId: string): Promise<RecentlyWatchedE
     const { data, error } = await supabase
       .from("watch_history")
       .select(
-        "youtube_video_id, watched_at, videos!inner(title, thumbnail_url, duration_seconds, category, channels(title))"
+        "youtube_video_id, watched_at, position_seconds, videos!inner(title, thumbnail_url, duration_seconds, category, channels(title))"
       )
       .eq("user_id", userId)
       .order("watched_at", { ascending: false })
@@ -87,6 +120,7 @@ export async function getRemoteHistory(userId: string): Promise<RecentlyWatchedE
     type Row = {
       youtube_video_id: string;
       watched_at: string;
+      position_seconds: number | null;
       videos: {
         title: string;
         thumbnail_url: string | null;
@@ -106,6 +140,7 @@ export async function getRemoteHistory(userId: string): Promise<RecentlyWatchedE
         duration_seconds: row.videos!.duration_seconds,
         watched_at: new Date(row.watched_at).getTime(),
         category: row.videos!.category,
+        position_seconds: row.position_seconds,
       }));
   }, []);
 }

@@ -4,11 +4,21 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { LiteEmbed } from "@/components/lite-embed";
 import { Link, useRouter } from "@/i18n/navigation";
+import { useSession } from "@/lib/auth";
 import { setAutoplay, useAutoplay } from "@/lib/autoplay";
+import {
+  getRecentlyWatchedServerSnapshot,
+  getRecentlyWatchedSnapshot,
+  parseRecentlyWatchedSnapshot,
+  recordPosition,
+  resumeFromEntry,
+  subscribeToRecentlyWatched,
+} from "@/lib/recently-watched";
+import { getRemotePosition, recordWatchRemote } from "@/lib/watch-history";
 
 // How long the "Up next" card breathes before moving on - long enough to
 // decline calmly, short enough that a listening devotee with eyes closed
@@ -57,7 +67,67 @@ export function UpNext({
   // server snapshot), so everything it gates - the jsApi embed, the
   // ?continue auto-start - appears only after hydration. No mismatch by
   // construction.
-  const wireApi = autoplayOn && next !== null;
+  // The IFrame API is now wired for EVERY watch, not just autoplay users:
+  // recording a resume position needs it. It costs nothing at page load - the
+  // script is fetched inside an effect gated on the play tap, so it only
+  // arrives after a devotee has already committed to watching.
+  const wireApi = true;
+  const autoplayHandoff = autoplayOn && next !== null;
+
+  // WHERE TO RESUME. The device's own position is available synchronously, so
+  // it is read first; the account's is fetched in the background and wins if
+  // it is further along (a devotee who got to 20 minutes on their laptop
+  // should not be dropped back to the 4 minutes this phone remembers).
+  //
+  // Arriving late is fine: LiteEmbed freezes the value the moment the player
+  // is activated, and the curtain means that is never before the play tap.
+  const { session } = useSession();
+  const userId = session?.user.id ?? null;
+  // This device: read through the store, which has a neutral server snapshot,
+  // so there is no localStorage access during render and no setState in an
+  // effect - the same idiom ContinueWatchingShelf uses.
+  const rawHistory = useSyncExternalStore(
+    subscribeToRecentlyWatched,
+    getRecentlyWatchedSnapshot,
+    getRecentlyWatchedServerSnapshot
+  );
+  const localResume = useMemo(
+    () =>
+      resumeFromEntry(
+        parseRecentlyWatchedSnapshot(rawHistory).find((e) => e.youtube_video_id === videoId)
+      ),
+    [rawHistory, videoId]
+  );
+
+  // The account, keyed by the video it was fetched for so a navigation to a
+  // different video can never apply the previous one's position.
+  const [remote, setRemote] = useState<{ videoId: string; at: number | null } | null>(null);
+  useEffect(() => {
+    if (!userId) return;
+    let cancelled = false;
+    void getRemotePosition(userId, videoId).then((at) => {
+      if (!cancelled) setRemote({ videoId, at });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [userId, videoId]);
+
+  // Furthest wins: 20 minutes on a laptop should not be undone by the 4
+  // minutes this phone happens to remember.
+  const remoteResume = remote?.videoId === videoId ? remote.at : null;
+  const resumeAt = Math.max(localResume ?? 0, remoteResume ?? 0) || null;
+
+  // Position updates: always to this device, and to the account when signed
+  // in. recordPosition deliberately does not reorder the history, so a video
+  // playing for an hour does not keep re-sorting "recently watched".
+  const handleProgress = useCallback(
+    (seconds: number) => {
+      recordPosition(videoId, seconds);
+      if (userId) void recordWatchRemote(userId, videoId, seconds);
+    },
+    [videoId, userId]
+  );
   const autoStart = autoplayOn && searchParams.get("continue") === "1";
 
   // The countdown: one tick per second while the card shows. The reset to
@@ -94,7 +164,9 @@ export function UpNext({
         title={title}
         jsApi={wireApi}
         autoplay={autoStart}
-        onEnded={handleEnded}
+        onEnded={autoplayHandoff ? handleEnded : undefined}
+        startAt={resumeAt ?? undefined}
+        onProgress={handleProgress}
       />
 
       {/* The opt-in switch, quiet under the player - same switch idiom as

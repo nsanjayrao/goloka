@@ -19,6 +19,10 @@ export type RecentlyWatchedEntry = {
    * affinity (lib/affinity.ts). Optional: entries recorded before this
    * field existed simply don't contribute, no migration needed. */
   category?: string | null;
+  /** Seconds into the video, for resuming. Optional for the same reason:
+   * entries written before resume existed, or watched without the YouTube
+   * IFrame API available, simply have no position and start from zero. */
+  position_seconds?: number | null;
 };
 
 /** Most-recently-watched first. Never throws - a disabled/blocked
@@ -32,6 +36,42 @@ export function getRecentlyWatched(): RecentlyWatchedEntry[] {
     return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
+  }
+}
+
+/** How far in before a resume is worth offering. Under this a devotee has
+ * barely started and would rather begin again than be dropped 12 seconds in. */
+export const RESUME_MIN_SECONDS = 30;
+/** How close to the end counts as finished. Past this the position is cleared,
+ * so a completed lecture never resumes two seconds from the credits. */
+export const RESUME_END_MARGIN_SECONDS = 60;
+
+/** A useful resume point for one entry, or null. Applies both thresholds, so
+ * callers get "resume here" or nothing and never have to reason about it.
+ * Takes the entry rather than reading storage, so it works equally on a
+ * useSyncExternalStore snapshot (the SSR-safe way to read this) and on a row
+ * that came back from the account. */
+export function resumeFromEntry(entry: RecentlyWatchedEntry | undefined): number | null {
+  const at = entry?.position_seconds;
+  if (at == null || at < RESUME_MIN_SECONDS) return null;
+  const duration = entry?.duration_seconds;
+  if (duration != null && at > duration - RESUME_END_MARGIN_SECONDS) return null;
+  return Math.floor(at);
+}
+
+/** Updates just the position of an existing entry, in place. Deliberately
+ * does NOT reorder the list or create an entry: position updates fire every
+ * few seconds while a video plays, and each one moving the video to the front
+ * would make "recently watched" mean "currently watching" and nothing else. */
+export function recordPosition(youtubeVideoId: string, seconds: number): void {
+  try {
+    const all = getRecentlyWatched();
+    const index = all.findIndex((e) => e.youtube_video_id === youtubeVideoId);
+    if (index === -1) return;
+    all[index] = { ...all[index], position_seconds: Math.floor(seconds) };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
+  } catch {
+    // Storage unavailable/full - resume is a nicety, never load-bearing.
   }
 }
 

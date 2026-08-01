@@ -3,7 +3,7 @@
 
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { useDataSaver } from "@/lib/data-saver";
 
@@ -20,22 +20,27 @@ import { useDataSaver } from "@/lib/data-saver";
 // default), the iframe renders immediately - identical to before this
 // existed.
 //
-// UP-NEXT WIRING (see components/up-next.tsx): when `jsApi` is true the
-// iframe carries enablejsapi=1 and the OFFICIAL IFrame Player API script is
-// lazy-loaded to watch for the player's ENDED state - the documented,
-// ToS-clean way to know a standard player finished (the embed itself stays
-// standard and unmodified; nothing is drawn over it). `jsApi` is only ever
-// true after the visitor's explicit opt-in (lib/autoplay.ts is false on the
-// server and the first client render), so visitors who never opt in ship
-// ZERO extra JS and no youtube.com script.
+// IFRAME API WIRING. When `jsApi` is true the iframe carries enablejsapi=1
+// and the OFFICIAL IFrame Player API script is lazy-loaded - the documented,
+// ToS-clean way to observe a standard player (the embed itself stays standard
+// and unmodified; nothing is drawn over it). It gives us two things: the
+// ENDED event that drives up-next, and getCurrentTime() for the resume
+// position.
+//
+// As of 2026-08-01 up-next passes `jsApi` for EVERY watch, not only after the
+// autoplay opt-in, because resume needs it. That is affordable precisely
+// because of the curtain: the script is fetched inside an effect gated on
+// `showIframe`, which is only true after the play tap - so it never touches
+// page load, and a devotee who opens a watch page and leaves still downloads
+// no youtube.com script at all.
 
 // One API script per page, however many embeds ask for it.
 type YtNamespace = {
   Player: new (
     el: HTMLIFrameElement,
     opts: { events: { onStateChange?: (e: { data: number }) => void } }
-  ) => { destroy: () => void };
-  PlayerState: { ENDED: number };
+  ) => { destroy: () => void; getCurrentTime?: () => number };
+  PlayerState: { ENDED: number; PLAYING: number };
 };
 let ytApiPromise: Promise<YtNamespace> | null = null;
 function loadYouTubeIframeApi(): Promise<YtNamespace> {
@@ -64,12 +69,22 @@ export function LiteEmbed({
   jsApi = false,
   autoplay = false,
   onEnded,
+  startAt,
+  onProgress,
 }: {
   videoId: string;
   title: string;
   /** Attach the IFrame Player API to hear the ENDED event. Only ever passed
    * true client-side, after the autoplay opt-in - see the banner. */
   jsApi?: boolean;
+  /** Seconds to resume from. Applied via YouTube's own `start` param, which
+   * needs no API - only RECORDING a position does. Frozen at activation (see
+   * below) so a late-arriving cross-device position can never reload a video
+   * a devotee is already watching. */
+  startAt?: number;
+  /** Called with the current position every few seconds while playing, and
+   * once when the page is hidden. */
+  onProgress?: (seconds: number) => void;
   /** Start playing on mount (the ?continue=1 hand-off from up-next). Only
    * ever true client-side, gated on the same opt-in. */
   autoplay?: boolean;
@@ -83,8 +98,13 @@ export function LiteEmbed({
   // every render - the ref keeps the API listener reading the latest one
   // (same idiom as chant-space.tsx's advanceBeadsRef).
   const onEndedRef = useRef(onEnded);
+  const onProgressRef = useRef(onProgress);
   useEffect(() => {
     onEndedRef.current = onEnded;
+    // Same reason as onEnded: the player effect must not re-run (and tear the
+    // YouTube player down) merely because the parent re-rendered with a fresh
+    // callback identity.
+    onProgressRef.current = onProgress;
   });
 
   // The curtain (2026-07-23). The iframe now waits for intent from EVERY
@@ -159,33 +179,74 @@ export function LiteEmbed({
     iframeRef.current.focus();
   }, [curtainGone]);
 
-  const params = new URLSearchParams();
-  if (activated || autoplay) params.set("autoplay", "1");
-  if (jsApi && typeof window !== "undefined") {
-    params.set("enablejsapi", "1");
-    // The API's recommended origin check - messages only ever go to/from
-    // this site.
-    params.set("origin", window.location.origin);
-  }
-  const query = params.toString();
-  const src = `https://www.youtube-nocookie.com/embed/${videoId}${query ? `?${query}` : ""}`;
+  // The src is memoised so the resume position is FROZEN once the player
+  // exists. `startAt` can arrive late - a cross-device position is fetched
+  // over the network while the curtain is still closed - and if it changed
+  // after the iframe mounted, the src would change and RELOAD a video the
+  // devotee is already watching, throwing them back to the resume point
+  // forever. Omitting it from the deps is the entire mechanism, not an
+  // oversight: this recomputes when the player appears and never again.
+  const src = useMemo(() => {
+    const params = new URLSearchParams();
+    if (activated || autoplay) params.set("autoplay", "1");
+    if (startAt != null && startAt > 0) {
+      // YouTube's own parameter - resuming needs no API, only recording does.
+      params.set("start", String(Math.floor(startAt)));
+    }
+    if (jsApi && typeof window !== "undefined") {
+      params.set("enablejsapi", "1");
+      // The API's recommended origin check - messages only ever go to/from
+      // this site.
+      params.set("origin", window.location.origin);
+    }
+    const query = params.toString();
+    return `https://www.youtube-nocookie.com/embed/${videoId}${query ? `?${query}` : ""}`;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoId, showIframe, activated, autoplay, jsApi]);
 
   useEffect(() => {
     if (!jsApi || !showIframe) return;
     let cancelled = false;
-    let player: { destroy: () => void } | null = null;
+    let player: { destroy: () => void; getCurrentTime?: () => number } | null = null;
+    let poll = 0;
+
+    // Every 10s while playing. Frequent enough that closing a tab mid-lecture
+    // loses at most ten seconds, rare enough that it is nowhere near the
+    // per-frame work the motion audit cares about. The position is also
+    // captured on pagehide, which is the case that actually matters: a devotee
+    // closing the tab or switching apps mid-lecture.
+    const report = () => {
+      const at = player?.getCurrentTime?.();
+      if (typeof at === "number" && at > 0) onProgressRef.current?.(at);
+    };
+    const onHide = () => report();
+
     void loadYouTubeIframeApi().then((yt) => {
       if (cancelled || !iframeRef.current) return;
       player = new yt.Player(iframeRef.current, {
         events: {
           onStateChange: (e) => {
-            if (e.data === yt.PlayerState.ENDED) onEndedRef.current?.();
+            if (e.data === yt.PlayerState.ENDED) {
+              onEndedRef.current?.();
+              // A finished lecture must not resume one second from the end.
+              onProgressRef.current?.(0);
+            }
+            if (e.data === yt.PlayerState.PLAYING && !poll) {
+              poll = window.setInterval(report, 10_000);
+            }
           },
         },
       });
+      window.addEventListener("pagehide", onHide);
     });
+
     return () => {
       cancelled = true;
+      window.clearInterval(poll);
+      window.removeEventListener("pagehide", onHide);
+      // One last read on the way out - navigating away inside the app (an
+      // up-next hand-off, a tap on a related video) never fires pagehide.
+      report();
       try {
         player?.destroy();
       } catch {

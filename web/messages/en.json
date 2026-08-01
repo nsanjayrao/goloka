@@ -392,7 +392,7 @@
     "myLibrary": "My library",
     "signedInAs": "Signed in as {name} — open my library",
     "continueWithGoogle": "Continue with Google",
-    "why": "Sign in and your practice follows you: your favourites, your watch-later list, your japa record and everything you have been watching, on every device.",
+    "why": "Sign in and your practice follows you: your favourites, your watch-later list, your japa record, and where you left off in a lecture — on every device.",
     "privacyNote": "Google sign-in only. Signed in, your history follows you between devices — yours alone, deleted with your account. Signed out, it never leaves this device."
   }
 }

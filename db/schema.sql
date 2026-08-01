@@ -479,3 +479,14 @@ create policy "update own history" on watch_history
 drop policy if exists "delete own history" on watch_history;
 create policy "delete own history" on watch_history
   for delete using (auth.uid() = user_id);
+
+-- Resume position (2026-08-01). Nullable and added separately from the table
+-- above so an existing watch_history keeps every row: a NULL simply means "we
+-- never learned where they were", which is exactly the pre-existing state.
+--
+-- Seconds, not a percentage: the catalogue is 45-90 minute lectures and a
+-- percentage loses precision exactly where it matters most. Only written when
+-- the YouTube IFrame API is available, so it is always best-effort - the
+-- resume logic must treat a missing position as "start from the beginning"
+-- rather than an error.
+alter table watch_history add column if not exists position_seconds integer;
