@@ -18,6 +18,22 @@ import { distinctEkadashis, ekadashiSlug } from "@/lib/vaishnava-calendar";
 // 24 distinct ekādaśīs; Kāmikā falls in both 2026 and 2027 and is one story,
 // keyed by ekadashiSlug(name). Every year after 2027 reuses these unchanged.
 //
+// WHAT WENT WRONG HERE, 2026-08-01, so it is not repeated. The first version
+// of this file gave all 24 ekādaśīs a NARRATIVE, because the comic-panel
+// format needed one. But many māhātmyas are not narratives at all - they are
+// glorification: what the fast erases, what an offering outweighs, and no
+// plot whatever. Where the Purāṇa gave only that, a story got invented to
+// fill the panels, and shipped as scripture. Kāmikā gained a warrior who
+// killed a brāhmaṇa and was refused the funeral fire; Aparā gained a murdered
+// king haunting a pipal tree. Neither exists in the text.
+//
+// Two things changed as a result. `kind` now records what the source actually
+// is, so a `glories` day renders the māhātmya's own comparisons instead of a
+// fabricated plot. And WITHDRAWN below holds the ekādaśīs whose invented
+// stories were pulled from the site and are being rewritten from source -
+// they render no page at all, and /calendar falls back to /topic/ekadashi
+// for them, which is worse than a real story and far better than a false one.
+//
 // ART. Panels carry `art: true` when an illustration exists at
 // public/ekadashi/<slug>/panel-N.webp - the path is DERIVED from position, so
 // adding art is dropping a correctly-named file in and flipping one flag,
@@ -42,6 +58,26 @@ export type EkadashiStory = {
   occasion: string;
   /** The Purāṇa this māhātmya is recorded in. */
   purana: string;
+  /** WHAT THE SOURCE ACTUALLY IS - added 2026-08-01 after an audit found
+   * five stories here that scripture does not tell.
+   *
+   * Not every ekādaśī māhātmya is a narrative. Many are `glories`: the Lord
+   * tells Yudhiṣṭhira what the fast erases and what an offering is worth,
+   * with no plot and no characters at all. The first version of this file
+   * assumed every ekādaśī had a story, because the panel format demanded
+   * one - so where the Purāṇa gave only glorification, a narrative got
+   * INVENTED to fill the panels. Kāmikā acquired a warrior who killed a
+   * brāhmaṇa; Aparā a murdered king haunting a pipal tree. Neither is in the
+   * text.
+   *
+   * This field exists so that can never be silent again: a story marked
+   * `glories` must render the māhātmya's own comparisons, not a plot. */
+  kind: "narrative" | "glories";
+  /** ISKCON Desire Tree's page slug, verified to resolve. Their deep links
+   * DO exist (/page/kamika-ekadasi) - an earlier probe tested /page/ekadashi,
+   * got a 404, and wrongly concluded the whole pattern was unusable. Absent
+   * where no page was found, and the link falls back to their search. */
+  sourceSlug?: string;
   /** One sentence - card, meta description, and the calendar row. */
   summary: string;
   /** Other names this ekādaśī is titled under, ASCII as devotees actually
@@ -67,6 +103,8 @@ const STORIES: EkadashiStory[] = [
     name: "Śayanī Ekādaśī",
     occasion: "Āṣāḍha, śukla-pakṣa",
     purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "sayana-ekadasi",
     summary:
       "The Lord enters His four-month yogic sleep, and a king ends a three-year drought by fasting for it.",
     aliases: ["Devshayani", "Devasayani", "Shayani", "Hari Shayani", "Padma"],
@@ -94,26 +132,37 @@ const STORIES: EkadashiStory[] = [
     slug: "kamika",
     name: "Kāmikā Ekādaśī",
     occasion: "Śrāvaṇa, kṛṣṇa-pakṣa",
-    purana: "Padma Purāṇa, Brahma-vaivarta-khaṇḍa",
+    purana: "Brahma-vaivarta Purāṇa",
+    kind: "glories",
+    sourceSlug: "kamika-ekadasi",
     summary:
-      "A warrior who killed a brāhmaṇa in anger finds the one atonement the sages will accept.",
+      "No story is told for this day — only what it is worth, and what a single leaf of Tulasī outweighs.",
     panels: [
       {
         caption:
-          "A kṣatriya quarrelled with a brāhmaṇa, and in the heat of it struck him dead. The anger passed in a moment. What it left did not pass at all.",
+          "Yudhiṣṭhira asked which ekādaśī falls in the dark fortnight of Śrāvaṇa, and what it gives. Kṛṣṇa answered by repeating an older conversation still: what Brahmā, seated on his lotus, once told his son Nārada. No story follows. What follows is a reckoning.",
       },
       {
         caption:
-          "He went to perform the funeral rites and the assembled brāhmaṇas refused him. There is no rite, they said, for what you have done. Come no closer to the fire.",
+          "Merely to hear these glories, Brahmā said, carries the merit of a horse sacrifice. To worship the four-armed Lord — conch, disc, club and lotus — on this day gives more than bathing in the Gaṅgā at Kāśī, more than Naimiṣāraṇya, more than Puṣkara, the one place where Brahmā himself is worshipped.",
       },
       {
         caption:
-          "The sages he begged for atonement named Kāmikā Ekādaśī — and told him something stranger still: that the mercy of this one day exceeds bathing at every holy river a pilgrim could walk to in a lifetime.",
+          "More, He said, than the darśana of Kedāranātha in the Himālayas. More than bathing at Kurukṣetra during a solar eclipse. More than giving away the entire earth with its forests and its oceans. The list goes on being outweighed, and the thing outweighing it is one day of fasting.",
         span: "full",
       },
       {
         caption:
-          "He kept it. Not because a fast undoes a killing, but because the day carries the Lord's own name into a heart that has nothing else left to offer — and that is what Kāmikā means: the fulfiller of desires, including the desire to be clean again.",
+          "Then the measure narrows to something a poor devotee can actually hold. A single leaf of Tulasī offered to the Lord pleases Him more than pearls, rubies, topaz, diamonds, lapis lazuli, sapphires and coral together. One leaf, against the contents of a treasury.",
+      },
+      {
+        caption:
+          "To see Tulasī-devī on this day removes sin; to touch her and pray removes disease. One who waters her need never fear Yamarāja. One who plants her will live with Kṛṣṇa. Not even Citragupta, who keeps the record of every deed, can total the merit of a ghee lamp offered before her.",
+      },
+      {
+        caption:
+          "And this day, Brahmā said, erases even the killing of a brāhmaṇa. Then he added the warning that belongs with it: no one may plan on that. To sin knowingly, intending to be cleared afterwards, is an abomination. The mercy is real, and it is not a loophole.",
+        span: "full",
       },
     ],
   },
@@ -122,6 +171,8 @@ const STORIES: EkadashiStory[] = [
     name: "Pavitrāropaṇā Ekādaśī",
     occasion: "Śrāvaṇa, śukla-pakṣa",
     purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "pavitropana-ekadasi",
     summary:
       "A childless king learns that his sorrow has a cause he cannot see, and a remedy he can.",
     // "Shravana Putrada" is QUALIFIED on purpose. This ekādaśī is widely
@@ -154,6 +205,8 @@ const STORIES: EkadashiStory[] = [
     name: "Annadā Ekādaśī",
     occasion: "Bhādrapada, kṛṣṇa-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "annada-ekadasi",
     summary:
       "Hariścandra, who had lost everything rather than tell one lie, is given it all back.",
     aliases: ["Aja"],
@@ -182,6 +235,8 @@ const STORIES: EkadashiStory[] = [
     name: "Pārśva Ekādaśī",
     occasion: "Bhādrapada, śukla-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "parsva-ekadasi",
     summary:
       "The sleeping Lord turns onto His other side — and Vāmana's three steps are remembered.",
     aliases: ["Parshva", "Parivartini", "Vamana"],
@@ -210,6 +265,8 @@ const STORIES: EkadashiStory[] = [
     name: "Indirā Ekādaśī",
     occasion: "Āśvina, kṛṣṇa-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "indira-ekadasi",
     summary:
       "A king meets his own father in a lower world, and fasts to bring him out of it.",
     panels: [
@@ -233,38 +290,12 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
-    slug: "pasankusa",
-    name: "Pāśāṅkuśā Ekādaśī",
-    occasion: "Āśvina, śukla-pakṣa",
-    purana: "Brahma-vaivarta Purāṇa",
-    summary:
-      "A hunter who had done nothing good in his life is taken to Vaikuṇṭha for one day's fast.",
-    aliases: ["Papankusha", "Pashankusha", "Pasankusha"],
-    panels: [
-      {
-        caption:
-          "In the Vindhya hills lived a hunter named Krodhana, whose name meant anger and whose life had matched it. He had killed for a living and cheated for pleasure and had, by any reckoning, no defence.",
-      },
-      {
-        caption:
-          "When the messengers of Yamarāja set a date for his death, he did what such men rarely do — he ran to the forest, to the sage Aṅgirā, and asked whether anything at all could be done.",
-      },
-      {
-        caption:
-          "The sage did not tell him he was a good man underneath. He told him to observe Pāśāṅkuśā Ekādaśī. That was the whole of the instruction.",
-      },
-      {
-        caption:
-          "He observed it, and was carried to Vaikuṇṭha — which is the scandal at the centre of this day, and the reason it is told at all: the mercy is not proportionate to the man.",
-        span: "full",
-      },
-    ],
-  },
-  {
     slug: "rama",
     name: "Rāmā Ekādaśī",
     occasion: "Kārtika, kṛṣṇa-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "rama-ekadasi",
     summary:
       "A man too weak to fast keeps the fast anyway, and dies — and what he is given for it.",
     panels: [
@@ -292,6 +323,8 @@ const STORIES: EkadashiStory[] = [
     name: "Utthāna Ekādaśī",
     occasion: "Kārtika, śukla-pakṣa",
     purana: "Skanda Purāṇa",
+    kind: "narrative",
+    sourceSlug: "utthana-ekadasi",
     summary:
       "The Lord rises from four months of yogic sleep, and the year opens again.",
     aliases: ["Utthan", "Prabodhini", "Devutthana", "Haribodhini", "Dev Uthani"],
@@ -320,6 +353,8 @@ const STORIES: EkadashiStory[] = [
     name: "Utpannā Ekādaśī",
     occasion: "Mārgaśīrṣa, kṛṣṇa-pakṣa",
     purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "utpanna-ekadasi",
     summary:
       "The birthday of Ekādaśī herself — a goddess born from the Lord's own body to kill a demon no weapon could touch.",
     aliases: ["Utpatti"],
@@ -348,6 +383,8 @@ const STORIES: EkadashiStory[] = [
     name: "Mokṣadā Ekādaśī",
     occasion: "Mārgaśīrṣa, śukla-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "mokshada-ekadasi",
     summary:
       "Gītā-jayantī — the day the Bhagavad-gītā was spoken, and a son frees his father with its merit.",
     aliases: ["Mokshada"],
@@ -376,6 +413,8 @@ const STORIES: EkadashiStory[] = [
     name: "Saphalā Ekādaśī",
     occasion: "Pauṣa, kṛṣṇa-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "saphala-ekadasi",
     summary:
       "A wicked prince observes the fast by accident, in a forest, without knowing what he is doing.",
     aliases: ["Safala"],
@@ -400,38 +439,12 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
-    slug: "putrada",
-    name: "Putradā Ekādaśī",
-    occasion: "Pauṣa, śukla-pakṣa",
-    purana: "Bhaviṣya Purāṇa",
-    summary:
-      "A king and queen of Bhadrāvatī, grieving that they have no heir, are sent to the sages by a deer.",
-    aliases: ["Pausha Putrada", "Pausa Putrada"],
-    panels: [
-      {
-        caption:
-          "King Suketumān of Bhadrāvatī and Queen Śaibyā had no child. The grief had gone on so long that the king finally left the palace for the forest, intending not to return.",
-      },
-      {
-        caption:
-          "He wandered without food or water until he came upon a lake ringed with lotuses, and around it the āśramas of sages who had been waiting, they said, for him.",
-      },
-      {
-        caption:
-          "They told him the day was Putradā Ekādaśī, the giver of sons, and that he had arrived on it — and instructed him to observe it before he did anything else.",
-      },
-      {
-        caption:
-          "He fasted there among them and went home. A son was born to Bhadrāvatī who grew to be everything the kingdom needed — and the king had gone into the forest to die.",
-        span: "full",
-      },
-    ],
-  },
-  {
     slug: "sat-tila",
     name: "Ṣaṭ-tilā Ekādaśī",
     occasion: "Māgha, kṛṣṇa-pakṣa",
     purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "sattila-ekadasi",
     summary:
       "A woman who fasted perfectly and gave nothing away learns what a fast is actually for.",
     aliases: ["Shattila", "Sattila", "Shat-tila", "Sat Tila"],
@@ -460,6 +473,8 @@ const STORIES: EkadashiStory[] = [
     name: "Bhaimī Ekādaśī",
     occasion: "Māgha, śukla-pakṣa",
     purana: "Padma Purāṇa",
+    kind: "narrative",
+    sourceSlug: "bhaimi-ekadasi",
     summary:
       "Two singers of heaven are cursed to become demons, and one day undoes it.",
     aliases: ["Jaya", "Bhishma", "Bhaimi"],
@@ -488,6 +503,8 @@ const STORIES: EkadashiStory[] = [
     name: "Vijayā Ekādaśī",
     occasion: "Phālguna, kṛṣṇa-pakṣa",
     purana: "Skanda Purāṇa",
+    kind: "narrative",
+    sourceSlug: "vijaya-ekadasi",
     summary:
       "Lord Rāma, stopped at the ocean with an army and no way across, is given a day instead of a plan.",
     panels: [
@@ -515,6 +532,8 @@ const STORIES: EkadashiStory[] = [
     name: "Āmalakī Ekādaśī",
     occasion: "Phālguna, śukla-pakṣa",
     purana: "Brahmāṇḍa Purāṇa",
+    kind: "narrative",
+    sourceSlug: "amalaki-ekadasi",
     summary:
       "A hunter hides in a tree from his own enemies and is protected by what grows there.",
     aliases: ["Amalaka", "Amla"],
@@ -543,6 +562,8 @@ const STORIES: EkadashiStory[] = [
     name: "Pāpamocanī Ekādaśī",
     occasion: "Caitra, kṛṣṇa-pakṣa",
     purana: "Bhaviṣya Purāṇa",
+    kind: "narrative",
+    sourceSlug: "papamocani-ekadasi",
     summary:
       "A sage loses fifty-seven years to a single distraction, and the apsarā who caused it pays for it too.",
     aliases: ["Papamochani"],
@@ -571,6 +592,8 @@ const STORIES: EkadashiStory[] = [
     name: "Kāmadā Ekādaśī",
     occasion: "Caitra, śukla-pakṣa",
     purana: "Varāha Purāṇa",
+    kind: "narrative",
+    sourceSlug: "kamada-ekadasi",
     summary:
       "A wife fasts to turn her husband back from the monster a curse has made of him.",
     panels: [
@@ -594,37 +617,12 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
-    slug: "varuthini",
-    name: "Varūthinī Ekādaśī",
-    occasion: "Vaiśākha, kṛṣṇa-pakṣa",
-    purana: "Bhaviṣya Purāṇa",
-    summary:
-      "A king meditating in the forest is dragged away by a bear, and does not break his meditation.",
-    panels: [
-      {
-        caption:
-          "King Māndhātā left his kingdom for the forest to perform austerities, and sat in meditation beneath the trees for a long time without moving.",
-      },
-      {
-        caption:
-          "A bear came and began to gnaw at his foot. The king felt it. He did not open his eyes, and he did not cry out, because he had undertaken to sit and he was sitting.",
-      },
-      {
-        caption:
-          "The bear dragged him away from the seat entirely. Only then did Māndhātā call out — not for rescue, but to Viṣṇu — and the Lord came and killed the bear with His disc.",
-        span: "full",
-      },
-      {
-        caption:
-          "The king's foot was gone. Observe Varūthinī Ekādaśī, the Lord told him — varūthinī means armour, that which protects — and his body was restored to him whole.",
-      },
-    ],
-  },
-  {
     slug: "mohini",
     name: "Mohinī Ekādaśī",
     occasion: "Vaiśākha, śukla-pakṣa",
     purana: "Kūrma Purāṇa",
+    kind: "narrative",
+    sourceSlug: "mohini-ekadasi",
     summary:
       "The day of the Lord's most beautiful deception, and of a wastrel son who is given it as a remedy.",
     aliases: ["Mohini"],
@@ -649,38 +647,12 @@ const STORIES: EkadashiStory[] = [
     ],
   },
   {
-    slug: "apara",
-    name: "Aparā Ekādaśī",
-    occasion: "Jyeṣṭha, kṛṣṇa-pakṣa",
-    purana: "Brahmāṇḍa Purāṇa",
-    summary:
-      "A murdered king becomes a ghost in a pipal tree, and a sage passing by does something about it.",
-    aliases: ["Achala", "Achhala"],
-    panels: [
-      {
-        caption:
-          "King Mahīdhvaja was righteous, and his younger brother could not bear it. He killed him and buried the body in the forest under a pipal tree, and told no one.",
-      },
-      {
-        caption:
-          "Because the rites were never performed, the king became a ghost, bound to that tree — and being what he was, he troubled everyone who passed beneath it.",
-      },
-      {
-        caption:
-          "The sage Dhaumya came that way, saw what the spirit had been, and asked him. The ghost told him the whole thing, and the sage stayed.",
-      },
-      {
-        caption:
-          "Dhaumya observed Aparā Ekādaśī and gave the merit to the murdered king, who rose out of that tree in a celestial form and went upward — released by a man who had no obligation to him at all.",
-        span: "full",
-      },
-    ],
-  },
-  {
     slug: "pandava-nirjala",
     name: "Pāṇḍava Nirjalā Ekādaśī",
     occasion: "Jyeṣṭha, śukla-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "pandava-nirjala-ekadasi",
     summary:
       "Bhīma, who could not fast at all, is given one day that counts for all twenty-four.",
     aliases: ["Nirjala", "Bhima", "Bhimseni", "Pandava"],
@@ -709,6 +681,8 @@ const STORIES: EkadashiStory[] = [
     name: "Yoginī Ekādaśī",
     occasion: "Āṣāḍha, kṛṣṇa-pakṣa",
     purana: "Brahma-vaivarta Purāṇa",
+    kind: "narrative",
+    sourceSlug: "yogini-ekadasi",
     summary:
       "A servant of Kuvera, cursed with leprosy for a stolen hour with his wife, is healed.",
     panels: [
@@ -730,6 +704,41 @@ const STORIES: EkadashiStory[] = [
           "He came to Mārkaṇḍeya Ṛṣi, who told him to observe Yoginī Ekādaśī. He observed it, his body was restored, and he returned to his own place — and to her.",
       },
     ],
+  },
+];
+
+/** Ekādaśīs whose first written story was INVENTED and has been pulled from
+ * the site pending a rewrite from source (see the file header). These render
+ * no page; /calendar and the home strip fall back to /topic/ekadashi, the
+ * behaviour storyForName()'s null branch was already built for.
+ *
+ * Each entry records what the source actually says, so the rewrite starts
+ * from a fact rather than from the same guess twice. Empty this array by
+ * rewriting them, never by deleting the check. */
+export const WITHDRAWN: { slug: string; name: string; sourceIs: string }[] = [
+  {
+    slug: "pasankusa",
+    name: "Pāśāṅkuśā Ekādaśī",
+    sourceIs:
+      "Glorification. No hunter named Krodhana, no sage Aṅgirā, no Vindhya hills - those were invented.",
+  },
+  {
+    slug: "putrada",
+    name: "Putradā Ekādaśī",
+    sourceIs:
+      "Glorification. No King Suketumān, no Queen Śaibyā, no Bhadrāvatī in the fetched text.",
+  },
+  {
+    slug: "varuthini",
+    name: "Varūthinī Ekādaśī",
+    sourceIs:
+      "Glorification, naming King Māndhātā in a single clause ('was liberated') and Dhundhumāra's leprosy. The bear, the gnawed foot and the Lord's disc were built on top of that clause.",
+  },
+  {
+    slug: "apara",
+    name: "Aparā Ekādaśī",
+    sourceIs:
+      "Glorification - a list of sins erased, including false witness and fleeing the battlefield. No King Mahīdhvaja, no ghost in a pipal tree, no sage Dhaumya.",
   },
 ];
 
@@ -786,18 +795,24 @@ export function titleKeywordsFor(story: EkadashiStory): string[] {
   return stems.flatMap((stem) => [`${stem} Ekadashi`, `${stem} Ekadasi`]);
 }
 
-/** ISKCON Desire Tree's SEARCH url for this ekādaśī, not a deep link.
- * Same reasoning DESIGN.md already records for the BBT store links on
- * /books: deep links rot, search is stable. Verified 2026-08-01 that
- * iskcondesiretree.com/page/ekadashi 404s while `?s=` resolves. */
-export function desireTreeSearchUrl(name: string): string {
-  const plain = name.normalize("NFD").replace(/[̀-ͯ]/g, "");
+/** ISKCON Desire Tree's page for this ekādaśī - their own telling of the
+ * same māhātmya, credited and linked rather than copied.
+ *
+ * Prefers the DEEP link when the story records a verified `sourceSlug`. An
+ * earlier version used search urls for all 24, on the strength of a probe
+ * that requested /page/ekadashi, got a 404, and concluded the pattern did
+ * not exist. It does: /page/kamika-ekadasi resolves, as do most others. The
+ * search url survives as the fallback for the handful with no page found. */
+export function desireTreeUrl(story: EkadashiStory): string {
+  if (story.sourceSlug) return `https://iskcondesiretree.com/page/${story.sourceSlug}`;
+  const plain = story.name.normalize("NFD").replace(/[̀-ͯ]/g, "");
   return `https://iskcondesiretree.com/?s=${encodeURIComponent(plain)}`;
 }
 
-/** Ekādaśīs in the calendar that have no story yet - empty today, and a test
- * keeps it that way, so adding a date to vaishnava-calendar.ts without a
- * māhātmya fails the suite instead of shipping a dead "Read the story" link. */
+/** Ekādaśīs in the calendar with no story page. Today this is exactly the
+ * WITHDRAWN set; a test pins that, so adding a date to vaishnava-calendar.ts
+ * without a māhātmya fails the suite rather than shipping a dead link - and
+ * so does quietly abandoning a withdrawn rewrite. */
 export function ekadashisWithoutStory(): string[] {
   return distinctEkadashis()
     .filter(({ slug }) => !BY_SLUG.has(slug))

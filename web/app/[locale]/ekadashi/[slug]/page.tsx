@@ -10,7 +10,7 @@ import { Link } from "@/i18n/navigation";
 import { routing } from "@/i18n/routing";
 import {
   allStories,
-  desireTreeSearchUrl,
+  desireTreeUrl,
   storyForSlug,
   titleKeywordsFor,
 } from "@/lib/ekadashi-stories";
@@ -145,7 +145,7 @@ export default async function EkadashiStoryPage({ params }: Props) {
             {t("sourceNote", { purana: story.purana })}
           </p>
           <a
-            href={desireTreeSearchUrl(story.name)}
+            href={desireTreeUrl(story)}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-3 inline-block text-[13px] font-medium text-accent-strong underline-offset-4 hover:underline"

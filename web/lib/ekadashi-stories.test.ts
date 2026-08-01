@@ -7,7 +7,8 @@ import {
   storyForName,
   storyForSlug,
   titleKeywordsFor,
-  desireTreeSearchUrl,
+  desireTreeUrl,
+  WITHDRAWN,
 } from "./ekadashi-stories";
 import { EKADASHIS, distinctEkadashis, ekadashiSlug } from "./vaishnava-calendar";
 
@@ -35,17 +36,34 @@ describe("ekadashiSlug", () => {
 });
 
 describe("story coverage", () => {
-  it("has a story for EVERY distinct ekadashi in the calendar", () => {
-    // The guard that matters: adding a date to vaishnava-calendar.ts without
-    // writing its mahatmya fails here rather than shipping a "Read the story"
-    // link that 404s.
-    expect(ekadashisWithoutStory()).toEqual([]);
+  it("has a story for every ekadashi EXCEPT the withdrawn ones", () => {
+    // Two guards in one. Adding a date to vaishnava-calendar.ts without
+    // writing its mahatmya fails here rather than shipping a "Read the
+    // story" link that 404s - AND quietly forgetting to rewrite a withdrawn
+    // story fails here too, because the sets must match exactly.
+    expect(ekadashisWithoutStory().sort()).toEqual(WITHDRAWN.map((w) => w.name).sort());
   });
 
-  it("covers all 24 distinct ekadashis from 36 dated entries", () => {
+  it("covers 24 distinct ekadashis, minus those pending a rewrite", () => {
     expect(EKADASHIS.length).toBe(36);
     expect(distinctEkadashis().length).toBe(24);
-    expect(allStories().length).toBe(24);
+    expect(allStories().length + WITHDRAWN.length).toBe(24);
+  });
+
+  it("publishes no story for a withdrawn ekadashi", () => {
+    // The whole point of withdrawing them: the invented text must not be
+    // reachable. /calendar falls back to /topic/ekadashi for these.
+    for (const { slug, name } of WITHDRAWN) {
+      expect(storyForSlug(slug), `${slug} is still published`).toBeNull();
+      expect(storyForName(name), `${name} is still published`).toBeNull();
+    }
+  });
+
+  it("records what each withdrawn source ACTUALLY says", () => {
+    // So the rewrite starts from a fact rather than from the same guess.
+    for (const w of WITHDRAWN) {
+      expect(w.sourceIs.length, w.slug).toBeGreaterThan(40);
+    }
   });
 
   it("has no story for an ekadashi the calendar does not know", () => {
@@ -54,8 +72,15 @@ describe("story coverage", () => {
   });
 
   it("resolves by calendar NAME, which is what /calendar holds", () => {
+    const withdrawn = new Set(WITHDRAWN.map((w) => w.name));
     for (const entry of EKADASHIS) {
       const story = storyForName(entry.name);
+      if (withdrawn.has(entry.name)) {
+        // Deliberately unresolvable while its invented text is being
+        // rewritten - /calendar falls back to /topic/ekadashi.
+        expect(story, `${entry.name} is withdrawn`).toBeNull();
+        continue;
+      }
       expect(story, `no story for ${entry.name}`).not.toBeNull();
       expect(story!.name).toBe(entry.name);
     }
@@ -68,6 +93,14 @@ describe("story coverage", () => {
 });
 
 describe("story shape", () => {
+  it("every story declares what kind of source it has", () => {
+    // A `glories` mahatmya has no plot. Marking it honestly is what stops
+    // the panel format demanding a narrative that scripture never told.
+    for (const story of allStories()) {
+      expect(["narrative", "glories"], story.slug).toContain(story.kind);
+    }
+  });
+
   it("every story has a summary, a purana, an occasion and panels", () => {
     for (const story of allStories()) {
       expect(story.summary.length, story.slug).toBeGreaterThan(20);
@@ -120,13 +153,17 @@ describe("titleKeywordsFor", () => {
     // Śrāvaṇa story must only ever use the MONTH-QUALIFIED form, or each
     // shelf fills with the other's videos and neither is wrong-looking.
     const shravana = titleKeywordsFor(storyForSlug("pavitraropana")!);
-    const pausha = titleKeywordsFor(storyForSlug("putrada")!);
     for (const keyword of shravana) {
       expect(keyword, "unqualified Putrada would collide").not.toMatch(/^Putrada /);
     }
     expect(shravana.some((k) => k.startsWith("Shravana Putrada"))).toBe(true);
-    // And no keyword is shared between the two stories.
-    expect(shravana.filter((k) => pausha.includes(k))).toEqual([]);
+    // The Pauṣa story is withdrawn pending a rewrite; this still has to hold
+    // the day it returns, so the comparison runs whenever it is published
+    // rather than being deleted and forgotten.
+    const pausha = storyForSlug("putrada");
+    if (pausha) {
+      expect(shravana.filter((k) => titleKeywordsFor(pausha).includes(k))).toEqual([]);
+    }
   });
 
   it("deduplicates a stem that an alias repeats", () => {
@@ -147,19 +184,23 @@ describe("titleKeywordsFor", () => {
   });
 });
 
-describe("desireTreeSearchUrl", () => {
-  it("links to a search, not a deep link, with diacritics stripped", () => {
-    expect(desireTreeSearchUrl("Kāmikā Ekādaśī")).toBe(
-      "https://iskcondesiretree.com/?s=Kamika%20Ekadasi"
+describe("desireTreeUrl", () => {
+  it("prefers the verified deep link", () => {
+    expect(desireTreeUrl(storyForSlug("kamika")!)).toBe(
+      "https://iskcondesiretree.com/page/kamika-ekadasi"
     );
   });
 
-  it("produces a usable url for every story", () => {
+  it("falls back to search when no page was found", () => {
+    const orphan = { ...storyForSlug("kamika")!, sourceSlug: undefined };
+    expect(desireTreeUrl(orphan)).toBe("https://iskcondesiretree.com/?s=Kamika%20Ekadasi");
+  });
+
+  it("produces an ascii url for every story", () => {
     for (const story of allStories()) {
-      const url = desireTreeSearchUrl(story.name);
-      expect(url.startsWith("https://iskcondesiretree.com/?s=")).toBe(true);
-      // No raw non-ASCII left in the query.
-      expect(url).toMatch(/^[\x20-\x7e]+$/);
+      const url = desireTreeUrl(story);
+      expect(url.startsWith("https://iskcondesiretree.com/")).toBe(true);
+      expect(url, story.slug).toMatch(/^[\x20-\x7e]+$/);
     }
   });
 });

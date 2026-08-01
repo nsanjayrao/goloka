@@ -415,11 +415,30 @@ DELETED that day — see §14.
   - **Narration**: caption in `--body` at 15px/1.7, capped at
     `max-w-measure`. The FIRST panel's caption opens with a Marcellus drop
     cap (2 lines) — the one ornamental flourish, so it stays an event.
+  - **NOT EVERY EKĀDAŚĪ HAS A STORY — the format must not demand one**
+    (correction, 2026-08-01, after five stories shipped that scripture does
+    not tell). Many māhātmyas are pure *glorification*: the Lord tells
+    Yudhiṣṭhira what the fast erases and what one Tulasī leaf outweighs, with
+    no plot and no characters at all. The first build assumed all 24 were
+    narratives because the panel grid wanted a beginning, middle and end — so
+    where the Purāṇa gave only praise, a story got invented to fill the
+    panels. Kāmikā acquired a warrior who killed a brāhmaṇa; Aparā a murdered
+    king haunting a pipal tree. Neither is in the text.
+    `EkadashiStory.kind` now records which the source is, and a `glories` day
+    renders the māhātmya's own comparisons — which are *better* panels, not
+    weaker ones: a single leaf outweighing pearls, rubies and coral; a ghee
+    lamp Citragupta cannot total. **A missing story is a content state, never
+    a gap to fill by writing one.**
   - **Attribution is structural, not a footnote.** Each story names its
-    Purāṇa (`Padma Purāṇa, Brahma-vaivarta-khaṇḍa`) in the header and
-    link-outs sit at the foot. The text is OUR retelling of a public-domain
-    Purāṇic source — ISKCON Desire Tree is credited and linked, never
-    copied. "Index, never host" governs prose exactly as it governs video.
+    Purāṇa in the header and link-outs sit at the foot. The text is OUR
+    retelling of a public-domain Purāṇic source — ISKCON Desire Tree is
+    credited and linked, never copied. "Index, never host" governs prose
+    exactly as it governs video. Link to their DEEP page
+    (`/page/kamika-ekadasi`), falling back to search only where no page
+    exists; an earlier probe requested `/page/ekadashi`, took the 404 as
+    proof the pattern was unusable, and sent all 24 to search instead.
+    **Read the source before retelling it — the audit that caught the
+    invented stories was one fetch per ekādaśī.**
   - **A lecture shelf per Ekādaśī**, matched by name against the catalogue.
     This is the inward link no other Ekādaśī page has: read the story, then
     hear a class on it.
