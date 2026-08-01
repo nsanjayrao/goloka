@@ -401,5 +401,15 @@
     "continueWithGoogle": "Continuar con Google",
     "why": "Inicia sesión y tu práctica te acompaña: tus favoritos, tu lista para más tarde, tu registro de japa y dónde dejaste una clase, en todos tus dispositivos.",
     "privacyNote": "Solo inicio de sesión con Google. Con la sesión iniciada, tu historial te acompaña entre dispositivos: solo tuyo y se elimina con tu cuenta. Sin sesión, nunca sale de este dispositivo."
+  },
+  "ekadashiStory": {
+    "kicker": "Ekādaśī",
+    "backToCalendar": "← El calendario vaiṣṇava",
+    "occasion": "Ocasión",
+    "toldIn": "Narrado en",
+    "nextObserved": "Próxima observancia",
+    "classesTitle": "Clases sobre {name}",
+    "sourceNote": "Este relato es propio de Goloka, basado en el {purana}. Goloka indexa y enlaza: nunca republica el texto de otro sitio.",
+    "readElsewhere": "Leer esta historia en ISKCON Desire Tree ↗"
   }
 }

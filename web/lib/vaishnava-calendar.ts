@@ -97,6 +97,41 @@ export function toISTDateString(now: Date): string {
   return `${year}-${month}-${day}`;
 }
 
+/** The URL slug for an ekādaśī NAME, e.g. "Ṣaṭ-tilā Ekādaśī" -> "sat-tila".
+ *
+ * DERIVED, never stored on the entry, and that is the point: the registry
+ * holds 36 dated entries but only 24 distinct ekādaśīs (Kāmikā falls in both
+ * 2026 and 2027), so a hand-written slug column would be 36 chances for two
+ * occurrences of one ekādaśī to disagree about which story they point at.
+ * Deriving it from the name makes that impossible by construction.
+ *
+ * IAST survives NFD normalization cleanly: ā ī ū ś ñ carry combining marks,
+ * and so do the retroflex/anusvāra letters (ṣ ṭ ḍ ṇ ṛ = base + U+0323 dot
+ * below, ṅ ṁ = base + U+0307 dot above) - every one of them inside the
+ * U+0300–U+036F block stripped here. The word "Ekādaśī" itself is dropped:
+ * it is on all 24 names and carries nothing. */
+export function ekadashiSlug(name: string): string {
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/ekadasi/gi, "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/** Every distinct ekādaśī in the registry, in first-occurrence order - the
+ * 24 pages /ekadashi/[slug] builds, deduplicated from the 36 dated rows. */
+export function distinctEkadashis(): { slug: string; name: string }[] {
+  const seen = new Map<string, string>();
+  for (const entry of EKADASHIS) {
+    const slug = ekadashiSlug(entry.name);
+    if (!seen.has(slug)) seen.set(slug, entry.name);
+  }
+  return [...seen].map(([slug, name]) => ({ slug, name }));
+}
+
 /** Today's ekādaśī, or null on an ordinary day. Compares by IST calendar
  * date (see toISTDateString), matching the registry's Māyāpur/IST dates. */
 export function todaysEkadashi(now: Date = new Date()): EkadashiEntry | null {

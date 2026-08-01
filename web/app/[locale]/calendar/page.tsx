@@ -5,7 +5,8 @@ import { Container } from "@/components/container";
 import { EmptyState } from "@/components/empty-state";
 import { Link } from "@/i18n/navigation";
 import { localizedAlternates } from "@/lib/site";
-import { EKADASHIS, toISTDateString } from "@/lib/vaishnava-calendar";
+import { storyForName } from "@/lib/ekadashi-stories";
+import { EKADASHIS, ekadashiSlug, toISTDateString } from "@/lib/vaishnava-calendar";
 import { OBSERVANCES, type ObservanceKind } from "@/lib/vaishnava-observances";
 
 // Static + ISR, same idiom as /browse and /topic/[slug] - the registries are
@@ -51,7 +52,12 @@ function buildCalendarRows(now: Date): CalendarRow[] {
     name: entry.name,
     kind: "ekadashi",
     note: entry.note,
-    href: "/topic/ekadashi",
+    // Its own māhātmya, not the generic /topic/ekadashi pile every ekādaśī
+    // used to share - a link that looked specific and wasn't. Falls back to
+    // the pile only if an ekādaśī reaches the calendar before its story is
+    // written (lib/ekadashi-stories.ts's test forbids that, so this is
+    // belt-and-braces rather than a real branch).
+    href: storyForName(entry.name) ? `/ekadashi/${ekadashiSlug(entry.name)}` : "/topic/ekadashi",
   }));
 
   const observanceRows: CalendarRow[] = OBSERVANCES.filter((entry) => entry.date >= today).map((entry) => ({

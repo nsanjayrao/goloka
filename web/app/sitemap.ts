@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 
 import { getAllCategories, getChannelHandles, getSeriesHandles, getSitemapVideos } from "@/lib/data";
 import { SITE_URL } from "@/lib/site";
+import { allStories } from "@/lib/ekadashi-stories";
 import { TOPIC_LIST } from "@/lib/topics";
 
 // Regenerate hourly so newly synced videos/categories/channels/series enter
@@ -47,6 +48,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     changeFrequency: "weekly",
   }));
 
+  // The 24 ekādaśī māhātmyas - static hand-written prose, so "yearly": the
+  // stories do not change, only the date they are next observed on.
+  const ekadashiRoutes: MetadataRoute.Sitemap = allStories().map((story) => ({
+    url: `${SITE_URL}/ekadashi/${story.slug}`,
+    changeFrequency: "yearly",
+  }));
+
   const videoRoutes: MetadataRoute.Sitemap = videos.map((video) => ({
     url: `${SITE_URL}/watch/${video.youtube_video_id}`,
     lastModified: video.published_at ?? undefined,
@@ -58,6 +66,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...channelRoutes,
     ...topicRoutes,
     ...seriesRoutes,
+    ...ekadashiRoutes,
     ...videoRoutes,
   ];
 }

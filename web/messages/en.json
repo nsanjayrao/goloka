@@ -401,5 +401,15 @@
     "continueWithGoogle": "Continue with Google",
     "why": "Sign in and your practice follows you: your favourites, your watch-later list, your japa record, and where you left off in a lecture — on every device.",
     "privacyNote": "Google sign-in only. Signed in, your history follows you between devices — yours alone, deleted with your account. Signed out, it never leaves this device."
+  },
+  "ekadashiStory": {
+    "kicker": "Ekādaśī",
+    "backToCalendar": "← The Vaiṣṇava calendar",
+    "occasion": "Occasion",
+    "toldIn": "Told in",
+    "nextObserved": "Next observed",
+    "classesTitle": "Classes on {name}",
+    "sourceNote": "This retelling is Goloka's own, from the {purana}. Goloka indexes and links — it never republishes another site's writing.",
+    "readElsewhere": "Read this story on ISKCON Desire Tree ↗"
   }
 }

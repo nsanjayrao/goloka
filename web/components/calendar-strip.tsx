@@ -1,7 +1,8 @@
 import { useTranslations } from "next-intl";
 
 import { Link } from "@/i18n/navigation";
-import { daysUntil, nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calendar";
+import { storyForName } from "@/lib/ekadashi-stories";
+import { daysUntil, ekadashiSlug, nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calendar";
 
 // A quiet full-bleed band (DESIGN.md #4 shared --pad gutter) between the
 // live strip and the rest of the home page - deliberately NOT a full
@@ -25,16 +26,23 @@ export function CalendarStrip({ now = new Date() }: { now?: Date }) {
   const isToday = today !== null;
   const days = isToday ? 0 : daysUntil(upcoming.date, now);
   const state = isToday ? t("today") : t("inDays", { days });
+  // The strip NAMES one ekādaśī, so both halves go to that ekādaśī's own
+  // story rather than to /topic/ekadashi, which is the same undifferentiated
+  // shelf whichever one is upcoming. Falls back to the shelf only if a date
+  // reaches the calendar before its māhātmya is written.
+  const href = storyForName(upcoming.name)
+    ? `/ekadashi/${ekadashiSlug(upcoming.name)}`
+    : "/topic/ekadashi";
 
   return (
     <div className={`cal-strip${isToday ? " is-today" : ""}`}>
       <div className="cal-strip-row gutter">
-        <Link href="/topic/ekadashi" className="cal-strip-main">
+        <Link href={href} className="cal-strip-main">
           <span className="cal-strip-kicker">{t("kicker")}</span>
           <span className="cal-strip-name">{upcoming.name}</span>
         </Link>
         <div className="cal-strip-meta">
-          <Link href="/topic/ekadashi" className="cal-strip-state">
+          <Link href={href} className="cal-strip-state">
             {state}
           </Link>
           {/* A plain anchor, not the locale-aware Link: /ekadashi.ics

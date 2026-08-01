@@ -387,6 +387,45 @@ DELETED that day — see §14.
   website link-out, inward /channel link when indexed, and the LIVE
   badge when the temple's channel is currently streaming (ISR 600 to
   track the 15-min live check).
+- **Ekādaśī stories (`/ekadashi/[slug]`, 2026-08-01)**: the māhātmya of each
+  Ekādaśī, told as a **comic strip** — sequential panels, reverent narration.
+  Owner decision: comic-book *form*, never comic *tone*; these are Kṛṣṇa's
+  own words to Yudhiṣṭhira, so the layout may delight but the voice never
+  winks.
+  - **One story per NAME, not per date.** `vaishnava-calendar.ts` holds 36
+    entries but only 24 distinct Ekādaśīs — Kāmikā falls in both 2026 and
+    2027 and is one story. `EkadashiEntry.slug` is the join; every future
+    year reuses the same page.
+  - **Panel grid**: a 2-column grid on ≥640px, one column below. A panel is
+    `span: "half"` (default) or `"full"` for a beat that needs width. Every
+    panel is a fixed **4:3** art box + caption below, so the box reserves its
+    space whether or not art exists — art arriving must cause **zero layout
+    shift**, which is the whole reason the ratio is fixed rather than
+    intrinsic.
+  - **The pre-art state is a designed state, not a placeholder.** An empty
+    art box renders the `Jali` lattice (§5) at low opacity over `--surface`,
+    with the panel number in Marcellus. A story with no art at all must look
+    deliberate — this is what lets the page ship before 120 illustrations
+    exist. Never a grey box, never "image coming soon".
+  - **Art slots**: `public/ekadashi/<slug>/panel-N.webp`, 1200×900. Supplied
+    by the owner (I cannot generate images, and AI-rendered Deity iconography
+    gets arm count, flute posture and tilaka wrong often enough that a wrong
+    image is worse than none). Progressive by design: a story reads whole
+    with ONE hero panel and only gets richer as the rest land.
+  - **Narration**: caption in `--body` at 15px/1.7, capped at
+    `max-w-measure`. The FIRST panel's caption opens with a Marcellus drop
+    cap (2 lines) — the one ornamental flourish, so it stays an event.
+  - **Attribution is structural, not a footnote.** Each story names its
+    Purāṇa (`Padma Purāṇa, Brahma-vaivarta-khaṇḍa`) in the header and
+    link-outs sit at the foot. The text is OUR retelling of a public-domain
+    Purāṇic source — ISKCON Desire Tree is credited and linked, never
+    copied. "Index, never host" governs prose exactly as it governs video.
+  - **A lecture shelf per Ekādaśī**, matched by name against the catalogue.
+    This is the inward link no other Ekādaśī page has: read the story, then
+    hear a class on it.
+  - **Static**: `generateStaticParams` over 24 slugs × 6 locales. Story
+    bodies are English-first (translating 24 māhātmyas into six languages is
+    its own project); page chrome is translated like every other route.
 - **Accounts (Phase 4, 2026-07-18)**: OPTIONAL Google sign-in whose only
   data is two lists (favourite / watch_later in `saved_videos`,
   RLS-scoped). Auth is entirely client-side — server components stay
