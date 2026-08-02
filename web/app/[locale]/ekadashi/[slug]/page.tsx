@@ -120,6 +120,29 @@ export default async function EkadashiStoryPage({ params }: Props) {
       <Ornament className="my-9 sm:my-12" />
 
         <ComicStrip slug={story.slug} panels={story.panels} storyName={story.name} />
+
+        {/* WHOSE WORDS THE PANELS ARE, said plainly and directly under them.
+            They are the only prose on the page and would otherwise be read as
+            the māhātmya itself. They are ours. */}
+        <p className="mt-10 max-w-measure text-[13px] leading-relaxed text-text-muted">
+          {t("retellingNote")}
+        </p>
+
+        {/* The māhātmya itself is LINKED, never reproduced or paraphrased
+            (owner decision 2026-08-02): these texts come down through
+            paramparā, and re-wording scripture is not ours to do. This is now
+            the most important outbound link on the page, so it is a card
+            rather than a line in the footer. */}
+        <a
+          href={desireTreeUrl(story)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mahatmya-link"
+        >
+          <span className="kicker">{t("kicker")}</span>
+          <span className="title">{t("readFullTitle", { name: story.name })}</span>
+          <span className="note">{t("readFullNote", { purana: story.purana })}</span>
+        </a>
       </Container>
 
       {/* Outside Container: CategoryRow carries its own --pad gutters, the
@@ -135,23 +158,14 @@ export default async function EkadashiStoryPage({ params }: Props) {
         />
       )}
 
-      {/* Attribution is structural, not a footnote (DESIGN.md §6): the
-          retelling above is ours, from a public-domain Purāṇic source, and
-          the devotional site that also tells it is credited and linked
-          rather than copied. */}
+      {/* Attribution. The outbound link lives in the card above rather than
+          here now - repeating it in the footer would bury the one thing on
+          this page that leads to the actual scripture. */}
       <Container className="pb-14 sm:pb-20">
         <footer className="mt-14 border-t border-border pt-6 sm:mt-20">
           <p className="max-w-measure text-[13px] leading-relaxed text-text-muted">
             {t("sourceNote", { purana: story.purana })}
           </p>
-          <a
-            href={desireTreeUrl(story)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-3 inline-block text-[13px] font-medium text-accent-strong underline-offset-4 hover:underline"
-          >
-            {t("readElsewhere")}
-          </a>
         </footer>
       </Container>
     </>

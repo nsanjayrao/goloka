@@ -2484,6 +2484,50 @@
     color: var(--text-muted);
   }
 
+  /* ---- The māhātmya link-out (owner decision, 2026-08-02) --------------
+     The panels are OUR illustrated retelling. The māhātmya itself comes down
+     through paramparā, and re-wording scripture is not ours to do - so the
+     text is not reproduced or paraphrased here, it is LINKED, and this card
+     is deliberately prominent rather than a footnote. It is the most
+     important outbound link on the page. */
+  .mahatmya-link {
+    display: block;
+    margin-top: clamp(2.5rem, 6vw, 4rem);
+    padding: clamp(1.25rem, 3vw, 1.75rem);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-card);
+    background: var(--surface);
+    transition: border-color 0.35s var(--ease-spring), background 0.35s var(--ease-spring);
+  }
+  .mahatmya-link:hover,
+  .mahatmya-link:focus-visible {
+    border-color: var(--accent);
+    background: var(--surface-2);
+  }
+  .mahatmya-link .kicker {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .mahatmya-link .title {
+    display: block;
+    margin-top: 0.5rem;
+    font-family: var(--display);
+    font-size: clamp(1.15rem, 2.4vw, 1.45rem);
+    line-height: 1.3;
+    color: var(--text);
+  }
+  .mahatmya-link .note {
+    display: block;
+    margin-top: 0.6rem;
+    max-width: var(--max-width-measure);
+    font-size: 13px;
+    line-height: 1.7;
+    color: var(--text-muted);
+  }
+
   /* One drop cap, on the first panel only, so it stays an event. `float`
      rather than a grid trick because it must wrap however many lines the
      caption happens to run to. */

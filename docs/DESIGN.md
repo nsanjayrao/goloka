@@ -430,15 +430,37 @@ DELETED that day — see §14.
     lamp Citragupta cannot total. **A missing story is a content state, never
     a gap to fill by writing one.**
   - **Attribution is structural, not a footnote.** Each story names its
-    Purāṇa in the header and link-outs sit at the foot. The text is OUR
-    retelling of a public-domain Purāṇic source — ISKCON Desire Tree is
-    credited and linked, never copied. "Index, never host" governs prose
-    exactly as it governs video. Link to their DEEP page
+    Purāṇa in the header, and the link-out is the card described above.
+    "Index, never host" governs prose exactly as it governs video. Link to
+    their DEEP page
     (`/page/kamika-ekadasi`), falling back to search only where no page
     exists; an earlier probe requested `/page/ekadashi`, took the 404 as
     proof the pattern was unusable, and sent all 24 to search instead.
     **Read the source before retelling it — the audit that caught the
     invented stories was one fetch per ekādaśī.**
+  - **THE SCRIPTURE IS LINKED, NEVER REWORDED** (owner decision, 2026-08-02 —
+    the governing rule for this page). A māhātmya comes down through
+    **paramparā**, master to student. Someone outside that chain re-phrasing
+    it and setting it where a devotee expects the text is not a copyright
+    question, it is a fidelity one, and the owner is strictly against it.
+    So Goloka does not reproduce the māhātmya AND does not paraphrase it:
+    the `.mahatmya-link` card sends the devotee to the text where it is
+    published, whole and unaltered. That card is the most important outbound
+    link on the page and is deliberately sized like one, not tucked into the
+    footer.
+    A rejected approach, recorded so it is not retried: a coverage audit found
+    our pages carried ~12% of what their sources say, and the first fix was to
+    write complete retellings in our own words with a test enforcing that every
+    name and quantity appeared. 13,000 words of it existed before the owner
+    pointed out that a complete paraphrase of scripture is still a paraphrase
+    of scripture. It was discarded. **Completeness does not justify authorship
+    here.**
+  - **The panels say whose words they are.** They are Goloka's illustrated
+    retelling and the page states that in a line directly beneath them
+    (`ekadashiStory.retellingNote`), because they are the only prose on the
+    page and would otherwise be read as the māhātmya. Illustrated retelling is
+    an accepted devotional genre; retelling presented AS scripture is not. The
+    distinction is entirely in the labelling, so the label is not optional.
   - **A lecture shelf per Ekādaśī**, matched by name against the catalogue.
     This is the inward link no other Ekādaśī page has: read the story, then
     hear a class on it.

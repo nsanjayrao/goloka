@@ -398,7 +398,7 @@ const STORIES: EkadashiStory[] = [
     panels: [
       {
         caption:
-          "Four months after Śayanī, the Lord wakes. The day is Utthāna — the rising — and also Prabodhinī, the awakening. Cāturmāsya ends here.",
+          "Four months after Śayanī, the Lord wakes. This day carries four names for one event — Haribodhinī, Prabodhinī, Devotthānī, Utthāna: the waking, and the rising. Cāturmāsya ends here.",
       },
       {
         caption:
@@ -406,7 +406,7 @@ const STORIES: EkadashiStory[] = [
       },
       {
         caption:
-          "Tulasī-devī is married to Śālagrāma-śilā on this day in temples and in courtyards, and lamps are lit in numbers nobody counts.",
+          "Tulasī-devī is the other half of this day. Merely to see her, Brahmā told Nārada, or to touch her, meditate on her, tell her history, bow to her, plant her or pour water at her root, is to live in the Lord's own abode — and through Kārtika a ghee lamp is set burning before her.",
       },
       {
         caption:
@@ -888,7 +888,7 @@ const STORIES: EkadashiStory[] = [
       },
       {
         caption:
-          "He gathered the flowers and then went home to his wife Viśālākṣī, and stayed — and the hour for the worship came and went with Kuvera waiting and the flowers still in the house.",
+          "He gathered the flowers and then went home to his wife Svarūpavatī, and stayed — and the hour for the worship came and went with Kuvera waiting and the flowers still in the house.",
       },
       {
         caption:
@@ -936,6 +936,7 @@ export function storyForName(name: string): EkadashiStory | null {
 export function allStories(): EkadashiStory[] {
   return STORIES;
 }
+
 
 /** The public path for a panel's art. DERIVED from position so that adding an
  * illustration is dropping `panel-3.webp` into public/ekadashi/<slug>/ and

@@ -409,7 +409,9 @@
     "toldIn": "Narrado en",
     "nextObserved": "Próxima observancia",
     "classesTitle": "Clases sobre {name}",
-    "sourceNote": "Este relato es propio de Goloka, basado en el {purana}. Goloka indexa y enlaza: nunca republica el texto de otro sitio.",
-    "readElsewhere": "Leer esta historia en ISKCON Desire Tree ↗"
+    "sourceNote": "Goloka indexa y enlaza. La escritura no se reproduce ni se parafrasea aquí: permanece donde está publicada, entera e inalterada.",
+    "retellingNote": "Las viñetas de arriba son el relato ilustrado propio de Goloka: nuestras palabras, no la escritura. El māhātmya ha llegado por paramparā y no lo reformulamos. Léelo completo abajo.",
+    "readFullTitle": "Leer el māhātmya completo de {name}",
+    "readFullNote": "El texto íntegro, tal como está recogido en el {purana}, en ISKCON Desire Tree. Se abre en una pestaña nueva."
   }
 }

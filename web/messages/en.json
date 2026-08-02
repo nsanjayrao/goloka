@@ -409,7 +409,9 @@
     "toldIn": "Told in",
     "nextObserved": "Next observed",
     "classesTitle": "Classes on {name}",
-    "sourceNote": "This retelling is Goloka's own, from the {purana}. Goloka indexes and links — it never republishes another site's writing.",
-    "readElsewhere": "Read this story on ISKCON Desire Tree ↗"
+    "sourceNote": "Goloka indexes and links. The scripture is not reproduced or paraphrased here — it is kept where it is published, whole and unaltered.",
+    "retellingNote": "The panels above are Goloka's own illustrated retelling — our words, not scripture. The māhātmya itself has come down through paramparā, and we do not reword it. Read it in full below.",
+    "readFullTitle": "Read the full māhātmya of {name}",
+    "readFullNote": "The complete text, as recorded in the {purana}, at ISKCON Desire Tree. It opens in a new tab."
   }
 }
