@@ -434,8 +434,9 @@ DELETED that day — see §14.
      — the labelling was honest but the words were still mine, sitting where
      a devotee looks for the māhātmya.
 
-  Ten illustrations exist under `web/public/ekadashi/{kamika,utpanna}/` from
-  approach 1 and are no longer referenced by anything. `docs/idt-permission-request.md`
+  The ten illustrations approach 1 produced were deleted on 2026-08-03 once
+  nothing referenced them; they remain in git history at `8fa4a9f` and
+  `e451820` if ever wanted. `docs/idt-permission-request.md`
   drafts a note asking ISKCON Desire Tree to let Goloka carry the text
   verbatim with credit — the one route to having the authentic māhātmya on
   the page with the chain intact. If they agree, add a `mahatmyaText` field
