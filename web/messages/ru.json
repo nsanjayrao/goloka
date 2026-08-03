@@ -58,7 +58,8 @@
     "browseEverything": "Смотреть всё",
     "featuredAria": "Избранные видео",
     "featuredItemAria": "Избранное {index} из {total}: {title}",
-    "fromChannel": "С канала <b>{channel}</b>"
+    "fromChannel": "С канала <b>{channel}</b>",
+    "standing": "{videos} лекций, киртанов и праздников, собранных с {channels} официальных каналов ИСККОН. Бесплатно и без рекламы."
   },
   "liveStrip": {
     "streamingNow": "Прямой эфир",

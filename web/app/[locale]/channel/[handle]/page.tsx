@@ -7,12 +7,21 @@ import { cache } from "react";
 import { Breadcrumb } from "@/components/breadcrumb";
 import { Container } from "@/components/container";
 import { ShareButton, WhatsAppShareButton } from "@/components/share-button";
+import { FilterChips } from "@/components/filter-chips";
 import { TopicChips } from "@/components/topic-chips";
 import { VideoGrid } from "@/components/video-grid";
 import { Link } from "@/i18n/navigation";
-import { CATEGORY_PAGE_SIZE, getChannelByHandle, getSeriesForChannel, getVideoCount, getVideosPage } from "@/lib/data";
+import {
+  CATEGORY_PAGE_SIZE,
+  getChannelByHandle,
+  getLanguagesIn,
+  getSeriesForChannel,
+  getVideoCount,
+  getVideosPage,
+} from "@/lib/data";
 import { localizedAlternates } from "@/lib/site";
 import { TOPICS, TOPIC_LIST } from "@/lib/topics";
+import type { DurationBucket } from "@/lib/types";
 import { safeDecodeURIComponent } from "@/lib/utils";
 
 // Dynamic like /watch/[id] - a channel page is looked up per-request by its
@@ -20,7 +29,7 @@ import { safeDecodeURIComponent } from "@/lib/utils";
 // APIs).
 type Props = {
   params: Promise<{ locale: string; handle: string }>;
-  searchParams: Promise<{ topic?: string }>;
+  searchParams: Promise<{ topic?: string; duration?: string; language?: string; sort?: string }>;
 };
 
 // React.cache dedupes within one request: generateMetadata and the page
@@ -63,7 +72,8 @@ export default async function ChannelPage({ params, searchParams }: Props) {
   const channel = await getChannel(decoded);
   if (!channel) notFound();
 
-  const { topic: topicSlugParam } = await searchParams;
+  const sp = await searchParams;
+  const { topic: topicSlugParam } = sp;
   // Unrecognized slug -> undefined -> treated exactly like no ?topic at all.
   const activeTopic = topicSlugParam ? TOPICS[topicSlugParam] : undefined;
 
@@ -83,16 +93,32 @@ export default async function ChannelPage({ params, searchParams }: Props) {
     (topic) => (countBySlug.get(topic.slug) ?? 0) >= 2 || topic.slug === activeTopic?.slug
   );
 
+  // FilterChips, at last. Its own docstring names this page as one of the
+  // two it was unstuck from /browse/[category] to serve - "/channel/@hdgoswami
+  // is 999" - and /topic got wired while this one did not, so the bigger of
+  // the two walls it cites as its motivation was the one still standing:
+  // 999 videos, twenty at a time, with topic chips as the only control.
+  const duration = (["short", "medium", "long"] as const).includes(sp.duration as DurationBucket)
+    ? (sp.duration as DurationBucket)
+    : undefined;
+  const sort = sp.sort === "popular" ? ("popular" as const) : ("recent" as const);
+
   // Channel-only filter (no category) - the same VideoGrid/getVideosPage the
-  // category page uses, now optionally crossed with a topic.
+  // category page uses, now optionally crossed with a topic and refined.
   const filters = {
     channelId: channel.id,
     ...(activeTopic ? { topicSlug: activeTopic.slug } : {}),
+    ...(duration ? { duration } : {}),
+    ...(sp.language ? { language: sp.language } : {}),
+    ...(sort === "popular" ? { sort } : {}),
   };
-  const [count, videos, series] = await Promise.all([
-    activeTopic ? Promise.resolve(countBySlug.get(activeTopic.slug) ?? 0) : getVideoCount({ channelId: channel.id }),
+  const [count, videos, series, languages] = await Promise.all([
+    // The count must follow the SAME filters as the grid, or the heading and
+    // the results disagree - the bug /topic hit when its chips first landed.
+    getVideoCount(filters),
     getVideosPage(filters, 0, CATEGORY_PAGE_SIZE),
     getSeriesForChannel(channel.id, 12),
+    getLanguagesIn({ channelId: channel.id }),
   ]);
 
   return (
@@ -130,6 +156,22 @@ export default async function ChannelPage({ params, searchParams }: Props) {
           <TopicChips handle={handle} topics={chipTopics} activeSlug={activeTopic?.slug} />
         </div>
       )}
+
+      {/* Sort, duration and language - NOT inside the chipTopics guard above.
+          A channel with no themes worth a chip is exactly the channel whose
+          999 videos most need sorting, so the refinements must not depend on
+          topics existing. No `channels` prop: filtering a channel page by
+          channel is a no-op, and FilterChips omits any row given nothing. */}
+      <div className="mt-4">
+        <FilterChips
+          basePath={`/channel/${encodeURIComponent(handle)}`}
+          channels={[]}
+          languages={languages}
+          activeDuration={duration}
+          activeLanguage={sp.language}
+          activeSort={sort}
+        />
+      </div>
 
       {activeTopic && (
         // A channel×topic intersection is precisely the kind of link a

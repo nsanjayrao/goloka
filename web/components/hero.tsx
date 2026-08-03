@@ -38,7 +38,16 @@ const FADE_MS = 500;
 // bars that fill like incense burning, clickable, paused on hover, 500ms
 // fade-out/swap/fade-in. Behind it: the drifting artwork, the breathing
 // āratī lamp (pure CSS), and the ember canvas.
-export function Hero({ features }: { features: HeroFeature[] }) {
+export function Hero({
+  features,
+  standing,
+}: {
+  features: HeroFeature[];
+  /** The one line on the home page that says what Goloka IS. Server-rendered
+   * and passed in, because the counts come from the DB. Optional so the hero
+   * still renders if that query returns nothing (lib/data.ts's safely()). */
+  standing?: string;
+}) {
   const [active, setActive] = useState(0);
   const [fading, setFading] = useState(false);
   const [paused, setPaused] = useState(false);
@@ -119,6 +128,16 @@ export function Hero({ features }: { features: HeroFeature[] }) {
           {t("browseEverything")}
         </Link>
       </div>
+
+      {/* WHAT THIS PLACE IS. Until 2026-08-03 a devotee could arrive at
+          Goloka, take in a whole 92svh screen on a phone, and be told nothing
+          about the site - the hero showed a YouTube title, a channel name and
+          two buttons, and the words "index", "free" and "no ads" existed only
+          in the footer tagline and the meta description. One quiet line,
+          after the actions so it never competes with them, above the fold on
+          a phone. It is the same job footer.tagline does, done where a
+          stranger is actually standing. */}
+      {standing && <p className="hero-standing rise d4">{standing}</p>}
 
       {/* NOT a tablist. These carried role="tablist"/role="tab" with no
           tabpanel and no aria-controls, so a screen reader announced "tab 1

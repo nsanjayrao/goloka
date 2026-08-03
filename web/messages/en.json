@@ -58,7 +58,8 @@
     "browseEverything": "Browse everything",
     "featuredAria": "Featured videos",
     "featuredItemAria": "Featured {index} of {total}: {title}",
-    "fromChannel": "From <b>{channel}</b>"
+    "fromChannel": "From <b>{channel}</b>",
+    "standing": "{videos} lectures, kirtans and festivals, gathered from {channels} official ISKCON channels. Free, and no ads."
   },
   "liveStrip": {
     "streamingNow": "Streaming now",

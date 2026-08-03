@@ -58,7 +58,8 @@
     "browseEverything": "सब कुछ ब्राउज़ करें",
     "featuredAria": "चयनित वीडियो",
     "featuredItemAria": "चयनित {index} / {total}: {title}",
-    "fromChannel": "<b>{channel}</b> की ओर से"
+    "fromChannel": "<b>{channel}</b> की ओर से",
+    "standing": "{videos} प्रवचन, कीर्तन और उत्सव, {channels} अधिकारिक इस्कॉन चैनलों से एकत्रित। निःशुल्क, और कोई विज्ञापन नहीं।"
   },
   "liveStrip": {
     "streamingNow": "अभी लाइव",

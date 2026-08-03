@@ -58,7 +58,8 @@
     "browseEverything": "সবকিছু ব্রাউজ করুন",
     "featuredAria": "নির্বাচিত ভিডিও",
     "featuredItemAria": "নির্বাচিত {index} / {total}: {title}",
-    "fromChannel": "<b>{channel}</b> থেকে"
+    "fromChannel": "<b>{channel}</b> থেকে",
+    "standing": "{videos}টি প্রবচন, কীর্তন ও উৎসব, {channels}টি অফিসিয়াল ইসকন চ্যানেল থেকে সংগৃহীত। বিনামূল্যে, কোনো বিজ্ঞাপন নেই।"
   },
   "liveStrip": {
     "streamingNow": "এখন সরাসরি",

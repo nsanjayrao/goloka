@@ -20,10 +20,12 @@ import { SplitFeature } from "@/components/split-feature";
 import { categorySubtitle } from "@/lib/category-meta";
 import {
   getAllCategories,
+  getChannelHandles,
   getFeaturedVideos,
   getLatestVideos,
   getLiveVideos,
   getPopularVideos,
+  getVideoCount,
   getVideosPage,
 } from "@/lib/data";
 import { heroTitle } from "@/lib/format";
@@ -84,11 +86,21 @@ export default async function HomePage({ params }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("home");
   const tEmpty = await getTranslations("emptyState");
+  const tHero = await getTranslations("hero");
   const homeTopics = TOPIC_LIST.filter((topic) => topic.showOnHomepage);
   const activeFestival = getActiveFestivalTopic();
 
-  const [featured, latest, live, categories, topicRows, popular, festivalVideos] =
-    await Promise.all([
+  const [
+    featured,
+    latest,
+    live,
+    categories,
+    topicRows,
+    popular,
+    festivalVideos,
+    videoCount,
+    channelHandles,
+  ] = await Promise.all([
       getFeaturedVideos(3),
       getLatestVideos(12),
       getLiveVideos(3),
@@ -103,6 +115,11 @@ export default async function HomePage({ params }: Props) {
       activeFestival
         ? getVideosPage({ topicSlug: activeFestival.slug }, 0, 8)
         : Promise.resolve([]),
+      // The two numbers in the hero's standing line. Both are bounded and
+      // this page is ISR-cached, so they ride along with the seven queries
+      // already in flight rather than costing a round trip of their own.
+      getVideoCount(),
+      getChannelHandles(),
     ]);
 
   if (latest.length === 0 && categories.length === 0) {
@@ -116,6 +133,18 @@ export default async function HomePage({ params }: Props) {
   // The hero rotates the owner's hand-curated Featured videos; before any
   // are flagged it falls back to the newest uploads, so it never sits empty.
   const heroFeatures = (featured.length > 0 ? featured : latest).slice(0, 3).map(toHeroFeature);
+
+  // The line that says what Goloka is. Rendered only when both counts came
+  // back - a hero claiming "0 lectures from 0 channels" because the DB was
+  // unreachable is worse than a hero that simply does not explain itself,
+  // and lib/data.ts's safely() returns exactly those zeroes on failure.
+  const heroStanding =
+    videoCount > 0 && channelHandles.length > 0
+      ? tHero("standing", {
+          videos: videoCount.toLocaleString(locale),
+          channels: channelHandles.length,
+        })
+      : undefined;
 
   // The first home topic with enough videos becomes the feature-split
   // layout; the remaining topics render as ordinary rows.
@@ -139,7 +168,7 @@ export default async function HomePage({ params }: Props) {
 
   return (
     <div>
-      {heroFeatures.length > 0 && <Hero features={heroFeatures} />}
+      {heroFeatures.length > 0 && <Hero features={heroFeatures} standing={heroStanding} />}
 
       {/* ---- 1. What is happening today ---------------------------------- */}
       {hasToday && (

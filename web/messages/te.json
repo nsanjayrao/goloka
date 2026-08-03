@@ -58,7 +58,8 @@
     "browseEverything": "అన్నీ అన్వేషించండి",
     "featuredAria": "ప్రత్యేక వీడియోలు",
     "featuredItemAria": "ప్రత్యేకం {total}లో {index}: {title}",
-    "fromChannel": "<b>{channel}</b> నుండి"
+    "fromChannel": "<b>{channel}</b> నుండి",
+    "standing": "{videos} ప్రవచనాలు, కీర్తనలు మరియు ఉత్సవాలు, {channels} అధికారిక ఇస్కాన్ ఛానెళ్ల నుండి సేకరించబడినవి. ఉచితం, ప్రకటనలు లేవు."
   },
   "liveStrip": {
     "streamingNow": "ఇప్పుడు ప్రసారంలో",

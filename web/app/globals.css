@@ -1010,6 +1010,27 @@
     flex-wrap: wrap;
     align-items: center;
   }
+
+  /* The standing line: what Goloka is, said once, under the hero actions.
+     A short gold hairline above it separates it from the buttons without
+     drawing a box - the same "hairline, not container" idiom §5 uses for
+     the ornament. Muted and at the reading measure so it reads as an
+     explanation rather than a third call to action. */
+  .hero-standing {
+    margin-top: 26px;
+    max-width: var(--max-width-measure);
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--text-muted);
+  }
+  .hero-standing::before {
+    content: "";
+    display: block;
+    width: 36px;
+    height: 1px;
+    margin-bottom: 14px;
+    background: var(--hairline);
+  }
   .btn {
     display: inline-flex;
     align-items: center;
