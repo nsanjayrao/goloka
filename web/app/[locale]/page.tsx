@@ -26,7 +26,7 @@ import {
   getPopularVideos,
   getVideosPage,
 } from "@/lib/data";
-import { cleanTitle } from "@/lib/format";
+import { heroTitle } from "@/lib/format";
 import { localizedAlternates } from "@/lib/site";
 import { getActiveFestivalTopic, TOPIC_LIST } from "@/lib/topics";
 import { nextEkadashi, todaysEkadashi } from "@/lib/vaishnava-calendar";
@@ -62,7 +62,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 function toHeroFeature(video: Video): HeroFeature {
   return {
     videoId: video.youtube_video_id,
-    title: cleanTitle(video.title),
+    // heroTitle, not cleanTitle: this one becomes the page <h1> at hero
+    // scale, where a YouTube SEO tail is five lines of noise and its last
+    // segment is usually the channel name printed again below. See
+    // lib/format.ts - cards keep the full title on purpose.
+    title: heroTitle(video.title),
     channel: video.channel?.title ?? null,
     subtitle: categorySubtitle(video.category) ?? null,
   };

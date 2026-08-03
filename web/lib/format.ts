@@ -31,6 +31,40 @@ const KEEP_UPPERCASE = new Set(["HG", "HH", "SB", "BG", "CC", "ISKCON", "Q&A"]);
  * Apple-style UI. This cleans for DISPLAY only; the database keeps the
  * original (search still matches the raw title).
  */
+/** The HERO's title: `cleanTitle`, then cut at the first separator.
+ *
+ * The home page's <h1> is the largest type on the site and is whatever
+ * YouTube title happens to be featured. `cleanTitle` trims separator junk at
+ * the ENDS only, so a mid-string SEO tail survived into it - on 2026-08-03
+ * the live h1 read "Hare Krishna Hare Rama Kirtan That Will Melt Your Heart
+ * | Harinam Utsav | Smita Krishna Das", roughly five lines of 30px Marcellus,
+ * and the trailing segment was the channel name the hero ALREADY prints on
+ * its own line underneath.
+ *
+ * HERO ONLY, deliberately. A video card wants the full title - a devotee
+ * scanning a grid uses those tail segments to tell two lectures apart. It is
+ * the h1, at hero scale, where the tail becomes noise.
+ *
+ * This cannot fix clickbait wording ("That Will Melt Your Heart" survives) -
+ * that needs an editor, not a regex. It removes duplication and length.
+ *
+ * Plain hyphen is NOT a separator here: "Bhakti-yoga", "Radha-Krishna" and
+ * "Hare Krishna - Live" are indistinguishable to a regex, and cutting a
+ * compound Sanskrit word in half is worse than a long title. */
+export function heroTitle(rawTitle: string): string {
+  const cleaned = cleanTitle(rawTitle);
+  const segments = cleaned.split(/\s*[|·•‖]\s*|\s+[—–]\s+/).filter(Boolean);
+  if (segments.length < 2) return cleaned;
+
+  // Keep taking segments until there is a real title, so a short opener
+  // ("SB 1.2.6 | Radhanath Swami") does not collapse to a bare citation.
+  let title = segments[0];
+  for (let i = 1; i < segments.length && title.length < 25; i += 1) {
+    title = `${title} — ${segments[i]}`;
+  }
+  return title;
+}
+
 export function cleanTitle(rawTitle: string): string {
   let title = rawTitle
     .replace(/#[^\s#]+/g, " ") // drop #hashtags entirely

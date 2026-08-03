@@ -146,21 +146,32 @@ export async function getChannelByHandle(handle: string): Promise<Channel | null
  * count descending (the most prolific teacher's catalog leads). One query
  * for all the channel rows, then one small COUNT per channel in parallel -
  * bounded by SPEAKER_HANDLES' length (well under free-tier concern). */
-export async function getSpeakerChannels(
-  handles: string[]
-): Promise<{ channel: Channel; videoCount: number }[]> {
+/** The spiritual teachers for /leaders, IN THE ORDER `handles` GIVES THEM.
+ *
+ * This used to sort descending by video count and hand the page a number to
+ * print under each face - so a directory of living spiritual teachers was
+ * ranked by how much of their output happens to be indexed here, and
+ * Rādhanātha Swami read as eighteenth. DESIGN.md §5.13 ("The Courtyard")
+ * removed exactly that - visible counts and machine ranking - app-wide, and
+ * it applies with more force to people than it did to videos. `temples.ts`
+ * and `books.ts` both state "order here is display order"; /leaders was the
+ * one curated list that overrode its own curation at query time.
+ *
+ * Dropping the counts also drops 21 COUNT queries per page render, which is
+ * the free-tier discipline this file asks for everywhere else. */
+export async function getSpeakerChannels(handles: string[]): Promise<Channel[]> {
   return safely(async () => {
     const { data, error } = await supabase!.from("channels").select("*").in("handle", handles);
     if (error) throw error;
     const channels = (data ?? []) as unknown as Channel[];
 
-    const withCounts = await Promise.all(
-      channels.map(async (channel) => ({
-        channel,
-        videoCount: await getVideoCount({ channelId: channel.id }),
-      }))
-    );
-    return withCounts.sort((a, b) => b.videoCount - a.videoCount);
+    // `.in()` returns rows in whatever order Postgres likes. Re-impose the
+    // curated order from lib/speakers.ts; a teacher missing from the DB (not
+    // yet synced) simply drops out rather than shifting everyone after them.
+    const byHandle = new Map(channels.map((channel) => [channel.handle, channel]));
+    return handles
+      .map((handle) => byHandle.get(handle))
+      .filter((channel): channel is Channel => Boolean(channel));
   }, []);
 }
 

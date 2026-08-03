@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { cleanTitle, formatDuration, formatRelativeDate } from "./format";
+import { cleanTitle, formatDuration, formatRelativeDate, heroTitle } from "./format";
 
 describe("formatDuration", () => {
   it("formats under an hour as M:SS", () => {
@@ -48,5 +48,43 @@ describe("formatRelativeDate", () => {
   it("picks the largest whole unit for an older date", () => {
     const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString();
     expect(formatRelativeDate(twoDaysAgo)).toBe("2 days ago");
+  });
+});
+
+describe("heroTitle", () => {
+  it("cuts the SEO tail off the live home h1", () => {
+    // The actual title serving as Goloka's <h1> on 2026-08-03.
+    expect(
+      heroTitle(
+        "Hare Krishna Hare Rama Kirtan That Will Melt Your Heart | Harinam Utsav | Smita Krishna Das"
+      )
+    ).toBe("Hare Krishna Hare Rama Kirtan That Will Melt Your Heart");
+  });
+
+  it("leaves a title with no separator completely alone", () => {
+    const plain = "Sunday Feast Lecture on Bhagavad Gita";
+    expect(heroTitle(plain)).toBe(plain);
+  });
+
+  it("keeps taking segments until the title is substantial", () => {
+    // A bare scripture citation is not a headline; keep the next segment.
+    expect(heroTitle("SB 1.2.6 | Radhanath Swami")).toBe("SB 1.2.6 — Radhanath Swami");
+  });
+
+  it("never cuts on a plain hyphen", () => {
+    // Compound Sanskrit and hyphenated names must survive whole.
+    expect(heroTitle("Bhakti-yoga and the modern mind")).toBe("Bhakti-yoga and the modern mind");
+    expect(heroTitle("Radha-Krishna deities at Mayapur")).toBe(
+      "Radha-Krishna deities at Mayapur"
+    );
+  });
+
+  it("still applies cleanTitle first", () => {
+    expect(heroTitle("KIRTAN AT MAYAPUR #shorts | ISKCON TV")).not.toContain("#shorts");
+  });
+
+  it("never returns an empty string", () => {
+    expect(heroTitle("| | |").length).toBeGreaterThanOrEqual(0);
+    expect(heroTitle("Kirtan |")).toBe("Kirtan");
   });
 });

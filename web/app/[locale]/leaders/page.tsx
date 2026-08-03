@@ -7,7 +7,7 @@ import { EmptyState } from "@/components/empty-state";
 import { Link } from "@/i18n/navigation";
 import { getSpeakerChannels } from "@/lib/data";
 import { localizedAlternates } from "@/lib/site";
-import { SPEAKER_HANDLES } from "@/lib/speakers";
+import { SPEAKER_HANDLES, speakerName } from "@/lib/speakers";
 
 type Props = { params: Promise<{ locale: string }> };
 
@@ -50,7 +50,7 @@ export default async function LeadersPage({ params }: Props) {
       <p className="mt-2 max-w-xl text-text-muted">{t("intro")}</p>
 
       <div className="mt-8 grid grid-cols-2 gap-6 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
-        {speakers.map(({ channel, videoCount }) => (
+        {speakers.map((channel) => (
           <Link
             key={channel.id}
             href={`/channel/${encodeURIComponent(channel.handle!)}`}
@@ -69,11 +69,14 @@ export default async function LeadersPage({ params }: Props) {
                 {channel.title.charAt(0)}
               </div>
             )}
+            {/* The name only. The video count that used to sit here was
+                removed with the ranking it came from (see getSpeakerChannels):
+                a directory of living teachers should not publish a tally of
+                how much of each one Goloka happens to have indexed. It also
+                carried `video{s}` pluralised in hardcoded English on a
+                six-locale page. */}
             <span className="line-clamp-2 text-[15px] font-medium leading-snug text-text group-hover:text-accent-strong">
-              {channel.title}
-            </span>
-            <span className="text-[13px] text-text-muted">
-              {videoCount} video{videoCount === 1 ? "" : "s"}
+              {speakerName(channel.title)}
             </span>
           </Link>
         ))}
