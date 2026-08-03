@@ -86,7 +86,12 @@ export default async function EkadashiStoryPage({ params }: Props) {
 
   return (
     <>
-      <Container className="py-10 sm:py-14">
+      {/* `page-top`, not a py- utility. Every other inner page in the app uses
+          this token because it is what clears the FIXED header
+          (clamp(88px,12vh,120px) vs the header's 64-72px). This page shipped
+          with `py-10` and its back link rendered at y~68, half-hidden behind
+          the header on every load. Do not swap it back for a padding class. */}
+      <Container className="page-top pb-10 sm:pb-14">
       <nav className="mb-6">
         <Link
           href="/calendar"

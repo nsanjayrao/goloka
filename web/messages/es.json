@@ -328,6 +328,8 @@
       "title": "Compartido con Goloka"
     },
     "chant": {
+      "tapHint": "Toca el centro una vez por cada mantra que cantes.",
+      "tapHintRound": "108 cuentas forman una vuelta.",
       "roundsToday": "Rondas hoy: {count}",
       "reset": "Reiniciar",
       "resetConfirm": "¿Reiniciar?",

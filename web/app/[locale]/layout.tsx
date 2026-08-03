@@ -116,10 +116,18 @@ export default async function LocaleLayout({ children, params }: Props) {
             <Jali />
             <div className="grain" aria-hidden="true" />
             <TopBar />
-            <main id="main" className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
-              {children}
-            </main>
-            <Footer />
+            {/* The tab-bar clearance wraps main AND the footer. It used to sit
+                on <main> alone, and <Footer> is main's SIBLING - so on every
+                page under 640px the fixed bar (56px + safe area) covered the
+                last ~50px of the footer, burying the "index, not a host"
+                disclaimer and the language switcher, which are footer-only
+                mounts and had nowhere else to be read. Keep this on the
+                wrapper: one clearance for everything the bar can overlap
+                cannot drift out of sync the way two copies would. */}
+            <div className="pb-[calc(3.5rem+env(safe-area-inset-bottom))] sm:pb-0">
+              <main id="main">{children}</main>
+              <Footer />
+            </div>
             <BottomTabBar />
             <Feather />
             <RegisterServiceWorker />

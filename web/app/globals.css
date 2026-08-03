@@ -2191,8 +2191,11 @@
   .chant-mantra span {
     display: block;
   }
+  /* Height-aware for the same reason as the two rules above. This line is
+     aria-hidden and decorative - the roman verse carries the text - so it is
+     the right thing to shrink first when the viewport is short. */
   .chant-devanagari {
-    font-size: clamp(18px, 2.8vw, 28px);
+    font-size: clamp(15px, min(2.4vw, 3.2vh), 22px);
     line-height: 1.6;
     opacity: 0.82;
   }
@@ -2206,8 +2209,17 @@
      hardcoded color. --ring-size drives both the container's box and every
      bead's radius via calc(), so the ring stays one fluid size at any
      viewport without a resize listener. */
+  /* --ring-size consults the SCARCER dimension, not just width. It was
+     `clamp(220px, 62vw, 340px)` - sized off viewport width alone, like every
+     other object on this page - which meant a wide-but-short window (a
+     1366x599 laptop, a landscape phone) got the LARGEST ring in the LEAST
+     room. Measured: the bead's bottom edge landed at 739px inside a 599px
+     viewport, so the one control on the page was below the fold, after the
+     devotee had been shown the verse twice. `min(62vw, 40vh)` keeps the
+     phone case identical (62vw wins at 390x844) and only bites when height
+     is the constraint. This is the first height-aware rule in the file. */
   .chant-ring {
-    --ring-size: clamp(220px, 62vw, 340px);
+    --ring-size: clamp(200px, min(62vw, 40vh), 340px);
     position: relative;
     width: var(--ring-size);
     height: var(--ring-size);
@@ -2297,12 +2309,17 @@
      per tap (see components/chant-space.tsx and lib/japa-rhythm.ts) - NOT by
      per-syllable transcription: there is no speech model, so it follows the
      pace of the voice and re-anchors at every counted mantra and breath. */
+  /* Same correction as .chant-ring: the verse is a liturgical display element
+     with its own clamp (like .quote, DESIGN.md §5.16), but its max of 44px on
+     a short screen pushed the bead off the fold. Reduced to 32px and made
+     height-aware. §5.16 explicitly wants this NOT competing with a hero h1,
+     so shrinking it moves toward the spec, not away from it. */
   .chant-verse {
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    font-size: clamp(24px, 4.4vw, 44px);
+    font-size: clamp(20px, min(3.4vw, 4.6vh), 32px);
     line-height: 1.45;
     font-weight: 400;
   }

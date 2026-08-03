@@ -328,6 +328,8 @@
       "title": "Shared with Goloka"
     },
     "chant": {
+      "tapHint": "Tap the centre once for each mantra you chant.",
+      "tapHintRound": "108 beads make one round.",
       "roundsToday": "Rounds today: {count}",
       "reset": "Reset",
       "resetConfirm": "Reset?",

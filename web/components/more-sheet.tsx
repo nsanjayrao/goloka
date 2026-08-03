@@ -13,12 +13,28 @@ import { Link, usePathname } from "@/i18n/navigation";
 // had no room). One list, used by BOTH the desktop "More" trigger and the
 // mobile tab bar's fifth tab, so the two can never drift apart.
 //
-// Calendar is deliberately NOT here: it is one of the header's four primary
-// links. Listing it in both made it the single duplicated destination in the
-// whole nav, so on /calendar the Calendar link AND the More trigger both
-// claimed "you are here" - two gold underlines, and two aria-current="page"
-// markers announced on one screen. Every href below must be absent from
-// PRIMARY_LINKS in top-bar.tsx.
+// Calendar is deliberately NOT in this list: it is one of the header's four
+// primary links. Listing it in both made it the single duplicated destination
+// in the whole nav, so on /calendar the Calendar link AND the More trigger
+// both claimed "you are here" - two gold underlines, and two
+// aria-current="page" markers announced on one screen. Every href below must
+// be absent from PRIMARY_LINKS in top-bar.tsx.
+//
+// BUT THAT REASONING ONLY HOLDS ABOVE 640px, and leaving it unqualified cost
+// /calendar its only door on a phone (found 2026-08-03). Under 40rem
+// `globals.css`'s `.site-nav .nav-link { display: none }` hides EVERY header
+// link, so there is nothing left to duplicate - and with no calendar tab in
+// the five-slot bar and no entry here, the route was reachable only from the
+// footer. That breaks the rule DESIGN.md §6 states outright: every route must
+// be reachable on a phone without opening the footer. All 24 /ekadashi pages
+// sit behind it.
+//
+// So Calendar is rendered below as a MOBILE-ONLY extra (`sm:hidden`, the exact
+// complement of the CSS that hides the header link) and stays out of
+// MORE_LINKS and MORE_HREFS - which is what keeps the desktop aria-current
+// fix intact. CSS, not a JS media query, so there is no hydration branch.
+const CALENDAR_LINK = { href: "/calendar", key: "calendar" } as const;
+
 const MORE_LINKS = [
   { href: "/start", key: "start" },
   { href: "/sadhana", key: "sadhana" },
@@ -127,6 +143,18 @@ export function MoreSheet({
                 {t(key)}
               </Link>
             ))}
+            {/* Mobile only - see the CALENDAR_LINK note above. `sm:hidden` is
+                the exact complement of globals.css's `@media (width < 40rem)`
+                header-link rule, so Calendar appears here precisely when the
+                header stops offering it, and never both at once. */}
+            <Link
+              href={CALENDAR_LINK.href}
+              onClick={() => dialog.current?.close()}
+              aria-current={pathname.startsWith(CALENDAR_LINK.href) ? "page" : undefined}
+              className="more-link sm:hidden"
+            >
+              {t(CALENDAR_LINK.key)}
+            </Link>
           </nav>
 
           {/* The account, at the foot of the one sheet reachable from every

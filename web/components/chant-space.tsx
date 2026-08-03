@@ -585,8 +585,32 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
 
       {/* Zone 1 - the session's living status. Fixed min-height so the
           listening line and nudge row appearing/disappearing never shifts
-          anything below (the old layout jumped every time voice toggled). */}
+          anything below (the old layout jumped every time voice toggled).
+
+          THE FIRST LINE A DEVOTEE READS (added 2026-08-03). This band was
+          reserved for the voice status and rendered EMPTY for every
+          tap-mode visitor - 56px of nothing in the exact spot the eye lands
+          after the bead. Meanwhile nothing anywhere on the page said what to
+          do: the tap target is `background: transparent` by design (so an
+          eyes-closed tap needs no aiming) and its only affordance was a
+          :hover glow no phone can fire. The owner's words were "people come
+          to the chant page and I don't know what they are supposed to do
+          there."
+
+          Shown only before the first bead of the day, so it teaches once and
+          then gets out of the way - the same instinct as VOICE_INTRO_KEY
+          above, at the granularity lib/rounds.ts already keeps. It returns
+          each morning, which is right: it is the line the person beside you
+          would say as you sit down, and by the tenth day you no longer read
+          it. Putting a verb INSIDE the bowl was rejected - a devotee on their
+          thousandth round would still be told to tap. */}
       <div className="mt-4 flex min-h-[56px] flex-col items-center justify-start gap-2">
+        {!listening && roundsToday === 0 && beadIndex === 0 && (
+          <p className="max-w-measure text-[13px] leading-relaxed text-text-muted">
+            {t("tapHint")}{" "}
+            <span className="text-text-muted/70">{t("tapHintRound")}</span>
+          </p>
+        )}
         {listening && (
           <p className="text-[12px] uppercase tracking-[0.14em] text-accent">{t("voiceListening")}</p>
         )}
