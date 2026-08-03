@@ -3,7 +3,6 @@ import { describe, expect, it } from "vitest";
 import {
   allStories,
   ekadashisWithoutStory,
-  panelArtPath,
   storyForName,
   storyForSlug,
   titleKeywordsFor,
@@ -93,34 +92,23 @@ describe("story coverage", () => {
 });
 
 describe("story shape", () => {
-  it("every story declares what kind of source it has", () => {
-    // A `glories` mahatmya has no plot. Marking it honestly is what stops
-    // the panel format demanding a narrative that scripture never told.
+  it("every story declares its occasion, purana and source", () => {
     for (const story of allStories()) {
+      expect(story.purana.length, story.slug).toBeGreaterThan(3);
+      expect(story.occasion, story.slug).toMatch(/pakṣa$/);
       expect(["narrative", "glories"], story.slug).toContain(story.kind);
     }
   });
 
-  it("every story has a summary, a purana, an occasion and panels", () => {
+  it("holds no retelling of scripture - only facts about the day", () => {
+    // The governing rule (see the file header): Goloka does not tell the
+    // mahatmya. If a prose field ever reappears on a story, this fails.
+    const PROSE = ["summary", "panels", "caption", "fullStory", "text", "body"];
     for (const story of allStories()) {
-      expect(story.summary.length, story.slug).toBeGreaterThan(20);
-      expect(story.purana.length, story.slug).toBeGreaterThan(3);
-      expect(story.occasion, story.slug).toMatch(/pakṣa$/);
-      expect(story.panels.length, story.slug).toBeGreaterThanOrEqual(4);
-    }
-  });
-
-  it("every panel has a caption", () => {
-    for (const story of allStories()) {
-      for (const [i, panel] of story.panels.entries()) {
-        expect(panel.caption.length, `${story.slug} panel ${i + 1}`).toBeGreaterThan(40);
+      for (const key of Object.keys(story)) {
+        expect(PROSE, `${story.slug} gained a prose field "${key}"`).not.toContain(key);
       }
     }
-  });
-
-  it("derives art paths from position, never from a stored filename", () => {
-    expect(panelArtPath("kamika", 0)).toBe("/ekadashi/kamika/panel-1.webp");
-    expect(panelArtPath("sat-tila", 3)).toBe("/ekadashi/sat-tila/panel-4.webp");
   });
 });
 

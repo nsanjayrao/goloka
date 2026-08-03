@@ -387,86 +387,59 @@ DELETED that day — see §14.
   website link-out, inward /channel link when indexed, and the LIVE
   badge when the temple's channel is currently streaming (ISR 600 to
   track the 15-min live check).
-- **Ekādaśī stories (`/ekadashi/[slug]`, 2026-08-01)**: the māhātmya of each
-  Ekādaśī, told as a **comic strip** — sequential panels, reverent narration.
-  Owner decision: comic-book *form*, never comic *tone*; these are Kṛṣṇa's
-  own words to Yudhiṣṭhira, so the layout may delight but the voice never
-  winks.
-  - **One story per NAME, not per date.** `vaishnava-calendar.ts` holds 36
-    entries but only 24 distinct Ekādaśīs — Kāmikā falls in both 2026 and
-    2027 and is one story. `EkadashiEntry.slug` is the join; every future
-    year reuses the same page.
-  - **Panel grid**: a 2-column grid on ≥640px, one column below. A panel is
-    `span: "half"` (default) or `"full"` for a beat that needs width. Every
-    panel is a fixed **4:3** art box + caption below, so the box reserves its
-    space whether or not art exists — art arriving must cause **zero layout
-    shift**, which is the whole reason the ratio is fixed rather than
-    intrinsic.
-  - **The pre-art state is a designed state, not a placeholder.** An empty
-    art box renders the `Jali` lattice (§5) at low opacity over `--surface`,
-    with the panel number in Marcellus. A story with no art at all must look
-    deliberate — this is what lets the page ship before 120 illustrations
-    exist. Never a grey box, never "image coming soon".
-  - **Art slots**: `public/ekadashi/<slug>/panel-N.webp`, 1200×900. Supplied
-    by the owner (I cannot generate images, and AI-rendered Deity iconography
-    gets arm count, flute posture and tilaka wrong often enough that a wrong
-    image is worse than none). Progressive by design: a story reads whole
-    with ONE hero panel and only gets richer as the rest land.
-  - **Narration**: caption in `--body` at 15px/1.7, capped at
-    `max-w-measure`. The FIRST panel's caption opens with a Marcellus drop
-    cap (2 lines) — the one ornamental flourish, so it stays an event.
-  - **NOT EVERY EKĀDAŚĪ HAS A STORY — the format must not demand one**
-    (correction, 2026-08-01, after five stories shipped that scripture does
-    not tell). Many māhātmyas are pure *glorification*: the Lord tells
-    Yudhiṣṭhira what the fast erases and what one Tulasī leaf outweighs, with
-    no plot and no characters at all. The first build assumed all 24 were
-    narratives because the panel grid wanted a beginning, middle and end — so
-    where the Purāṇa gave only praise, a story got invented to fill the
-    panels. Kāmikā acquired a warrior who killed a brāhmaṇa; Aparā a murdered
-    king haunting a pipal tree. Neither is in the text.
-    `EkadashiStory.kind` now records which the source is, and a `glories` day
-    renders the māhātmya's own comparisons — which are *better* panels, not
-    weaker ones: a single leaf outweighing pearls, rubies and coral; a ghee
-    lamp Citragupta cannot total. **A missing story is a content state, never
-    a gap to fill by writing one.**
-  - **Attribution is structural, not a footnote.** Each story names its
-    Purāṇa in the header, and the link-out is the card described above.
-    "Index, never host" governs prose exactly as it governs video. Link to
-    their DEEP page
-    (`/page/kamika-ekadasi`), falling back to search only where no page
-    exists; an earlier probe requested `/page/ekadashi`, took the 404 as
-    proof the pattern was unusable, and sent all 24 to search instead.
-    **Read the source before retelling it — the audit that caught the
-    invented stories was one fetch per ekādaśī.**
-  - **THE SCRIPTURE IS LINKED, NEVER REWORDED** (owner decision, 2026-08-02 —
-    the governing rule for this page). A māhātmya comes down through
-    **paramparā**, master to student. Someone outside that chain re-phrasing
-    it and setting it where a devotee expects the text is not a copyright
-    question, it is a fidelity one, and the owner is strictly against it.
-    So Goloka does not reproduce the māhātmya AND does not paraphrase it:
-    the `.mahatmya-link` card sends the devotee to the text where it is
-    published, whole and unaltered. That card is the most important outbound
-    link on the page and is deliberately sized like one, not tucked into the
-    footer.
-    A rejected approach, recorded so it is not retried: a coverage audit found
-    our pages carried ~12% of what their sources say, and the first fix was to
-    write complete retellings in our own words with a test enforcing that every
-    name and quantity appeared. 13,000 words of it existed before the owner
-    pointed out that a complete paraphrase of scripture is still a paraphrase
-    of scripture. It was discarded. **Completeness does not justify authorship
-    here.**
-  - **The panels say whose words they are.** They are Goloka's illustrated
-    retelling and the page states that in a line directly beneath them
-    (`ekadashiStory.retellingNote`), because they are the only prose on the
-    page and would otherwise be read as the māhātmya. Illustrated retelling is
-    an accepted devotional genre; retelling presented AS scripture is not. The
-    distinction is entirely in the labelling, so the label is not optional.
-  - **A lecture shelf per Ekādaśī**, matched by name against the catalogue.
-    This is the inward link no other Ekādaśī page has: read the story, then
-    hear a class on it.
-  - **Static**: `generateStaticParams` over 24 slugs × 6 locales. Story
-    bodies are English-first (translating 24 māhātmyas into six languages is
-    its own project); page chrome is translated like every other route.
+- **Ekādaśī days (`/ekadashi/[slug]`, 2026-08-01, rewritten 2026-08-03)**:
+  one page per ekādaśī, reachable from `/calendar` and the home calendar
+  strip. It exists because a devotee who tapped "Pāśāṅkuśā Ekādaśī" used to
+  land on `/topic/ekadashi` — the same undifferentiated pile of 278 videos
+  every ekādaśī pointed at, a link that looked specific and wasn't.
+  - **GOLOKA DOES NOT TELL THE MĀHĀTMYA.** This is the governing rule and it
+    is the owner's, arrived at over three attempts. A māhātmya comes down
+    through **paramparā**, master to student; Goloka is not in that chain, so
+    it neither reproduces the text nor retells it in its own words. The page
+    carries FACTS about the day and a prominent link to the scripture where
+    it is published, whole and unaltered.
+  - **What the page holds**: the name, the lunar occasion (`Śrāvaṇa,
+    kṛṣṇa-pakṣa`), the Purāṇa its glories are recorded in, the next date it
+    falls on (from `vaishnava-calendar.ts`), the `.mahatmya-link` card, and a
+    shelf of classes on that ekādaśī from the catalogue. Nothing else.
+  - **The `.mahatmya-link` card is the most important element on the page**
+    and is sized like it — not a footer line. "Read the full māhātmya of
+    Kāmikā Ekādaśī / The complete text, as recorded in the Brahma-vaivarta
+    Purāṇa, at ISKCON Desire Tree." Deep-linked per ekādaśī (`sourceSlug`,
+    all 24 verified 200), falling back to their search only where no page
+    exists. Never duplicate this link in the footer; a second copy dilutes
+    the one thing that leads to scripture.
+  - **A lecture shelf per Ekādaśī**, matched by name against the catalogue
+    with month-qualified keywords so the two Putradās cannot claim each
+    other's classes. This is what Goloka has that a scripture site does not:
+    read the day's text there, hear a class on it here.
+  - **Static**: `generateStaticParams` over 24 slugs × 6 locales.
+
+  THREE APPROACHES WERE TRIED AND REJECTED. Recorded because each looked
+  reasonable and each was wrong in the same direction — us writing where
+  scripture belongs.
+  1. *Comic panels with narration* (2026-08-01). Handsome, and it produced a
+     real disaster: the format demanded a story for all 24, but many
+     māhātmyas are pure glorification with no plot, so **five narratives were
+     invented and shipped as scripture** — Kāmikā gained a warrior who killed
+     a brāhmaṇa, Aparā a murdered king haunting a pipal tree. Caught only
+     when the owner sent one source URL and asked why it wasn't used.
+  2. *Complete retelling in our own words* (2026-08-01). The fix for an audit
+     showing our pages carried ~12% of their sources. 1,298 required nouns
+     extracted, a coverage test, six research agents, 13,000 words written.
+     Discarded: **completeness does not justify authorship.** A faithful
+     paraphrase of scripture is still a paraphrase of scripture.
+  3. *Panels kept as a labelled retelling* (2026-08-02). Kept the artwork and
+     captions with a line saying they were ours, not scripture. Also dropped
+     — the labelling was honest but the words were still mine, sitting where
+     a devotee looks for the māhātmya.
+
+  Ten illustrations exist under `web/public/ekadashi/{kamika,utpanna}/` from
+  approach 1 and are no longer referenced by anything. `docs/idt-permission-request.md`
+  drafts a note asking ISKCON Desire Tree to let Goloka carry the text
+  verbatim with credit — the one route to having the authentic māhātmya on
+  the page with the chain intact. If they agree, add a `mahatmyaText` field
+  rendered under the header. **Do not re-introduce a paraphrase layer.**
 - **Accounts (Phase 4, 2026-07-18)**: OPTIONAL Google sign-in whose only
   data is two lists (favourite / watch_later in `saved_videos`,
   RLS-scoped). Auth is entirely client-side — server components stay

@@ -3,7 +3,6 @@ import { notFound } from "next/navigation";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 
 import { CategoryRow } from "@/components/category-row";
-import { ComicStrip } from "@/components/comic-strip";
 import { Container } from "@/components/container";
 import { Ornament } from "@/components/ornament";
 import { Link } from "@/i18n/navigation";
@@ -32,15 +31,17 @@ export function generateStaticParams() {
 }
 
 // Fixed English title/description, the same convention /calendar, /leaders
-// and /books already use - story bodies are English-first (DESIGN.md §6).
+// and /books already use. The title is the ekādaśī's name and nothing more -
+// it used to read "<name> - the story", which promised a telling this page
+// deliberately does not give.
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params;
   const story = storyForSlug(slug);
   if (!story) return {};
   const plain = story.name.normalize("NFD").replace(/[̀-ͯ]/g, "");
   return {
-    title: `${plain} - the story`,
-    description: story.summary,
+    title: plain,
+    description: `${plain} — when it falls, the Purāṇa its glories are recorded in, and classes about it.`,
     alternates: localizedAlternates(locale, `/ekadashi/${slug}`),
   };
 }
@@ -98,7 +99,6 @@ export default async function EkadashiStoryPage({ params }: Props) {
       <header className="max-w-measure">
         <p className="text-[11px] uppercase tracking-[0.18em] text-accent">{t("kicker")}</p>
         <h1 className="mt-2 font-heading text-[30px] leading-tight sm:text-[40px]">{story.name}</h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-text-muted">{story.summary}</p>
         <dl className="mt-5 flex flex-wrap gap-x-8 gap-y-3 text-[13px]">
           <div>
             <dt className="text-text-muted">{t("occasion")}</dt>
@@ -119,20 +119,6 @@ export default async function EkadashiStoryPage({ params }: Props) {
 
       <Ornament className="my-9 sm:my-12" />
 
-        <ComicStrip slug={story.slug} panels={story.panels} storyName={story.name} />
-
-        {/* WHOSE WORDS THE PANELS ARE, said plainly and directly under them.
-            They are the only prose on the page and would otherwise be read as
-            the māhātmya itself. They are ours. */}
-        <p className="mt-10 max-w-measure text-[13px] leading-relaxed text-text-muted">
-          {t("retellingNote")}
-        </p>
-
-        {/* The māhātmya itself is LINKED, never reproduced or paraphrased
-            (owner decision 2026-08-02): these texts come down through
-            paramparā, and re-wording scripture is not ours to do. This is now
-            the most important outbound link on the page, so it is a card
-            rather than a line in the footer. */}
         <a
           href={desireTreeUrl(story)}
           target="_blank"
