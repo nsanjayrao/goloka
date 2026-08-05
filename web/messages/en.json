@@ -415,5 +415,8 @@
     "sourceNote": "Goloka indexes and links. The scripture is not reproduced or paraphrased here — it is kept where it is published, whole and unaltered.",
     "readFullTitle": "Read the full māhātmya of {name}",
     "readFullNote": "The complete text, as recorded in the {purana}, at ISKCON Desire Tree. It opens in a new tab."
+  },
+  "counts": {
+    "videos": "{count, plural, one {# video} other {# videos}}"
   }
 }

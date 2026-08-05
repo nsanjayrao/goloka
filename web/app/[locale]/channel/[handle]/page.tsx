@@ -67,6 +67,7 @@ export default async function ChannelPage({ params, searchParams }: Props) {
   setRequestLocale(locale);
   const t = await getTranslations("library");
   const tNav = await getTranslations("nav");
+  const tCounts = await getTranslations("counts");
   const decoded = safeDecodeURIComponent(handle);
   if (decoded === null) notFound(); // malformed percent-encoding -> 404, not 500
   const channel = await getChannel(decoded);
@@ -145,7 +146,7 @@ export default async function ChannelPage({ params, searchParams }: Props) {
         <div>
           <h1 className="font-heading text-3xl font-medium text-text sm:text-4xl">{channel.title}</h1>
           <p className="mt-1 text-sm text-text-muted">
-            {count} video{count === 1 ? "" : "s"}
+            {tCounts("videos", { count })}
             {activeTopic ? ` on ${activeTopic.title}` : ""}
           </p>
         </div>

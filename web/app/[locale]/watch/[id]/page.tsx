@@ -15,6 +15,7 @@ import { VideoDescription } from "@/components/video-description";
 import { Link } from "@/i18n/navigation";
 import { cleanTitle, formatDuration, formatRelativeDate } from "@/lib/format";
 import { getMoreFromCategory, getSeriesForVideo, getVideoByYoutubeId } from "@/lib/data";
+import { displayPartNumber, watchPageSeriesReversed } from "@/lib/series-order";
 import { localizedAlternates } from "@/lib/site";
 import type { Video } from "@/lib/types";
 
@@ -175,8 +176,22 @@ export default async function WatchPage({ params }: Props) {
                   className="text-text underline-offset-4 transition-colors hover:text-flame focus-visible:text-flame"
                   aria-label={t("seriesViewAria", { title: series.series.title })}
                 >
+                  {/* Counted from the FIRST class, not the first playlist
+                      slot. A newest-first playlist told a devotee twelve
+                      classes in that they were on "Part 76 of 87". The
+                      direction is read from the two neighbours this page has
+                      already fetched, so it costs no extra query, and it
+                      declines to guess when only one neighbour exists. */}
                   {t("seriesPart", {
-                    position: series.position + 1,
+                    position: displayPartNumber(
+                      series.position,
+                      series.series.item_count ?? 0,
+                      watchPageSeriesReversed(
+                        series.prev?.published_at,
+                        video.published_at,
+                        series.next?.published_at
+                      )
+                    ),
                     total: series.series.item_count,
                   })}{" "}
                   · {series.series.title}

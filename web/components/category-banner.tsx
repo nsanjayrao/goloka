@@ -1,3 +1,4 @@
+import { useTranslations } from "next-intl";
 import type { ReactNode } from "react";
 
 import { CATEGORY_ICONS, OM_ICON } from "@/components/category-cards";
@@ -18,6 +19,8 @@ export function CategoryBanner({
   /** Optional personality line (category-meta.ts / topic subtitle). */
   subtitle?: string;
 }) {
+  // useTranslations in a server component, the same as SectionHeader.
+  const t = useTranslations("counts");
   const icon: ReactNode = CATEGORY_ICONS[category] ?? OM_ICON;
 
   return (
@@ -34,9 +37,7 @@ export function CategoryBanner({
       <div className="mb-4 h-px w-9 bg-accent" aria-hidden="true" />
       <div className="relative flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h1 className="font-heading text-3xl text-text sm:text-4xl">{category}</h1>
-        <span className="text-sm text-text-muted">
-          {count} video{count === 1 ? "" : "s"}
-        </span>
+        <span className="text-sm text-text-muted">{t("videos", { count })}</span>
       </div>
       {subtitle && <p className="relative mt-1 max-w-xl text-sm text-text-muted">{subtitle}</p>}
     </div>

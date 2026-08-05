@@ -8,6 +8,7 @@ import { Breadcrumb } from "@/components/breadcrumb";
 import { Container } from "@/components/container";
 import { Link } from "@/i18n/navigation";
 import { getSeriesByPlaylistId, getSeriesEpisodes } from "@/lib/data";
+import { seriesReadingOrder } from "@/lib/series-order";
 import { cleanTitle, formatDuration } from "@/lib/format";
 import { localizedAlternates } from "@/lib/site";
 
@@ -44,7 +45,15 @@ export default async function SeriesPage({ params }: Props) {
   const series = await getSeries(id);
   if (!series) notFound();
 
-  const episodes = await getSeriesEpisodes(series.id);
+  const rawEpisodes = await getSeriesEpisodes(series.id);
+  // Part one first. A YouTube playlist's own order is very often newest-first
+  // (an uploads feed), and numbering that 1..N made "part 1" the most recent
+  // class - so a devotee wanting to begin at the beginning had to scroll to
+  // the bottom of up to 500 rows, which is precisely what this page exists to
+  // spare them. Nothing is re-sorted by date; the array is turned around only
+  // when the dates say it runs backwards, and a curated playlist is left as
+  // its channel arranged it. See lib/series-order.ts.
+  const { episodes } = seriesReadingOrder(rawEpisodes);
 
   return (
     <Container className="page-top pb-16">
@@ -80,7 +89,7 @@ export default async function SeriesPage({ params }: Props) {
                 {series.channel.title}
               </span>
             ))}
-          <span>{t("episodesIndexed", { count: episodes.length, total: series.item_count })}</span>
+          <span>{t("episodesIndexed", { count: rawEpisodes.length, total: series.item_count })}</span>
         </div>
 
         {series.description && (
@@ -93,17 +102,20 @@ export default async function SeriesPage({ params }: Props) {
           <p className="mt-10 max-w-md text-[15px] leading-relaxed text-text-muted">{t("empty")}</p>
         ) : (
           <ol className="mt-8 divide-y divide-border">
-            {episodes.map((episode) => (
+            {episodes.map(({ episode, partNumber }) => (
               <li key={episode.video.youtube_video_id}>
                 <Link
                   href={`/watch/${episode.video.youtube_video_id}`}
                   className="group flex items-center gap-4 rounded-lg py-3"
                 >
-                  {/* The TRUE playlist slot, 1-based - so numbering matches
-                      what the devotee saw on YouTube even when we haven't
-                      indexed every item in between. */}
+                  {/* The part number as a devotee would count it - from the
+                      first class, not from the playlist's first slot. On a
+                      normal playlist these are the same number; on a
+                      newest-first one they are opposite ends. `position` is
+                      untouched on the episode itself, because prev/next on
+                      the watch page walks by true slot. */}
                   <span className="w-8 shrink-0 text-right font-heading text-[15px] tabular-nums text-text-muted">
-                    {episode.position + 1}
+                    {partNumber}
                   </span>
                   <span className="relative block aspect-video w-32 shrink-0 overflow-hidden rounded-lg sm:w-40">
                     {episode.video.thumbnail_url && (
