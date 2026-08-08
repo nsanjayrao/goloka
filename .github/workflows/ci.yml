@@ -1,0 +1,48 @@
+name: CI
+
+# The path lists are duplicated rather than shared via a YAML anchor because
+# GitHub Actions does not support anchors/aliases in workflow files.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/ci.yml"
+  pull_request:
+    paths:
+      - "web/**"
+      - ".github/workflows/ci.yml"
+  workflow_dispatch: {}      # allow manual runs from the Actions tab
+
+# Push twice in a minute and the first run is cancelled rather than burning
+# free-tier minutes on a commit that has already been replaced.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"          # matches Vercel's default for Next 16
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      # No Supabase env vars are set here, and that is deliberate: lib/supabase.ts
+      # exports null without them and every caller in lib/data.ts checks for null,
+      # so the build renders empty states instead of crashing. CI therefore needs
+      # no secrets at all - and the service key stays as far from `web/` as ever.
+      #
+      # Ordered cheapest-first: lint and test take seconds, build takes a minute,
+      # so the common failures surface without waiting on the slow step.
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
