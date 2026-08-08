@@ -331,6 +331,10 @@
     "chant": {
       "tapHint": "Toca el centro una vez por cada mantra que cantes.",
       "tapHintRound": "108 cuentas forman una vuelta.",
+      "tapNameplate": "Toca el centro",
+      "voiceWakeNote": "Mantiene la pantalla encendida mientras escucha.",
+      "voicePaused": "Conteo en pausa: la página estuvo en segundo plano. Vuelve a activarlo para continuar.",
+      "voiceLevelAria": "Con qué claridad se escucha tu canto",
       "roundsToday": "Rondas hoy: {count}",
       "reset": "Reiniciar",
       "resetConfirm": "¿Reiniciar?",

@@ -331,6 +331,10 @@
     "chant": {
       "tapHint": "Tap the centre once for each mantra you chant.",
       "tapHintRound": "108 beads make one round.",
+      "tapNameplate": "Tap the centre",
+      "voiceWakeNote": "Keeps your screen awake while listening.",
+      "voicePaused": "Counting paused — this page was in the background. Turn it on again to continue.",
+      "voiceLevelAria": "How clearly your chanting is being heard",
       "roundsToday": "Rounds today: {count}",
       "reset": "Reset",
       "resetConfirm": "Reset?",

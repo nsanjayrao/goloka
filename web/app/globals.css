@@ -2200,25 +2200,29 @@
   }
 
   /* ---------- /chant: a still space to chant, not a habit tracker ---------- */
-  /* The mahā-mantra, set large and slow. Devanagari falls back through the
-     SAME --display stack (Tiro Devanagari Hindi), so no separate font rule
-     is needed - only size/rhythm differ from the roman line. */
-  .chant-mantra {
-    font-size: clamp(22px, 3.6vw, 36px);
-    line-height: 1.5;
-    font-weight: 400;
-    text-wrap: balance;
-  }
-  .chant-mantra span {
-    display: block;
-  }
-  /* Height-aware for the same reason as the two rules above. This line is
+  /* (`.chant-mantra` lived here until 2026-08-08 with no call site in the
+     app - the verse is `.chant-verse` below. The only surviving
+     "chant-mantra" string is lib/mantras.ts's localStorage KEY, which is
+     unrelated. Deleted rather than left to mislead the next reader.) */
+  /* Height-aware for the same reason as the rules below. This line is
      aria-hidden and decorative - the roman verse carries the text - so it is
-     the right thing to shrink first when the viewport is short. */
+     the right thing to shrink first when the viewport is short. The 1.45
+     leading (was 1.6) is part of the 2026-08-08 first-screen budget that
+     buys room for .chant-nameplate without pushing the ring below the fold. */
   .chant-devanagari {
     font-size: clamp(15px, min(2.4vw, 3.2vh), 22px);
-    line-height: 1.6;
+    line-height: 1.45;
     opacity: 0.82;
+  }
+  /* On a genuinely short viewport (a 1366x599 laptop, a landscape phone) the
+     devanāgarī is what gets dropped so the mala and its label both fit on the
+     first screen - this line is aria-hidden and decorative, the roman verse
+     carries the text, and the rule above has said it was the right thing to
+     shrink first since it was written. Phones are unaffected (844px tall). */
+  @media (max-height: 680px) {
+    .chant-devanagari {
+      display: none;
+    }
   }
   .chant-devanagari span {
     display: block;
@@ -2239,12 +2243,32 @@
      devotee had been shown the verse twice. `min(62vw, 40vh)` keeps the
      phone case identical (62vw wins at 390x844) and only bites when height
      is the constraint. This is the first height-aware rule in the file. */
+  /* The page's one instruction, and the reason it sits HERE (2026-08-08):
+     a line BELOW an object is a caption - read after you already understand
+     it - while a line ABOVE it is a label, read before you meet it. The
+     2026-08-03 attempt put the right words below the ring and failed, because
+     on a 1366x599 laptop the ring's bottom edge lands at ~570px and the
+     caption was never on the first screen at all.
+
+     min-height is load-bearing, not cosmetic: this slot swaps between "Tap
+     the centre", the listening line and the mic-request line, and without a
+     reserved line box every swap would shift the ring under the devotee's
+     finger. The margins below (and .chant-verse's) are height-aware clamps
+     for the same first-screen budget that shortened .chant-devanagari. */
+  .chant-nameplate {
+    margin-top: clamp(16px, 3.6vh, 26px);
+    min-height: 1.4em;
+    font-size: 12px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
   .chant-ring {
     --ring-size: clamp(200px, min(62vw, 40vh), 340px);
     position: relative;
     width: var(--ring-size);
     height: var(--ring-size);
-    margin: 0 auto;
+    margin: clamp(18px, 4.4vh, 40px) auto 0;
   }
   .chant-bead {
     position: absolute;
@@ -2292,12 +2316,33 @@
     justify-content: center;
     gap: 4px;
     pointer-events: none;
-    transition: transform 0.25s var(--ease-spring), box-shadow 0.4s ease, border-color 0.4s ease;
+    /* The resting affordance (2026-08-08). Before this the bowl wore only the
+       hairline border that .mantra-switch, .chant-voice-toggle and .doorway
+       also wear - this system's "quiet container" dress, not its "pressable"
+       one - so the page's ONE input looked like decoration while five
+       settings below looked interactive. The gold rim that said "press me"
+       was behind :hover, which no phone can fire.
+
+       A lip and a well, so the bowl reads as having an INSIDE you could put
+       a finger in, rather than a flat disc. Deliberately not just switching
+       the hover glow on at rest: 26px of glow is too loud in a still space,
+       and it would erase the hover delta. */
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 18px rgb(var(--glow-rgb) / 0.06);
   }
+  /* box-shadow REPLACES, it does not append: the two inset layers must be
+     restated in every rule that sets box-shadow on this element, or the bowl
+     visibly flattens the moment a pointer touches it. Same for the keyframes
+     below. */
   .chant-tap:hover .chant-bowl,
   .chant-tap:focus-visible .chant-bowl {
     border-color: var(--accent);
-    box-shadow: 0 0 26px rgb(var(--glow-rgb) / 0.16);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 26px rgb(var(--glow-rgb) / 0.16);
   }
   .chant-tap:active .chant-bowl {
     transform: scale(0.97);
@@ -2322,6 +2367,43 @@
   .chant-bowl.is-listening {
     animation: chant-listening-breathe 5.5s ease-in-out infinite;
   }
+  /* The invitation breath (2026-08-08), a BREATH in DESIGN.md §7's motion
+     vocabulary. 7s - slower than the lamp's 6.5s and much fainter - so it is
+     the quietest moving thing on the page. It runs ONLY before the first
+     bead and stops for good at the first tap: nothing should pulse while a
+     devotee is actually chanting. It exists purely for the moment of not
+     knowing what to do. Under prefers-reduced-motion the global rule kills
+     it and leaves the static lip above, which is the affordance that
+     actually matters - correct degradation, not a lesser one. */
+  .chant-bowl.is-resting {
+    animation: chant-rest-breathe 7s ease-in-out infinite;
+  }
+
+  /* The bead count is a GAUGE READING, not liturgy - so it leaves Marcellus
+     (the display/liturgical face, DESIGN.md §3) for the body face. Three
+     faults fixed at once: Marcellus's zero is a geometric circle, which
+     inside a circular bowl inside a circular ring parsed as a fourth
+     concentric ornament at the page's focal point; a lone stacked glyph
+     didn't read as a numerator; and proportional figures made the bowl's
+     contents jitter at every tap as 9->10->99->100. tabular-nums fixes the
+     last one for good. */
+  .chant-count {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    font-family: var(--body);
+    font-variant-numeric: tabular-nums;
+  }
+  .chant-count-n {
+    font-size: 28px;
+    line-height: 1;
+    color: var(--chandan);
+  }
+  .chant-count-of {
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+  }
 
   /* ---- Karaoke word-lighting: the mantra as the lit centerpiece ---- */
   /* The mantra, word by word. One word is lit at a time (flame + a gentle
@@ -2340,6 +2422,10 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
+    /* Height-aware, like .chant-ring and .chant-nameplate: the margin was a
+       flat mt-6 utility, which spends the same 24px on a 599px-tall laptop as
+       on a 1080px monitor. */
+    margin-top: clamp(14px, 3.2vh, 24px);
     font-size: clamp(20px, min(3.4vw, 4.6vh), 32px);
     line-height: 1.45;
     font-weight: 400;
@@ -2600,15 +2686,30 @@
     transform: translateY(6px);
   }
 }
+/* Every stop in the three bowl animations restates .chant-bowl's two inset
+   layers (the lip and the well, added 2026-08-08). box-shadow REPLACES
+   rather than appends, so a stop that lists only its outer glow silently
+   flattens the bowl for the whole animation - which for .is-listening means
+   the entire time voice mode is on. Change the insets in one place and you
+   must change them in all four. */
 @keyframes chant-bloom {
   0% {
-    box-shadow: 0 0 0 rgb(var(--glow-hi-rgb) / 0);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 0 rgb(var(--glow-hi-rgb) / 0);
   }
   35% {
-    box-shadow: 0 0 48px rgb(var(--glow-hi-rgb) / 0.5);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 48px rgb(var(--glow-hi-rgb) / 0.5);
   }
   100% {
-    box-shadow: 0 0 0 rgb(var(--glow-hi-rgb) / 0);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 0 rgb(var(--glow-hi-rgb) / 0);
   }
 }
 /* Voice mode's quiet "listening" tell (see .chant-bowl.is-listening) - same
@@ -2617,10 +2718,34 @@
 @keyframes chant-listening-breathe {
   0%,
   100% {
-    box-shadow: 0 0 16px rgb(var(--glow-rgb) / 0.1);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 16px rgb(var(--glow-rgb) / 0.1);
   }
   50% {
-    box-shadow: 0 0 30px rgb(var(--glow-rgb) / 0.22);
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 30px rgb(var(--glow-rgb) / 0.22);
+  }
+}
+/* The invitation breath (see .chant-bowl.is-resting) - fainter and slower
+   than the listening tell, because this one plays at the devotee who does
+   not yet know the bowl is a control, not at one who is already chanting. */
+@keyframes chant-rest-breathe {
+  0%,
+  100% {
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 18px rgb(var(--glow-rgb) / 0.05);
+  }
+  50% {
+    box-shadow:
+      inset 0 1px 0 rgb(var(--glow-hi-rgb) / 0.1),
+      inset 0 -18px 28px -18px rgb(var(--midnight-rgb) / 0.75),
+      0 0 30px rgb(var(--glow-rgb) / 0.14);
   }
 }
 /* The lit karaoke word's gentle breath - same flame rgba channels as the

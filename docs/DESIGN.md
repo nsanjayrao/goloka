@@ -375,6 +375,43 @@ DELETED that day — see §14.
     lies when a devotee opens a shared WhatsApp link cold.
 - **Watch page**: player on midnight, title in Marcellus, related videos
   as one row, lamp glow behind the player at low intensity.
+- **Chant space (`/chant`, interface rebuilt 2026-08-08)**: the page has ONE
+  input — the tap bowl at the heart of the mala — and the rebuild exists
+  because that input was the only element on the page with no resting
+  affordance. Its hairline border is the same one `.mantra-switch`,
+  `.chant-voice-toggle` and `.doorway` wear, which in this system reads
+  "quiet container", not "pressable"; the gold rim that said *press me* lived
+  behind `:hover`, an event no phone can fire. Five low-stakes settings below
+  looked more interactive than the one control that matters. The owner
+  reported the same confusion twice (2026-08-03, 2026-08-08).
+  - **The nameplate.** A permanent kicker-rung line (12px, uppercase,
+    tracking .18em, `--muted`) sits directly ABOVE the ring. Placement is
+    the rule, not the wording: a line BELOW an object is a caption, read
+    after you already understand; a line ABOVE it is a label, read before
+    you meet it. The 2026-08-03 fix used the right words below the ring and
+    failed — on a 1366×599 viewport the ring's bottom edge lands at ~570px,
+    so the caption was never on the first screen at all.
+  - It is a **state slot, never empty and never shifting**: "Tap the centre"
+    at rest, the listening line while the mic is on, the mic-request line
+    during the prompt. It does NOT teach once and hide — a hint that
+    disappears is what already failed, and a label under a control is not
+    nagging, it is what makes the control a control.
+  - **The bowl reads as having an inside** — an inset lip and well, drawn on
+    `.chant-bowl` only. `.chant-tap` stays fully transparent and stays the
+    whole ring: an eyes-closed tap must never need aiming. That contract
+    outranks every visual change here.
+  - **The count is a gauge, not liturgy.** Figtree with `tabular-nums`,
+    baseline-aligned beside `/ 108` — never Marcellus, whose zero is a
+    geometric circle that reads as a fourth concentric ornament at the exact
+    focal point, and whose proportional figures make the bowl's contents
+    jitter at every tap.
+  - **No page title above the mantra, and no first-run modal** (owner
+    decisions). The verse stays the h1: a devotee is here to chant, not to
+    operate a counter. A modal would also teach before the object is
+    visible, so the knowledge has nowhere to attach.
+  - **Nothing here keeps score.** No streaks, no totals, no badge, and the
+    sankalpa speaks only while a round is underway toward it or once it is
+    fulfilled — never a word on a day that falls short.
 - **Browse/search/topic/channel/leaders/about**: same tokens, header,
   footer, card components; grids of the same `.card` language.
 - **Books (/books, Phase 3)**: typographic "spine" cards — gold rule +
@@ -490,7 +527,9 @@ DELETED that day — see §14.
 - **Motion vocabulary** (2026-07-22, Design Manifesto motion audit): every
   ambient/decorative animation in the app is one of three things - a
   BREATH (slow opacity/scale pulse: the lamp, the chant-listening glow,
-  the lit karaoke word), a DRIFT (slow floating movement: the hero
+  the lit karaoke word, and the chant bowl's 7s invitation breath — which
+  runs ONLY before the first bead and stops for good at the first tap, so
+  nothing pulses while a devotee is actually chanting), a DRIFT (slow floating movement: the hero
   image's 26s Ken-Burns pan), or a CURTAIN (a threshold crossed once:
   the darshan curtain parting on the PLAYER when a devotee presses
   "Begin listening" (§5.1 — it is no longer a page preloader; `veil.tsx`

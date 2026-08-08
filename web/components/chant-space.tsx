@@ -534,7 +534,7 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
 
       {/* Centerpiece: the mantra itself, lit word by word, with its
           Devanagari gracefully beneath. This is the one h1 on the page. */}
-      <h1 className="chant-verse font-heading mt-6 text-chandan" lang="sa-Latn">
+      <h1 className="chant-verse font-heading text-chandan" lang="sa-Latn">
         {verseLines.map((line, li) => (
           <span key={li} className="chant-verse-line">
             {line.map(({ index, text }) => (
@@ -552,9 +552,39 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
         </p>
       )}
 
+      {/* THE PAGE'S ONE INSTRUCTION, and the reason it is HERE rather than
+          under the ring (rewritten 2026-08-08; the note below records what
+          came before, because the same complaint has now been raised twice).
+
+          A line BELOW an object is a caption - it explains a thing after you
+          have already understood it. A line ABOVE it is a label, read before
+          you meet it. The 2026-08-03 attempt put very nearly these words
+          under the ring and the owner reported the identical confusion five
+          days later: on a 1366x599 laptop the ring's bottom edge lands at
+          ~570px, so the caption was never on the first screen at all. It was
+          also gated on `beadIndex === 0`, so it vanished after a single tap
+          and left a 56px hole; and it read "tap the centre" while voice mode
+          was listening, which was simply untrue.
+
+          So this slot is PERMANENT and it carries the session's live state.
+          A label under a control is not a tutorial being repeated at you -
+          it is what makes the control a control, the same way the word on a
+          button is not nagging. It never empties, so nothing below it ever
+          shifts (see .chant-nameplate's min-height). Do not re-introduce a
+          hint that teaches once and hides: that is the thing that failed. */}
+      <p className="chant-nameplate">
+        {voiceStatus === "requesting-mic"
+          ? t("voiceRequestingMic")
+          : listening
+            ? t("voiceListening")
+            : voiceStatus === "paused"
+              ? t("voicePaused")
+              : t("tapNameplate")}
+      </p>
+
       {/* The mala: 108 quiet marks in a ring, with the eyes-closed tap bowl
           at its heart. */}
-      <div className="chant-ring mt-10">
+      <div className="chant-ring">
         {beads.map((filled, i) => (
           <span
             key={i}
@@ -573,65 +603,73 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
           className="chant-tap"
           aria-label={t("tapAria", { count: beadIndex })}
         >
+          {/* is-resting is the invitation breath, and it is deliberately
+              narrow: only before the very first bead, never while listening,
+              never mid-bloom. Nothing should pulse at a devotee who is
+              already chanting - this exists for the moment of not knowing
+              the bowl is a control at all. */}
           <span
             aria-hidden="true"
-            className={`chant-bowl${blooming ? " is-blooming" : ""}${listening ? " is-listening" : ""}`}
+            className={`chant-bowl${blooming ? " is-blooming" : ""}${listening ? " is-listening" : ""}${
+              beadIndex === 0 && !listening && !blooming ? " is-resting" : ""
+            }`}
           >
-            <span className="font-heading text-3xl text-chandan">{beadIndex}</span>
-            <span className="text-[11px] uppercase tracking-[0.18em] text-text-muted">/ 108</span>
+            <span className="chant-count">
+              <span className="chant-count-n">{beadIndex}</span>
+              <span className="chant-count-of">/ 108</span>
+            </span>
           </span>
         </button>
       </div>
 
-      {/* Zone 1 - the session's living status. Fixed min-height so the
-          listening line and nudge row appearing/disappearing never shifts
-          anything below (the old layout jumped every time voice toggled).
+      {/* Zone 1 - the fuller second tier of explanation, and the count
+          corrections. The live status line that used to live here has moved
+          ABOVE the ring (see .chant-nameplate) - a caption under the fold was
+          the 2026-08-03 mistake. What remains is for the devotee who reads
+          on: the nameplate names the gesture, this explains the round.
 
-          THE FIRST LINE A DEVOTEE READS (added 2026-08-03). This band was
-          reserved for the voice status and rendered EMPTY for every
-          tap-mode visitor - 56px of nothing in the exact spot the eye lands
-          after the bead. Meanwhile nothing anywhere on the page said what to
-          do: the tap target is `background: transparent` by design (so an
-          eyes-closed tap needs no aiming) and its only affordance was a
-          :hover glow no phone can fire. The owner's words were "people come
-          to the chant page and I don't know what they are supposed to do
-          there."
-
-          Shown only before the first bead of the day, so it teaches once and
-          then gets out of the way - the same instinct as VOICE_INTRO_KEY
-          above, at the granularity lib/rounds.ts already keeps. It returns
-          each morning, which is right: it is the line the person beside you
-          would say as you sit down, and by the tenth day you no longer read
-          it. Putting a verb INSIDE the bowl was rejected - a devotee on their
-          thousandth round would still be told to tap. */}
-      <div className="mt-4 flex min-h-[56px] flex-col items-center justify-start gap-2">
+          Still gated on the first bead of the day, and that is right now that
+          it is no longer carrying discovery on its own: it is the line the
+          person beside you would say as you sit down, and by the tenth day
+          you no longer read it. Putting a verb INSIDE the bowl was rejected -
+          a devotee on their thousandth round would still be told to tap. */}
+      <div className="mt-4 flex min-h-[40px] flex-col items-center justify-start gap-2">
         {!listening && roundsToday === 0 && beadIndex === 0 && (
           <p className="max-w-measure text-[13px] leading-relaxed text-text-muted">
             {t("tapHint")}{" "}
             <span className="text-text-muted/70">{t("tapHintRound")}</span>
           </p>
         )}
-        {listening && (
-          <p className="text-[12px] uppercase tracking-[0.14em] text-accent">{t("voiceListening")}</p>
-        )}
-        {listening && (
+        {/* Corrections. -1 is available in BOTH modes as of 2026-08-08:
+            tap mode could previously only ever over-count (a double-tap, a
+            pocket brush) and had no way at all to take a bead back, since
+            Reset clears the day's ROUNDS and not the bead in hand. For a
+            devotee keeping a sankalpa, a count they know is wrong and cannot
+            correct is a real devotional problem, not a UI nicety. +1 stays
+            voice-only, which is honest to each mode's failure shape: a finger
+            cannot under-count, a listener can drift either way. */}
+        {(listening || beadIndex > 0) && (
           <div className="flex items-center gap-5 text-[11px] uppercase tracking-[0.14em] text-text-muted">
-            <button
-              type="button"
-              onClick={() => handleNudge(-1)}
-              aria-label={t("voiceNudgeMinusAria")}
-              className="transition-colors hover:text-flame focus-visible:text-flame"
-            >
-              {t("voiceNudgeMinus")}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleNudge(1)}
-              aria-label={t("voiceNudgePlusAria")}
-              className="transition-colors hover:text-flame focus-visible:text-flame"
-            >
-              {t("voiceNudgePlus")}
-            </button>
+            {beadIndex > 0 && (
+              <button
+                type="button"
+                onClick={() => handleNudge(-1)}
+                aria-label={t("voiceNudgeMinusAria")}
+                className="transition-colors hover:text-flame focus-visible:text-flame"
+              >
+                {t("voiceNudgeMinus")}
+              </button>
+            )}
+            {listening && (
+              <button
+                type="button"
+                onClick={() => handleNudge(1)}
+                aria-label={t("voiceNudgePlusAria")}
+                className="transition-colors hover:text-flame focus-visible:text-flame"
+              >
+                {t("voiceNudgePlus")}
+              </button>
+            )}
           </div>
         )}
       </div>
@@ -759,15 +797,33 @@ export function ChantSpace({ onRoundComplete, sadhanaSlot }: ChantSpaceProps = {
           </div>
         )}
 
-        {voiceStatus === "requesting-mic" && <p className="text-[12px] text-text-muted">{t("voiceRequestingMic")}</p>}
-
+        {/* "Requesting microphone…" is no longer duplicated here - it is one
+            of the nameplate's states above, next to the thing it describes. */}
         {voiceStatus === "error" && voiceError && (
           <p className="max-w-xs text-[12px] text-lotus">{t(VOICE_ERROR_MESSAGE_KEY[voiceError])}</p>
         )}
 
         {showIosHint && <p className="max-w-xs text-[12px] text-text-muted">{t("voiceIosSafariHint")}</p>}
 
-        <p className="max-w-xs text-[11px] italic leading-relaxed text-text-muted">{t("voicePrivacy")}</p>
+        {/* Gated on voice actually being engaged (2026-08-08). Shown
+            unconditionally, a microphone-privacy disclaimer reached every
+            devotee who never touched the mic - as the last thing before the
+            closing prayer, reading like legal boilerplate stapled to it. Its
+            closing clause ("nudge a bead above if it slips") was also false
+            in tap mode, where no nudge row existed. Both true now.
+            voiceWakeNote discloses the wake lock lib/voice-japa.ts takes:
+            the screen staying awake is the devotee's battery, so it is said
+            plainly rather than done quietly. */}
+        {voiceStatus !== "off" && (
+          <>
+            <p className="max-w-xs text-[11px] italic leading-relaxed text-text-muted">
+              {t("voicePrivacy")}
+            </p>
+            <p className="max-w-xs text-[11px] italic leading-relaxed text-text-muted">
+              {t("voiceWakeNote")}
+            </p>
+          </>
+        )}
       </div>
 
       <p className="mt-8 max-w-md text-[14px] leading-relaxed text-text-muted">
