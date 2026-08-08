@@ -1,21 +1,19 @@
 name: CI
 
-# The path lists are duplicated rather than shared via a YAML anchor because
-# GitHub Actions does not support anchors/aliases in workflow files.
+# Deliberately NOT filtered to web/**. `web` is a required status check on
+# main, and a required check that is skipped never reports - it sits at
+# "waiting for status" and the PR can never merge. A worker-only change would
+# wedge itself. Running always costs a minute of runner time on commits that
+# could not have broken the frontend, which is free: this repo is public, so
+# Actions minutes are unmetered.
 on:
   push:
     branches: [main]
-    paths:
-      - "web/**"
-      - ".github/workflows/ci.yml"
   pull_request:
-    paths:
-      - "web/**"
-      - ".github/workflows/ci.yml"
   workflow_dispatch: {}      # allow manual runs from the Actions tab
 
-# Push twice in a minute and the first run is cancelled rather than burning
-# free-tier minutes on a commit that has already been replaced.
+# Push twice in a minute and the first run is cancelled rather than grinding
+# on for another two minutes to report on a commit already replaced.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
