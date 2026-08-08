@@ -44,10 +44,50 @@ export const CALIBRATION_MS = 1000;
 /** How fast the noise floor continues to drift AFTER calibration - slow,
  * and (see pushAudioFrame) only ever nudged by frames NOT classified as
  * voice, so a long round of sustained chanting can never drag the floor up
- * and start silencing itself out. This is what makes the floor "continuous"
- * per the design brief - a fan switching on mid-round, or a devotee moving
- * to a noisier room, is still tracked, just gently. */
+ * and start silencing itself out. */
 const NOISE_FLOOR_TAU_MS = 4000;
+
+/** Below this rms a frame is not a quiet room, it is NO SIGNAL - a fresh
+ * getUserMedia stream routinely delivers digital silence for its first tens
+ * of milliseconds while the capture pipeline warms up. A real quiet room
+ * with noise suppression sits around 0.002-0.01, three to twenty times
+ * higher, so this excludes warm-up without excluding any actual room.
+ *
+ * Calibration used to take the MINIMUM of everything it saw, so one such
+ * frame pinned the floor at ~0 for the whole session - and, with the
+ * deadlock FLOOR_STUCK_MS now fixes, it could never recover. Note the
+ * remedy is to skip silent FRAMES, not the first N milliseconds: fixtures
+ * and real sessions alike often carry their only room tone in a very short
+ * lead-in before the devotee begins. */
+export const SILENCE_EPS = 0.0005;
+/** Calibration takes the 10th percentile of the room's samples rather than
+ * the single quietest frame it saw. A one-sample minimum is decided by the
+ * unluckiest frame in the window; a percentile needs the room to actually be
+ * that quiet for a while. Same cost, immune to one bad frame. */
+export const CALIBRATION_PERCENTILE = 0.1;
+/** The escape hatch from a floor that can never come back down (fixed
+ * 2026-08-08). The floor only adapts on NOT-active frames, so if ambient
+ * noise steps up ABOVE the threshold - an AC compressor starting, a window
+ * opened onto traffic - every later frame reads active, the floor freezes,
+ * and the room's own noise is counted as chanting indefinitely. The comment
+ * here used to claim "a fan switching on mid-round is still tracked, just
+ * gently", which was simply false in exactly that case.
+ *
+ * So: once frames have read active CONTINUOUSLY for longer than any
+ * plausible phrase, let the floor climb toward the signal. Upward only, and
+ * five times slower than normal adaptation, so a genuinely marathon fluid
+ * chanter cannot have the floor creep up and silence them out. */
+export const FLOOR_STUCK_MS = 20000;
+const FLOOR_RECOVERY_TAU_MS = 20000;
+
+/** Roughly what fraction of a mantra's WALL-CLOCK duration is actually
+ * voiced. Consonant closures in "Kṛṣṇa" and "Rāma" sit below the threshold
+ * and are excluded from phraseVoicedMs, so a 5.5s mantra contributes only
+ * ~3.9s of voiced time. This constant is what keeps the two units apart:
+ * tempoSeedMs (from lib/mantras.ts karaokeMs) is WALL-CLOCK, while
+ * phraseVoicedMs is VOICED, and comparing them directly inflated every
+ * seed-tier threshold by ~1/0.7 on top of its intended factor. */
+export const VOICED_FRACTION = 0.7;
 
 /** Voice is "active" once a frame's rms clears the noise floor by this
  * multiple... */
@@ -159,6 +199,18 @@ export type JapaRhythmState = {
   /** Which mantra the learned tempo (and open phrase) belong to - reset
    * everything tempo-related when the devotee switches mantras. */
   mantraKey: string | null;
+  /** Room-tone samples gathered during the calibration window (post-warm-up)
+   * so the floor can be a percentile rather than a single unlucky minimum.
+   * Bounded by CALIBRATION_MS - about 20 numbers at a 40ms poll - and never
+   * read again after calibration ends. */
+  calibrationRms: number[];
+  /** True once the calibration window has closed. Calibration is a
+   * once-per-session event, and this makes that explicit rather than
+   * inferring it from the clock: a caller that feeds non-monotonic
+   * timestamps (chained test fixtures do exactly this) would otherwise
+   * re-enter calibration and let chanting frames into the room-tone
+   * sample, driving the floor up over the devotee's own voice. */
+  calibrated: boolean;
 };
 
 export function createJapaRhythmState(): JapaRhythmState {
@@ -177,6 +229,8 @@ export function createJapaRhythmState(): JapaRhythmState {
     tempoDeviation: 0,
     phraseCreditedCount: 0,
     mantraKey: null,
+    calibrationRms: [],
+    calibrated: false,
   };
 }
 
@@ -256,6 +310,10 @@ export const MAX_FRAME_DT_MS = 250;
 // sits within 25% of the current tempo.
 const TEMPO_LEARN_CEILING_FACTOR = 2.5;
 const TEMPO_LEARN_MAX_MS = 20000;
+/** The ceiling for the FIRST measurement, expressed against the seed's
+ * voiced length: comfortably above one slow mantra, comfortably below two
+ * merged ones. This is the number that stops the half-rate lock-in. */
+const TEMPO_SEED_CEILING_FACTOR = 1.6;
 const FLUID_LEARN_TOLERANCE = 0.25;
 
 /** The crediting unit for an open phrase: the learned tempo (with margin)
@@ -269,8 +327,23 @@ function creditUnitMs(state: JapaRhythmState, tempoSeedMs: number | undefined): 
   ) {
     return state.tempoMs * FLUID_CREDIT_MARGIN;
   }
-  if (tempoSeedMs !== undefined && tempoSeedMs > 0) return tempoSeedMs * SEED_CREDIT_FACTOR;
+  // tempoSeedMs is wall-clock; phraseVoicedMs (what this unit is compared
+  // against) is voiced-only - so the seed is converted before the deliberate
+  // SEED_CREDIT_FACTOR undercount is applied. Without VOICED_FRACTION the
+  // line sat at ~2.8x a real mantra rather than the documented ~1.75x.
+  if (tempoSeedMs !== undefined && tempoSeedMs > 0) {
+    return tempoSeedMs * VOICED_FRACTION * SEED_CREDIT_FACTOR;
+  }
   return null;
+}
+
+/** The p-th percentile of an unsorted sample list (nearest-rank). Pure and
+ * tiny - the calibration window holds ~20 samples. */
+function percentileOf(samples: number[], p: number): number {
+  if (samples.length === 0) return 0;
+  const sorted = [...samples].sort((a, b) => a - b);
+  const rank = Math.min(sorted.length - 1, Math.max(0, Math.round(p * (sorted.length - 1))));
+  return sorted[rank];
 }
 
 /** Feeds one polled audio frame into the rolling rhythm state. Returns the
@@ -350,12 +423,31 @@ export function pushAudioFrame(
   // the quietest instant seen so far; afterward it can drift either way but
   // only from frames NOT classified as voice, and slowly.
   let noiseFloor: number;
+  let calibrationRms = prev.calibrationRms;
+  const calibrated = prev.calibrated || (!isFirstFrame && elapsedSinceStart > CALIBRATION_MS);
   if (isFirstFrame) {
     noiseFloor = frame.rms; // bootstrap directly - there is nothing to compare against yet
-  } else if (elapsedSinceStart <= CALIBRATION_MS) {
-    noiseFloor = Math.min(prev.noiseFloor, frame.rms);
+    calibrationRms = [];
+  } else if (!calibrated) {
+    // Sample the room, skipping no-signal frames (see SILENCE_EPS), and take
+    // a percentile rather than the single quietest frame - a minimum is
+    // decided by the unluckiest sample in the window, a percentile needs the
+    // room to genuinely be that quiet for a while.
+    calibrationRms =
+      frame.rms > SILENCE_EPS ? [...prev.calibrationRms, frame.rms] : prev.calibrationRms;
+    noiseFloor =
+      calibrationRms.length > 0
+        ? percentileOf(calibrationRms, CALIBRATION_PERCENTILE)
+        : prev.noiseFloor;
   } else if (!rawActive) {
     noiseFloor = prev.noiseFloor + (frame.rms - prev.noiseFloor) * smoothingAlpha(dt, NOISE_FLOOR_TAU_MS);
+  } else if (prev.activeStreakMs + dt > FLOOR_STUCK_MS) {
+    // Nothing has read as silent for longer than any real phrase, so this is
+    // almost certainly a risen room, not a devotee. Let the floor climb -
+    // upward only, and slowly (see FLOOR_STUCK_MS).
+    noiseFloor =
+      prev.noiseFloor +
+      Math.max(0, frame.rms - prev.noiseFloor) * smoothingAlpha(dt, FLOOR_RECOVERY_TAU_MS);
   } else {
     noiseFloor = prev.noiseFloor; // chanting is happening - never let voice pull the floor up
   }
@@ -440,7 +532,32 @@ export function pushAudioFrame(
         // Learn at FULL weight - a breath-delimited single mantra is the
         // cleanest measurement there is - unless it is implausibly long
         // (a merged double-mantra must not poison the estimate).
-        const ceiling = tempoMs === null ? TEMPO_LEARN_MAX_MS : tempoMs * TEMPO_LEARN_CEILING_FACTOR;
+        //
+        // Fixed 2026-08-08: this guard did not guard the FIRST measurement,
+        // which is the one that matters most. With tempoMs still null the
+        // ceiling was TEMPO_LEARN_MAX_MS (20s), so a devotee who ran two
+        // mantras together - which is simply how japa is chanted - had ~6.3s
+        // of merged voiced time accepted whole and learned as their tempo.
+        // Every later phrase then agreed with it, tempoDeviation stayed near
+        // zero, and the engine became CONFIDENT in a tempo exactly double the
+        // truth: one bead per two mantras, permanently, and a karaoke that
+        // glided ever further behind the voice. The engine counted correctly
+        // only for someone pausing cleanly after every single repetition -
+        // how you chant when testing the feature, not when chanting japa.
+        //
+        // When a seed exists we know roughly how long one mantra should be,
+        // so use it. With no seed there is nothing to compare against and the
+        // old wide ceiling stands (fluid crediting is off in that case too).
+        const seedVoicedMs =
+          options?.tempoSeedMs !== undefined && options.tempoSeedMs > 0
+            ? options.tempoSeedMs * VOICED_FRACTION
+            : null;
+        const ceiling =
+          tempoMs !== null
+            ? tempoMs * TEMPO_LEARN_CEILING_FACTOR
+            : seedVoicedMs !== null
+              ? seedVoicedMs * TEMPO_SEED_CEILING_FACTOR
+              : TEMPO_LEARN_MAX_MS;
         if (phraseVoicedMs <= ceiling) {
           if (tempoMs === null) {
             tempoMs = phraseVoicedMs;
@@ -504,6 +621,8 @@ export function pushAudioFrame(
       tempoDeviation,
       phraseCreditedCount,
       mantraKey: prev.mantraKey,
+      calibrationRms,
+      calibrated,
     },
     mantraCompleted,
     // Any breath that CLOSED a phrase this frame - counted or discarded as

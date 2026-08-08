@@ -31,11 +31,41 @@ import { createJapaRhythmState, pushAudioFrame, type JapaRhythmState } from "@/l
 // tab.
 const FRAME_INTERVAL_MS = 40;
 
-// A wide enough time-domain window to compute a stable RMS reading each
-// poll without being so large it blurs together a real word boundary.
-const FFT_SIZE = 2048;
+// A wide enough time-domain window to compute a stable RMS reading each poll
+// without being so large it blurs together a real word boundary. Expressed
+// in MILLISECONDS and converted against the context's real sample rate
+// (below), because `fftSize` is a SAMPLE COUNT, not a duration: a fixed 2048
+// is 43ms at 48kHz but 128ms at the 16kHz rate some Android voice-processing
+// paths hand back - three times the poll interval, which smears every
+// reading and makes the micro-gap thresholds meaningless.
+const TARGET_WINDOW_MS = 30;
 
-export type VoiceJapaStatus = "requesting-mic" | "listening";
+/** The smallest legal AnalyserNode fftSize (a power of two, 32..32768) whose
+ * window covers TARGET_WINDOW_MS at this context's actual sample rate. */
+function fftSizeFor(sampleRate: number): number {
+  const targetSamples = (sampleRate * TARGET_WINDOW_MS) / 1000;
+  let size = 32;
+  while (size < targetSamples && size < 32768) size *= 2;
+  return size;
+}
+
+// Timer-throttling detection. The poll runs every 40ms; anything past this
+// means the browser is clamping the timer - which is exactly what mobile
+// browsers do to a hidden or screen-locked tab, and screen-off chanting is
+// this feature's PRIMARY use case. Three consecutive slow frames rather than
+// one, so a single GC pause or a busy main thread isn't mistaken for it.
+const THROTTLE_DT_MS = 150;
+const THROTTLE_STRIKES = 3;
+
+export type VoiceJapaStatus = "requesting-mic" | "listening" | "paused";
+
+/** The subset of the Screen Wake Lock API this file uses. Declared locally
+ * rather than relying on the DOM lib, so a TS target without those types
+ * still compiles - and the whole thing is feature-detected at runtime. */
+type WakeLockSentinelLike = { release: () => Promise<void> };
+type WakeLockNavigator = Navigator & {
+  wakeLock?: { request: (type: "screen") => Promise<WakeLockSentinelLike> };
+};
 
 export type VoiceJapaErrorReason =
   | "unsupported" // browser lacks getUserMedia/AudioContext
@@ -198,7 +228,12 @@ export async function startVoiceJapa(
 
   const source = audioContext.createMediaStreamSource(stream);
   const analyser = audioContext.createAnalyser();
-  analyser.fftSize = FFT_SIZE;
+  analyser.fftSize = fftSizeFor(audioContext.sampleRate);
+  // Only time-domain data is read today, which smoothing does not touch - but
+  // this default (0.8) averages the FREQUENCY data across roughly five
+  // frames, so anything spectral added here later would be silently smeared
+  // before it was ever looked at. Zero now, while it costs nothing.
+  analyser.smoothingTimeConstant = 0;
   // Deliberately NOT connected to audioContext.destination - this pipeline
   // only ever reads the signal, never plays it back (no feedback, no
   // speaker output, nothing resembling "recording" in any user-facing
@@ -208,9 +243,68 @@ export async function startVoiceJapa(
   const timeDomainBuffer = new Float32Array(analyser.fftSize);
   let rhythmState: JapaRhythmState = createJapaRhythmState();
   let active = true;
+  let lastPollMs: number | null = null;
+  let throttleStrikes = 0;
+  let paused = false;
+
+  // Keep the screen awake while listening. Eyes-closed chanting with the
+  // phone face-down is the whole point of voice mode, and a locked screen is
+  // precisely when the browser throttles the timer this pipeline runs on (or,
+  // on iOS, suspends the AudioContext outright). Entirely feature-detected;
+  // where it is unavailable the throttle detection above is the safety net.
+  // The lock is dropped automatically whenever the page is hidden, so it has
+  // to be re-taken on the way back.
+  let wakeLock: WakeLockSentinelLike | null = null;
+  const wakeLockApi = (navigator as WakeLockNavigator).wakeLock;
+  async function acquireWakeLock() {
+    if (!wakeLockApi || wakeLock || !active) return;
+    try {
+      wakeLock = await wakeLockApi.request("screen");
+    } catch {
+      wakeLock = null; // denied, or not permitted in this context - degrade quietly
+    }
+  }
+  function handleVisibilityChange() {
+    if (document.visibilityState === "visible") void acquireWakeLock();
+  }
+  void acquireWakeLock();
+  document.addEventListener("visibilitychange", handleVisibilityChange);
 
   function pollFrame() {
     if (!active) return;
+
+    // Is this poll arriving on time? lib/japa-rhythm.ts clamps each frame's
+    // dt to MAX_FRAME_DT_MS, which keeps a frozen tab from injecting one
+    // giant gap into the accumulators - but it also means a throttled timer
+    // is absorbed SILENTLY: at a 1s clamped tick the counter sees 250ms of
+    // elapsed time per real second and quietly under-counts about fourfold,
+    // saying nothing. For a page whose whole posture is honesty, producing a
+    // wrong number is worse than admitting the browser stopped cooperating.
+    const now = performance.now();
+    const sinceLastPoll = lastPollMs === null ? FRAME_INTERVAL_MS : now - lastPollMs;
+    lastPollMs = now;
+    if (sinceLastPoll > THROTTLE_DT_MS) {
+      throttleStrikes += 1;
+      if (throttleStrikes >= THROTTLE_STRIKES && !paused) {
+        paused = true;
+        callbacks.onStatusChange?.("paused");
+      }
+    } else if (paused) {
+      // Frames are arriving on time again. Start over rather than resume:
+      // the phrase in flight is long stale, and the room may not be the room
+      // that was calibrated (a devotee who locked their phone in one place
+      // and came back to another).
+      throttleStrikes = 0;
+      paused = false;
+      rhythmState = createJapaRhythmState();
+      callbacks.onStatusChange?.("listening");
+    } else {
+      throttleStrikes = 0;
+    }
+    // Count nothing while throttled - a paused bead is honest, a wrong one
+    // is not.
+    if (paused) return;
+
     const rms = readRms(analyser, timeDomainBuffer);
     // performance.now() for the frame clock, not audioContext.currentTime:
     // currentTime sits frozen at 0 while a context is suspended (the exact
@@ -248,6 +342,9 @@ export async function startVoiceJapa(
       if (!active) return;
       active = false;
       clearInterval(intervalId);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      void wakeLock?.release().catch(() => {});
+      wakeLock = null;
       // The privacy + battery requirement: the mic track is released the
       // moment voice mode stops, not left open in the background.
       for (const track of stream.getTracks()) track.stop();

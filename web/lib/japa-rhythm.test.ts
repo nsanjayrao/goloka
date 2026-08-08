@@ -13,6 +13,7 @@ import {
   karaokeFlowIndex,
   karaokeFlowResync,
   karaokeFlowRest,
+  FLOOR_STUCK_MS,
   MAX_FRAME_DT_MS,
   MAX_PHRASE_CREDITS,
   MICRO_GAP_MS,
@@ -431,17 +432,27 @@ describe("fluid crediting: chanting with no breath finally counts", () => {
 
   it("seed tier: a breathless session still moves the beads, undercounted", () => {
     // No breath EVER - the devotee the old counter left at zero forever.
-    // Credits fire per SEED_CREDIT_FACTOR × seed (~9.6s of voice each):
-    // 30s of chanting ≈ 5 mantras chanted → 3 credited. Moving, never over.
+    // Credits fire per VOICED_FRACTION × SEED_CREDIT_FACTOR × seed
+    // (5500 × 0.7 × 1.75 ≈ 6.7s of VOICED time each).
+    //
+    // The numbers here changed on 2026-08-08 with the unit fix. tempoSeedMs
+    // is WALL-CLOCK (lib/mantras.ts karaokeMs) while phraseVoicedMs is
+    // VOICED-only, and comparing them directly put the line at ~9.6s -
+    // roughly 2.8 real mantras, not the 1.75 the constant names. These 30s
+    // are 30s of unbroken VOICE, which is nearer 43s of real chanting (~7.8
+    // mantras), so 4 credits is still a deliberate, healthy undercount.
     const frames = framesFromSegments([segment(200, QUIET), segment(30000, CHANT)]);
     const { mantraEvents, fluidEvents } = run(frames, MAHA);
-    expect(mantraEvents).toBe(3);
-    expect(fluidEvents).toBe(3);
+    expect(mantraEvents).toBe(4);
+    expect(fluidEvents).toBe(4);
   });
 
-  it("seed tier stays conservative: 8s of unbroken chant is still 0", () => {
-    // 8s < SEED_CREDIT_FACTOR × 5500 = 9625 - under the first credit line.
-    const frames = framesFromSegments([segment(200, QUIET), segment(8000, CHANT)]);
+  it("seed tier stays conservative: a stretch under the credit line is still 0", () => {
+    // 6s < VOICED_FRACTION × SEED_CREDIT_FACTOR × 5500 ≈ 6737 - under the
+    // first credit line, so nothing is invented. (This was 8s against the
+    // old, unit-confused 9625 line; 8s of VOICED time is genuinely more than
+    // two mantras and crediting one for it is correct, not generous.)
+    const frames = framesFromSegments([segment(200, QUIET), segment(6000, CHANT)]);
     expect(run(frames, MAHA).mantraEvents).toBe(0);
   });
 
@@ -519,9 +530,10 @@ describe("fluid crediting: chanting with no breath finally counts", () => {
     const oneMantra = framesFromSegments([segment(200, QUIET), segment(5000, CHANT), segment(500, QUIET)]);
     const learned = run(oneMantra, MAHA);
     expect(learned.state.tempoSamples).toBe(1);
-    // 8s of unbroken chant: the learned tier (≈5.7s line) would credit, the
-    // seed tier (9.6s line) must not - one sample is not confidence.
-    const fluidRun = framesFromSegments([segment(8000, CHANT)]);
+    // 6.2s of unbroken chant sits deliberately BETWEEN the two tiers: the
+    // learned tier (≈5.7s line) would credit it, the seed tier (≈6.7s line
+    // after the 2026-08-08 unit fix) must not. One sample is not confidence.
+    const fluidRun = framesFromSegments([segment(6200, CHANT)]);
     expect(run(fluidRun, MAHA, learned.state).fluidEvents).toBe(0);
   });
 
@@ -550,13 +562,28 @@ describe("fluid crediting: chanting with no breath finally counts", () => {
   });
 
   it("an unbroken phrase stops crediting at the cap until a breath re-anchors", () => {
-    // ~200s of continuous voice at a learned ~5s tempo would earn ~34
-    // credits unbounded; the cap holds it to MAX_PHRASE_CREDITS. (If this
-    // much truly unbroken "chanting" is real, it isn't japa - it's a TV.)
+    // ~200s of voice at a learned ~5s tempo would earn ~34 credits
+    // unbounded; the cap holds it to MAX_PHRASE_CREDITS. (If this much
+    // near-unbroken "chanting" is real, it isn't japa - it's a TV.)
+    //
+    // The voice carries brief sub-threshold dips - the consonant closures
+    // any real chanting has, well under BREATH_GAP_MS so the phrase never
+    // closes. Added 2026-08-08 with the FLOOR_STUCK_MS fix: a mathematically
+    // flat tone with not one quiet instant in 200 seconds now (correctly)
+    // trips the noise-floor recovery, which is the defence against a
+    // television, so a fixture that wants to exercise the CREDIT CAP has to
+    // look like a voice rather than like the thing the other guard catches.
     const learned = learnTempo(5000, MAHA);
     const unitMs = learned.state.tempoMs! * FLUID_CREDIT_MARGIN;
-    const runMs = Math.ceil(unitMs * (MAX_PHRASE_CREDITS + 3));
-    const marathon = framesFromSegments([segment(runMs, CHANT)]);
+    const voicedNeededMs = Math.ceil(unitMs * (MAX_PHRASE_CREDITS + 3));
+    const VOICED_BLOCK_MS = 1920;
+    const CLOSURE_MS = 80;
+    const marathon = framesFromSegments(
+      Array.from({ length: Math.ceil(voicedNeededMs / VOICED_BLOCK_MS) }, () => [
+        segment(VOICED_BLOCK_MS, CHANT),
+        segment(CLOSURE_MS, QUIET),
+      ]).flat()
+    );
     const after = run(marathon, MAHA, learned.state);
     expect(after.fluidEvents).toBe(MAX_PHRASE_CREDITS);
   });
@@ -633,5 +660,132 @@ describe("karaoke tempo flow", () => {
   it("guards a zero-length word list", () => {
     const flow = karaokeFlowArm(createKaraokeFlow(SEED), 1000);
     expect(karaokeFlowIndex(flow, 5000, 0)).toBeNull();
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Regressions from the 2026-08-08 engine audit. Each of these passed its way
+// through the suite above while the engine was measurably wrong in the room,
+// which is the point: the tests above pin the SPECIFICATION, and these pin
+// the places where the specification and the microphone disagreed.
+// ---------------------------------------------------------------------------
+
+describe("regression: two mantras run together must not become the tempo (2026-08-08)", () => {
+  // THE headline defect. Japa is chanted with mantras running into one
+  // another; a clean 400ms pause after every single repetition is how you
+  // chant when testing the feature, not when chanting. Before the fix the
+  // first measurement was only rejected above TEMPO_LEARN_MAX_MS (20s), so a
+  // merged double-mantra was accepted whole and learned as the tempo. Every
+  // later phrase then agreed with it, deviation stayed near zero, and the
+  // engine grew CONFIDENT in a tempo exactly double the truth: one bead per
+  // two mantras, forever, plus a karaoke gliding ever further behind.
+
+  it("a merged double-mantra never becomes the learned tempo", () => {
+    // ~7s of voice with no internal breath - two ~3.9s voiced mantras run
+    // together - closed by a real breath.
+    const merged = framesFromSegments([
+      segment(200, QUIET),
+      segment(7000, CHANT),
+      segment(500, QUIET),
+    ]);
+    const { state } = run(merged, MAHA);
+    // It still credits the honest single bead the breath earned...
+    expect(state.mantrasCompleted).toBe(1);
+    // ...but it must NOT be taken as a measurement of one mantra.
+    expect(state.tempoSamples).toBe(0);
+    expect(state.tempoMs).toBeNull();
+  });
+
+  it("a plausible single mantra still teaches at full weight", () => {
+    // The guard must reject the double without rejecting the real thing:
+    // ~3.9s voiced is one mahā-mantra at the seeded pace.
+    const single = framesFromSegments([
+      segment(200, QUIET),
+      segment(3900, CHANT),
+      segment(500, QUIET),
+    ]);
+    const { state } = run(single, MAHA);
+    expect(state.tempoSamples).toBe(1);
+    expect(state.tempoMs).toBeGreaterThan(3000);
+    expect(state.tempoMs).toBeLessThan(4200);
+  });
+
+  it("repeated merged doubles never reach confidence, so fluid crediting stays on the seed", () => {
+    // The failure mode was not one wrong measurement but a CONFIDENT wrong
+    // one: consistency between equally-wrong phrases is what unlocked the
+    // learned tier. Four merged doubles must leave it locked.
+    let state = createJapaRhythmState();
+    for (let i = 0; i < 4; i++) {
+      const merged = framesFromSegments([
+        segment(200, QUIET),
+        segment(7000, CHANT),
+        segment(500, QUIET),
+      ]);
+      state = run(merged, MAHA, state).state;
+    }
+    expect(state.tempoSamples).toBe(0);
+    expect(state.tempoMs).toBeNull();
+  });
+});
+
+describe("regression: the noise floor can recover from a risen room (2026-08-08)", () => {
+  // The floor only adapts on NOT-active frames, so ambient noise that steps
+  // up ABOVE the threshold froze it permanently: every later frame read as
+  // active, and the room's own noise was counted as chanting indefinitely.
+  // The comment in the source claimed the opposite in plain words.
+
+  it("sustained above-threshold ambience stops being counted as chanting", () => {
+    // A quiet room, then a compressor starts and simply never stops.
+    const frames = framesFromSegments([
+      segment(1000, QUIET), // calibrate quiet
+      segment(FLOOR_STUCK_MS * 3, NOISY_FLOOR), // the room rises, and stays risen
+    ]);
+    const { state } = run(frames, MAHA);
+    // The floor must have climbed toward the new room rather than staying
+    // pinned at the old quiet one.
+    expect(state.noiseFloor).toBeGreaterThan(QUIET * 2);
+  });
+
+  it("does not fire during a normal round of chanting", () => {
+    // Real chanting has sub-threshold consonant closures, which reset the
+    // active streak - so a devotee chanting steadily for well past
+    // FLOOR_STUCK_MS must never have the floor creep up and silence them.
+    const blocks = Math.ceil((FLOOR_STUCK_MS * 2) / 2000);
+    const frames = framesFromSegments([
+      segment(1000, QUIET),
+      ...Array.from({ length: blocks }, () => [segment(1920, CHANT), segment(80, QUIET)]).flat(),
+    ]);
+    const { state } = run(frames, MAHA);
+    expect(state.noiseFloor).toBeLessThan(QUIET * 2);
+  });
+});
+
+describe("regression: calibration survives a silent capture warm-up (2026-08-08)", () => {
+  it("a digital-silence opening frame does not pin the floor at zero", () => {
+    // getUserMedia routinely delivers true silence for its first frames while
+    // the pipeline warms up. Calibration took the MINIMUM of everything it
+    // saw, so one such frame pinned the floor at ~0 for the whole session -
+    // and with the deadlock above, it could never recover. The room here is
+    // NOISY_FLOOR: with a zero floor its own ambience clears the threshold
+    // and gets counted; with an honest floor it does not.
+    const frames = framesFromSegments([
+      segment(120, 0), // capture warm-up: no signal at all
+      segment(2000, NOISY_FLOOR), // the actual room
+      segment(30000, NOISY_FLOOR), // ...which keeps on being the room
+    ]);
+    const { mantraEvents, state } = run(frames, MAHA);
+    expect(state.noiseFloor).toBeGreaterThan(NOISY_FLOOR / 2);
+    expect(mantraEvents).toBe(0);
+  });
+
+  it("still hears real chanting over that same room", () => {
+    // The floor must land on the room, not above the voice.
+    const frames = framesFromSegments([
+      segment(120, 0),
+      segment(1500, NOISY_FLOOR),
+      segment(3900, CHANT_IN_NOISE),
+      segment(500, NOISY_FLOOR),
+    ]);
+    expect(run(frames, MAHA).mantraEvents).toBe(1);
   });
 });
