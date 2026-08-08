@@ -5,13 +5,18 @@ import en from "@/messages/en.json";
 import es from "@/messages/es.json";
 import hi from "@/messages/hi.json";
 import ru from "@/messages/ru.json";
+import te from "@/messages/te.json";
 
 // The i18n drift guard: en.json is the source of truth for the site chrome
 // (goal #5). Every other locale must carry exactly the same set of keys -
 // this test fails loudly the moment someone adds an English string without
 // adding its translation everywhere else, instead of that gap surfacing
 // silently as an untranslated fallback in production.
-const LOCALES: Record<string, unknown> = { hi, bn, ru, es };
+//
+// `te` was absent from this list until 2026-08-08 - it is in routing.locales
+// like the rest, so it was the one locale that could drift in silence. It was
+// verified in full parity when added here.
+const LOCALES: Record<string, unknown> = { hi, bn, ru, es, te };
 
 // Recursively lists every leaf key path ("pages.about.h1") in a messages
 // object, so nesting depth doesn't matter to the comparison.

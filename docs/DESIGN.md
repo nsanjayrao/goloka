@@ -507,6 +507,43 @@ DELETED that day — see §14.
   is ever switched on, these four surfaces (two `themeColor`s, the manifest,
   the OG card) are the hardcoded ones to flip to candana with it; the icons
   stay dark regardless.
+  Two manifest keys carry reasoning that JSON cannot hold a comment for:
+  `"id": "/"` is the PWA's permanent identity — added 2026-08-08, and adding
+  it *later than the first install* would have made every browser treat
+  Goloka as a brand-new app; and there is deliberately **no `orientation`
+  key**, because locking to portrait would break YouTube fullscreen, which
+  is the one thing every page on this site leads to.
+- **Install (`/install`, 2026-08-08)**: the page that turns the PWA into an
+  app on a devotee's home screen. It exists because installing was possible
+  the whole time and *nothing anywhere said so* — on iOS especially, where
+  Add to Home Screen is four taps behind a Share sheet that no one opens by
+  accident.
+  - **One page, every platform, all of it server-rendered.** The three cards
+    (Android, iPhone/iPad, Desktop) are static content in the page component;
+    `InstallGuide` is a thin client wrapper that receives them as `children`
+    (§7's RSC children-as-props rule). It never *chooses* what to render —
+    it sets `data-platform` on the container after mount, and CSS lifts the
+    matching card with `order: -1` plus an accent border. So the page is
+    complete with JavaScript off, complete before hydration, and identical
+    on the server and the first client render. **Do not turn this into a
+    client component that renders one branch** — that is a hydration
+    mismatch and it hides two-thirds of the page from anyone we guessed
+    wrong about.
+  - **The steps are numbered and literal**, naming the icon a devotee is
+    looking for ("the Share icon — a square with an arrow pointing up"),
+    because the audience for this page is by definition the person who has
+    not done it before.
+  - **`beforeinstallprompt`** is captured where the browser offers it
+    (Chromium: Android + desktop) and shown as a real install button. Where
+    it is not offered — every iOS browser, Firefox, Safari — the numbered
+    steps ARE the mechanism, not a fallback. The button appears only if the
+    event actually fires; never render a dead one.
+  - **Already installed is a state the page must handle**: opened in
+    standalone display-mode it says so and stops selling. A page still
+    reading "Install Goloka" inside the installed app is the clearest
+    possible sign nobody tested it.
+  - Linked from the footer. Deliberately NOT in `MoreSheet` — that list is
+    destinations you visit, and this is a thing you do once.
 
 ## 7. Architecture rules
 

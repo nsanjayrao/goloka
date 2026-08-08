@@ -1,0 +1,81 @@
+{
+  "packageId": "app.goloka.android",
+  "host": "goloka-three.vercel.app",
+  "name": "Goloka",
+  "launcherName": "Goloka",
+  "display": "standalone",
+  "themeColor": "#0A0F26",
+  "themeColorDark": "#000000",
+  "navigationColor": "#000000",
+  "navigationColorDark": "#000000",
+  "navigationDividerColor": "#000000",
+  "navigationDividerColorDark": "#000000",
+  "backgroundColor": "#0A0F26",
+  "enableNotifications": true,
+  "startUrl": "/",
+  "iconUrl": "https://goloka-three.vercel.app/icons/icon-512.png",
+  "maskableIconUrl": "https://goloka-three.vercel.app/icons/icon-512.png",
+  "splashScreenFadeOutDuration": 300,
+  "signingKey": {
+    "path": "./android.keystore",
+    "alias": "goloka"
+  },
+  "appVersionName": "1",
+  "appVersionCode": 1,
+  "shortcuts": [
+    {
+      "name": "Live darshan",
+      "shortName": "Live",
+      "url": "https://goloka-three.vercel.app/#live",
+      "chosenIconUrl": "https://goloka-three.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Search",
+      "shortName": "Search",
+      "url": "https://goloka-three.vercel.app/search",
+      "chosenIconUrl": "https://goloka-three.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "My Library",
+      "shortName": "Library",
+      "url": "https://goloka-three.vercel.app/library",
+      "chosenIconUrl": "https://goloka-three.vercel.app/icons/icon-192.png"
+    },
+    {
+      "name": "Begin Here",
+      "shortName": "Begin Here",
+      "url": "https://goloka-three.vercel.app/start",
+      "chosenIconUrl": "https://goloka-three.vercel.app/icons/icon-192.png"
+    }
+  ],
+  "generatorApp": "bubblewrap-cli",
+  "webManifestUrl": "https://goloka-three.vercel.app/manifest.json",
+  "fallbackType": "customtabs",
+  "features": {},
+  "alphaDependencies": {
+    "enabled": false
+  },
+  "enableSiteSettingsShortcut": true,
+  "isChromeOSOnly": false,
+  "isMetaQuest": false,
+  "fullScopeUrl": "https://goloka-three.vercel.app/",
+  "minSdkVersion": 21,
+  "shareTarget": {
+    "action": "https://goloka-three.vercel.app/share-target",
+    "method": "GET",
+    "params": {
+      "title": "title",
+      "text": "text",
+      "url": "url"
+    }
+  },
+  "orientation": "default",
+  "fingerprints": [],
+  "additionalTrustedOrigins": [],
+  "retainedBundles": [],
+  "protocolHandlers": [],
+  "fileHandlers": [],
+  "launchHandlerClientMode": "",
+  "displayOverride": [],
+  "appVersion": "1"
+}

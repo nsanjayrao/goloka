@@ -1,0 +1,14 @@
+[
+  {
+    "relation": [
+      "delegate_permission/common.handle_all_urls"
+    ],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "app.goloka.android",
+      "sha256_cert_fingerprints": [
+        "96:CF:8A:D8:96:65:FE:42:74:48:28:AD:FC:15:FC:95:9C:F1:35:31:4A:3E:8D:DA:86:2D:89:BB:6D:56:A9:CA"
+      ]
+    }
+  }
+]

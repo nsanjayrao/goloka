@@ -1,9 +1,15 @@
 {
+  "id": "/",
   "name": "Goloka",
   "short_name": "Goloka",
   "description": "Eternal abode of divine love — a free index of ISKCON lectures, kirtans, and festivals.",
+  "lang": "en",
+  "dir": "ltr",
+  "categories": ["education", "lifestyle", "music"],
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#0A0F26",
   "theme_color": "#0A0F26",
   "icons": [

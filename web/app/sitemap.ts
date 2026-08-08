@@ -19,7 +19,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     getSitemapVideos(500),
   ]);
 
-  const staticRoutes: MetadataRoute.Sitemap = ["", "/browse", "/search", "/leaders", "/books", "/temples"].map(
+  const staticRoutes: MetadataRoute.Sitemap = ["", "/browse", "/search", "/leaders", "/books", "/temples", "/install"].map(
     (path) => ({
       url: `${SITE_URL}${path}`,
       changeFrequency: "daily",

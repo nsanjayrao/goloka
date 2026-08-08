@@ -11,3 +11,19 @@ node_modules/
 web/.env.local
 *.env.local
 *.tsbuildinfo
+
+# mobile/twa (the Android app - a Trusted Web Activity wrapper around the PWA).
+#
+# THE KEYSTORE MUST NEVER BE COMMITTED AND MUST NEVER BE LOST. It is the
+# private key that signs the APK; Android will refuse to install any future
+# build signed with a different key, so losing it means every existing
+# install is stranded on the version they have. It lives outside the repo -
+# see mobile/README.md.
+*.keystore
+*.jks
+mobile/twa/build/
+mobile/twa/app/build/
+mobile/twa/.gradle/
+mobile/twa/local.properties
+mobile/twa/*.apk
+mobile/twa/*.aab

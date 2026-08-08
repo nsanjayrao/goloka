@@ -48,6 +48,10 @@ export function Footer() {
           <Link href="/temples">{t("temples")}</Link>
           <Link href="/library">{t("library")}</Link>
           <Link href="/about">{t("about")}</Link>
+          {/* Deliberately here and not in MoreSheet (DESIGN.md #6): that
+              sheet lists places you go, and installing is a thing you do
+              once. */}
+          <Link href="/install">{t("install")}</Link>
           <a href="mailto:nandisanjay.ns@gmail.com?subject=Goloka%20suggestion">{t("suggestChannel")}</a>
           <DataSaverToggle />
         </nav>

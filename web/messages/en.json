@@ -37,7 +37,8 @@
     "languageLabel": "Language",
     "chant": "Chant",
     "sadhana": "My Sādhana",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "install": "Install app"
   },
   "sectionHeader": {
     "viewAll": "View all →"
@@ -376,9 +377,46 @@
       "festival": "Festival",
       "ekadashi": "Ekādaśī",
       "hearMore": "Hear more →"
+    },
+    "install": {
+      "h1": "Install Goloka",
+      "intro": "Goloka can live on your home screen like any other app — its own icon, full screen, no address bar. It is the same Goloka, only closer to hand.",
+      "free": "There is nothing to download from an app store, no account is needed, and it takes about ten seconds.",
+      "alreadyInstalled": "Goloka is already installed on this device — you are using it right now.",
+      "installNow": "Install Goloka",
+      "android": {
+        "kicker": "Android",
+        "title": "Add Goloka to your home screen",
+        "step1": "Open Goloka in Chrome.",
+        "step2": "Tap the three-dot menu at the top right.",
+        "step3": "Tap \"Add to Home screen\" — some versions of Chrome say \"Install app\" instead.",
+        "step4": "Tap \"Install\" to confirm. The gold lotus appears alongside your other apps.",
+        "note": "If a gold install button appeared higher up this page, it does all of this in one tap."
+      },
+      "ios": {
+        "kicker": "iPhone & iPad",
+        "title": "Add Goloka to your home screen",
+        "step1": "Open Goloka in Safari. On an iPhone or iPad this works only in Safari — not Chrome, not Firefox.",
+        "step2": "Tap the Share icon at the bottom of the screen: a square with an arrow pointing up out of it.",
+        "step3": "Scroll down the list of options and tap \"Add to Home Screen\".",
+        "step4": "Tap \"Add\" at the top right.",
+        "step5": "The gold lotus is now on your home screen. Open Goloka from there rather than from Safari.",
+        "note": "Opening it from the home screen is what gives you the full screen — and on iPhone it is also the only way festival reminders can reach you."
+      },
+      "desktop": {
+        "kicker": "Windows, Mac & Linux",
+        "title": "Install Goloka as a desktop app",
+        "step1": "Open Goloka in Chrome or Edge.",
+        "step2": "Look in the address bar for the install icon — a small screen with an arrow pointing down into it — and click it.",
+        "step3": "Click \"Install\". Goloka opens in its own window from then on.",
+        "note": "Safari and Firefox on the desktop do not offer this. Bookmarking the site works just as well there."
+      },
+      "whatYouGetTitle": "What installing changes",
+      "whatYouGetBody": "Goloka opens full screen with no address bar, starts from your home screen, and keeps its place in whatever you were watching. Everything else is exactly the same site — videos still play through YouTube's own player, and no video is ever downloaded to your device.",
+      "storageNote": "Installing stores nothing extra about you. It does not create an account and it does not switch on notifications; both of those stay opt-in, exactly where you left them."
     }
   },
-  "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es are machine-translated from this file.",
+  "_note": "Source-of-truth English strings for the site chrome. hi/bn/ru/es/te are machine-translated from this file.",
   "homeDoorways": {
     "newLabel": "New to Kṛṣṇa?",
     "newHint": "Begin here — gently",

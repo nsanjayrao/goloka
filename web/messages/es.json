@@ -37,7 +37,8 @@
     "languageLabel": "Idioma",
     "chant": "Cantar",
     "sadhana": "Mi sādhana",
-    "calendar": "Calendario"
+    "calendar": "Calendario",
+    "install": "Instalar la app"
   },
   "sectionHeader": {
     "viewAll": "Ver todo →"
@@ -376,6 +377,43 @@
       "festival": "Festival",
       "ekadashi": "Ekādaśī",
       "hearMore": "Escuchar más →"
+    },
+    "install": {
+      "h1": "Instalar Goloka",
+      "intro": "Goloka puede vivir en tu pantalla de inicio como cualquier otra aplicación: con su propio icono, a pantalla completa y sin barra de direcciones. Es la misma Goloka, solo que más a mano.",
+      "free": "No hay nada que descargar de una tienda de aplicaciones, no hace falta una cuenta y lleva unos diez segundos.",
+      "alreadyInstalled": "Goloka ya está instalada en este dispositivo: la estás usando ahora mismo.",
+      "installNow": "Instalar Goloka",
+      "android": {
+        "kicker": "Android",
+        "title": "Añade Goloka a tu pantalla de inicio",
+        "step1": "Abre Goloka en Chrome.",
+        "step2": "Toca el menú de tres puntos en la esquina superior derecha.",
+        "step3": "Toca \"Añadir a pantalla de inicio\"; en algunas versiones de Chrome aparece como \"Instalar aplicación\".",
+        "step4": "Toca \"Instalar\" para confirmar. El loto dorado aparecerá junto a tus demás aplicaciones.",
+        "note": "Si más arriba en esta página apareció un botón dorado de instalación, hace todo esto en un solo toque."
+      },
+      "ios": {
+        "kicker": "iPhone y iPad",
+        "title": "Añade Goloka a tu pantalla de inicio",
+        "step1": "Abre Goloka en Safari. En iPhone o iPad esto solo funciona en Safari, no en Chrome ni en Firefox.",
+        "step2": "Toca el icono de Compartir en la parte inferior de la pantalla: un cuadrado con una flecha que apunta hacia arriba.",
+        "step3": "Baja por la lista de opciones y toca \"Añadir a pantalla de inicio\".",
+        "step4": "Toca \"Añadir\" en la esquina superior derecha.",
+        "step5": "El loto dorado ya está en tu pantalla de inicio. Abre Goloka desde ahí, no desde Safari.",
+        "note": "Abrirla desde la pantalla de inicio es lo que da la pantalla completa, y en iPhone es además la única forma de que te lleguen los recordatorios de festivales."
+      },
+      "desktop": {
+        "kicker": "Windows, Mac y Linux",
+        "title": "Instala Goloka como aplicación de escritorio",
+        "step1": "Abre Goloka en Chrome o Edge.",
+        "step2": "Busca en la barra de direcciones el icono de instalación —una pantalla pequeña con una flecha hacia abajo— y haz clic en él.",
+        "step3": "Haz clic en \"Instalar\". A partir de entonces Goloka se abrirá en su propia ventana.",
+        "note": "Safari y Firefox de escritorio no ofrecen esta opción; ahí basta con guardar el sitio en marcadores."
+      },
+      "whatYouGetTitle": "Qué cambia al instalarla",
+      "whatYouGetBody": "Goloka se abre a pantalla completa sin barra de direcciones, arranca desde tu pantalla de inicio y recuerda por dónde ibas. Todo lo demás es exactamente el mismo sitio: los vídeos siguen reproduciéndose en el propio reproductor de YouTube y nunca se descarga ningún vídeo en tu dispositivo.",
+      "storageNote": "Instalarla no guarda nada adicional sobre ti. No crea una cuenta ni activa las notificaciones: ambas cosas siguen siendo opcionales y quedan tal como las dejaste."
     }
   },
   "_note": "Esta es la primera traducción automática. Las correcciones de hablantes nativos son bienvenidas.",
