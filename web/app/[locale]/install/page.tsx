@@ -33,6 +33,13 @@ const STEP_COUNT: Record<(typeof PLATFORMS)[number], number> = {
   desktop: 3,
 };
 
+// The signed APK, for installing without the Play Store. Points at
+// `releases/latest` rather than a pinned tag, so it follows every future
+// release without this file ever changing. The release PAGE, not the asset's
+// direct download URL - someone sideloading an app deserves to see the notes
+// and the checksum before the file lands on their phone.
+const APK_RELEASE_URL = "https://github.com/nsanjayrao/goloka/releases/latest";
+
 /**
  * /install (DESIGN.md #6) - how to put Goloka on a home screen. Entirely
  * static content: no data fetching, no database, nothing that can fail. The
@@ -63,6 +70,13 @@ export default async function InstallPage({ params }: Props) {
                 ))}
               </ol>
               <p className="install-note">{t(`${platform}.note`)}</p>
+              {/* Android only: the same app, obtained the other way. */}
+              {platform === "android" && (
+                <a className="install-apk" href={APK_RELEASE_URL} target="_blank" rel="noopener noreferrer">
+                  <span className="title">{t("android.apkTitle")}</span>
+                  <span className="note">{t("android.apkNote")}</span>
+                </a>
+              )}
             </section>
           ))}
         </InstallGuide>

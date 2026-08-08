@@ -542,6 +542,13 @@ DELETED that day — see §14.
     standalone display-mode it says so and stops selling. A page still
     reading "Install Goloka" inside the installed app is the clearest
     possible sign nobody tested it.
+  - **The APK sits inside the Android card, not beside it.** It is the second
+    way to get the same app, so it is a quiet inset block rather than a
+    button — it must not outshout the four numbered steps above it. It links
+    to `releases/latest` (never a pinned tag, so it follows every future
+    release without this page changing) and to the release PAGE rather than
+    the asset URL: someone sideloading an app deserves to see the notes and
+    the checksum before the file reaches their phone.
   - Linked from the footer. Deliberately NOT in `MoreSheet` — that list is
     destinations you visit, and this is a thing you do once.
 

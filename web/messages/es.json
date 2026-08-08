@@ -391,7 +391,9 @@
         "step2": "Toca el menú de tres puntos en la esquina superior derecha.",
         "step3": "Toca \"Añadir a pantalla de inicio\"; en algunas versiones de Chrome aparece como \"Instalar aplicación\".",
         "step4": "Toca \"Instalar\" para confirmar. El loto dorado aparecerá junto a tus demás aplicaciones.",
-        "note": "Si más arriba en esta página apareció un botón dorado de instalación, hace todo esto en un solo toque."
+        "note": "Si más arriba en esta página apareció un botón dorado de instalación, hace todo esto en un solo toque.",
+        "apkTitle": "O descarga el archivo de la aplicación",
+        "apkNote": "Un APK firmado en GitHub, para instalar sin Play Store. Android avisará de que procede de un origen desconocido; ese aviso aparece con cualquier aplicación que no venga de la tienda."
       },
       "ios": {
         "kicker": "iPhone y iPad",

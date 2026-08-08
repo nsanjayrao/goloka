@@ -391,7 +391,9 @@
         "step2": "Tap the three-dot menu at the top right.",
         "step3": "Tap \"Add to Home screen\" — some versions of Chrome say \"Install app\" instead.",
         "step4": "Tap \"Install\" to confirm. The gold lotus appears alongside your other apps.",
-        "note": "If a gold install button appeared higher up this page, it does all of this in one tap."
+        "note": "If a gold install button appeared higher up this page, it does all of this in one tap.",
+        "apkTitle": "Or download the app file",
+        "apkNote": "A signed APK on GitHub, for installing without the Play Store. Android warns that it comes from an unknown source; that warning appears for every app that is not from the store."
       },
       "ios": {
         "kicker": "iPhone & iPad",

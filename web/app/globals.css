@@ -2650,6 +2650,34 @@
   .install-button {
     margin-bottom: 1.25rem;
   }
+  /* The APK download, inside the Android card. A quiet inset block rather
+     than a button: it is the SECOND way to get the same app, and it must not
+     outshout the four numbered steps above it. */
+  .install-apk {
+    display: block;
+    margin-top: 1rem;
+    padding: 0.85rem 1.1rem;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--midnight);
+    transition: border-color 0.3s var(--ease-spring);
+  }
+  .install-apk:hover,
+  .install-apk:focus-visible {
+    border-color: var(--accent);
+  }
+  .install-apk .title {
+    display: block;
+    font-size: 14px;
+    color: var(--accent);
+  }
+  .install-apk .note {
+    display: block;
+    margin-top: 0.3rem;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+  }
   .install-installed {
     margin-bottom: 1.25rem;
     padding: 0.85rem 1.1rem;
